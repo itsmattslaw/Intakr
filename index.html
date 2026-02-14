@@ -1,0 +1,1833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Intakr — Client Intake System</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/docx/8.5.0/docx.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sage: #8FAF8F;
+    --sage-light: #B5CDB5;
+    --sage-pale: #E8F0E8;
+    --sage-dark: #6B8F6B;
+    --charcoal: #2C2C2C;
+    --warm-gray: #6B6B6B;
+    --light-gray: #F5F5F3;
+    --cream: #FAFAF8;
+    --white: #FFFFFF;
+    --border: #E0E0DC;
+    --error: #C0392B;
+    --amber: #E6A817;
+    --amber-pale: #FFF8E1;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--charcoal);
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  .app-container { display: none; }
+  .app-container.visible { display: block; }
+
+  .header {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 24px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .header-logo { 
+    height: 48px;
+    width: 48px;
+  }
+  .header-divider { width: 1px; height: 36px; background: var(--border); }
+  .header-text h1 {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--charcoal);
+    letter-spacing: -0.5px;
+  }
+  .header-text p {
+    font-size: 11px;
+    color: var(--warm-gray);
+    text-transform: uppercase;
+    letter-spacing: 1.8px;
+    font-weight: 600;
+    margin-top: -2px;
+  }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .header-badge {
+    background: var(--sage-pale);
+    color: var(--sage-dark);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .user-menu {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background: var(--sage-pale);
+    border-radius: 20px;
+    font-size: 12px;
+    color: var(--sage-dark);
+    font-weight: 500;
+  }
+  .user-menu button {
+    background: none;
+    border: none;
+    color: var(--sage-dark);
+    cursor: pointer;
+    font-size: 11px;
+    text-decoration: underline;
+    padding: 0;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .auth-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .auth-box {
+    background: var(--white);
+    border-radius: 16px;
+    max-width: 440px;
+    width: 100%;
+    padding: 48px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+    border: 1px solid var(--border);
+  }
+  .auth-logo {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+  .auth-logo svg {
+    width: 72px;
+    height: 72px;
+    margin-bottom: 20px;
+  }
+  .auth-logo h1 {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    letter-spacing: -0.5px;
+  }
+  .auth-logo p {
+    color: var(--warm-gray);
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1.8px;
+    font-weight: 600;
+  }
+  .auth-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 28px;
+    border-bottom: 1px solid var(--border);
+  }
+  .auth-tab {
+    flex: 1;
+    background: none;
+    border: none;
+    padding: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--warm-gray);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+  }
+  .auth-tab.active {
+    color: var(--sage-dark);
+    border-bottom-color: var(--sage);
+    font-weight: 600;
+  }
+  .auth-form { display: none; }
+  .auth-form.active { display: block; }
+
+  .setup-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+  }
+  .setup-modal.hidden { display: none; }
+  .setup-content {
+    background: var(--white);
+    border-radius: 16px;
+    max-width: 600px;
+    width: 100%;
+    padding: 40px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .setup-content h2 {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    letter-spacing: -0.5px;
+  }
+  .setup-content p {
+    color: var(--warm-gray);
+    margin-bottom: 24px;
+    line-height: 1.6;
+  }
+  .setup-content ol {
+    margin-left: 20px;
+    margin-bottom: 24px;
+    color: var(--warm-gray);
+  }
+  .setup-content ol li {
+    margin-bottom: 12px;
+    line-height: 1.6;
+  }
+  .setup-content code {
+    background: var(--sage-pale);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+    color: var(--sage-dark);
+  }
+  .setup-content pre {
+    background: var(--sage-pale);
+    padding: 16px;
+    border-radius: 8px;
+    margin: 12px 0;
+    overflow-x: auto;
+    font-size: 11px;
+    line-height: 1.5;
+  }
+
+  .tab-bar {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    padding: 0 40px;
+    gap: 0;
+  }
+  .tab-btn {
+    font-family: 'DM Sans', sans-serif;
+    background: none;
+    border: none;
+    padding: 14px 24px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--warm-gray);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .tab-btn:hover { color: var(--charcoal); }
+  .tab-btn.active {
+    color: var(--sage-dark);
+    border-bottom-color: var(--sage);
+    font-weight: 600;
+  }
+  .tab-btn .count {
+    background: var(--sage-pale);
+    color: var(--sage-dark);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 10px;
+    min-width: 22px;
+    text-align: center;
+  }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  .main {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+  .intro { text-align: center; margin-bottom: 40px; }
+  .intro h2 {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+  }
+  .intro p { color: var(--warm-gray); font-size: 15px; max-width: 520px; margin: 0 auto; }
+
+  .form-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+  .form-section-header {
+    background: var(--sage-pale);
+    padding: 16px 28px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-number {
+    width: 28px; height: 28px;
+    background: var(--sage);
+    color: var(--white);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700; flex-shrink: 0;
+  }
+  .form-section-header h3 {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 18px; font-weight: 600;
+  }
+  .form-body { padding: 28px; }
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  .form-grid .full-width { grid-column: 1 / -1; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group label { font-size: 13px; font-weight: 600; letter-spacing: 0.2px; }
+  .form-group label .required { color: var(--error); margin-left: 2px; }
+  .form-group label .hint { font-weight: 400; color: var(--warm-gray); font-size: 12px; margin-left: 4px; }
+
+  input, select, textarea {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--cream);
+    color: var(--charcoal);
+    transition: all 0.2s ease;
+    outline: none;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--sage);
+    background: var(--white);
+    box-shadow: 0 0 0 3px rgba(143,175,143,0.15);
+  }
+  textarea { resize: vertical; min-height: 80px; }
+  select {
+    cursor: pointer; appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236B6B6B' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+  }
+
+  .fee-toggle {
+    display: flex; gap: 0;
+    border: 1px solid var(--border);
+    border-radius: 8px; overflow: hidden;
+  }
+  .fee-toggle label {
+    flex: 1; text-align: center; padding: 10px 16px;
+    font-size: 13px; font-weight: 500; cursor: pointer;
+    background: var(--cream); color: var(--warm-gray);
+    border-right: 1px solid var(--border); transition: all 0.2s;
+  }
+  .fee-toggle label:last-child { border-right: none; }
+  .fee-toggle input { display: none; }
+  .fee-toggle input:checked + label, .fee-toggle label.active {
+    background: var(--sage); color: var(--white); font-weight: 600;
+  }
+
+  .conditional-field { display: none; animation: slideDown 0.3s ease; }
+  .conditional-field.visible { display: flex; }
+  @keyframes slideDown { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
+
+  .specialist-fields { display: none; margin-top:16px; padding-top:16px; border-top:1px solid var(--border); }
+  .specialist-fields.visible { display: block; }
+
+  .actions {
+    display: flex; gap: 16px; margin-top: 32px;
+    justify-content: center; flex-wrap: wrap;
+  }
+  .btn {
+    font-family: 'DM Sans', sans-serif;
+    padding: 14px 32px; border: none; border-radius: 10px;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+    transition: all 0.25s ease;
+    display: flex; align-items: center; gap: 8px; letter-spacing: 0.3px;
+  }
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .btn-primary { background: var(--sage); color: var(--white); }
+  .btn-primary:hover:not(:disabled) { background: var(--sage-dark); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(107,143,107,0.3); }
+  .btn-secondary { background: var(--white); color: var(--charcoal); border: 1px solid var(--border); }
+  .btn-secondary:hover:not(:disabled) { background: var(--light-gray); transform: translateY(-1px); }
+  .btn-danger { background: var(--white); color: var(--error); border: 1px solid #ECC; }
+  .btn-danger:hover:not(:disabled) { background: #FFF5F5; }
+  .btn-sm { padding: 8px 16px; font-size: 12px; border-radius: 6px; }
+  .btn svg { width: 16px; height: 16px; }
+  .btn-full { width: 100%; justify-content: center; }
+
+  .dashboard { max-width: 1100px; margin: 0 auto; padding: 40px 24px 80px; }
+  .dash-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 28px; flex-wrap: wrap; gap: 16px;
+  }
+  .dash-header h2 {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 28px; font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+  .dash-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+  .stats-row {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px; margin-bottom: 28px;
+  }
+  .stat-card {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 10px; padding: 20px; text-align: center;
+  }
+  .stat-card .stat-num {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 36px; font-weight: 700; color: var(--sage-dark);
+    line-height: 1;
+  }
+  .stat-card .stat-label {
+    font-size: 12px; color: var(--warm-gray);
+    text-transform: uppercase; letter-spacing: 1px;
+    margin-top: 6px; font-weight: 500;
+  }
+
+  .tracker-table-wrap {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 12px; overflow: hidden;
+  }
+  .tracker-table {
+    width: 100%; border-collapse: collapse; font-size: 13px;
+  }
+  .tracker-table thead { background: var(--sage-pale); }
+  .tracker-table th {
+    padding: 12px 16px; text-align: left; font-weight: 600;
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px;
+    color: var(--sage-dark); border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  .tracker-table td {
+    padding: 12px 16px; border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  .tracker-table tr:last-child td { border-bottom: none; }
+  .tracker-table tr:hover td { background: var(--sage-pale); }
+
+  .status-pill {
+    display: inline-block; padding: 4px 12px; border-radius: 12px;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.3px;
+    text-transform: uppercase; white-space: nowrap;
+  }
+  .status-prospective { background: var(--amber-pale); color: #9A7B00; }
+  .status-sent { background: #E3F2FD; color: #1565C0; }
+  .status-executed { background: var(--sage-pale); color: var(--sage-dark); }
+  .status-declined { background: #FBEAEA; color: var(--error); }
+
+  .empty-state {
+    text-align: center; padding: 60px 24px; color: var(--warm-gray);
+  }
+  .empty-state svg { width: 48px; height: 48px; margin-bottom: 16px; opacity: 0.4; }
+  .empty-state p { font-size: 15px; }
+
+  .row-actions { display: flex; gap: 6px; }
+  .row-actions select {
+    padding: 5px 8px; font-size: 11px; border-radius: 6px;
+    background: var(--cream); min-width: 110px;
+  }
+  .row-actions button {
+    background: none; border: 1px solid var(--border); border-radius: 6px;
+    padding: 5px 8px; cursor: pointer; color: var(--warm-gray);
+    font-size: 11px; transition: all 0.2s;
+  }
+  .row-actions button:hover { color: var(--charcoal); background: var(--light-gray); }
+  .row-actions button.del:hover { color: var(--error); background: #FFF5F5; border-color: #ECC; }
+
+  .status-bar {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--charcoal); color: var(--white);
+    padding: 14px 24px;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    font-size: 13px; font-weight: 500;
+    transform: translateY(100%); transition: transform 0.3s ease;
+    z-index: 100;
+  }
+  .status-bar.visible { transform: translateY(0); }
+  .status-bar.success { background: var(--sage-dark); }
+  .status-bar.error { background: var(--error); }
+
+  .loading-spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .help-text {
+    font-size: 12px;
+    color: var(--warm-gray);
+    margin-top: 8px;
+  }
+
+  @media (max-width: 640px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .header { padding: 16px 20px; flex-direction: column; gap: 12px; }
+    .tab-bar { padding: 0 16px; }
+    .tab-btn { padding: 12px 16px; font-size: 13px; }
+    .actions { flex-direction: column; }
+    .btn { justify-content: center; }
+    .dashboard { padding: 24px 16px; }
+    .tracker-table-wrap { overflow-x: auto; }
+    .auth-box { padding: 32px 24px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- SETUP MODAL -->
+<div class="setup-modal hidden" id="setupModal">
+  <div class="setup-content">
+    <h2>🔧 Initial Database Setup</h2>
+    <p>One-time setup to connect your Supabase database:</p>
+    <ol>
+      <li>Create a free account at <strong>supabase.com</strong></li>
+      <li>Create a new project</li>
+      <li>Go to <strong>SQL Editor</strong> and run this query:
+        <pre>-- Create clients table
+CREATE TABLE clients (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id),
+  client_type TEXT,
+  entity_name TEXT,
+  contact_name TEXT,
+  contact_title TEXT,
+  client_email TEXT,
+  client_phone TEXT,
+  client_address TEXT,
+  matter_type TEXT,
+  attorney TEXT,
+  matter_description TEXT,
+  adverse_party TEXT,
+  fee_type TEXT,
+  hourly_rate TEXT,
+  paralegal_rate TEXT,
+  flat_fee_amount TEXT,
+  retainer_amount TEXT,
+  engagement_date TEXT,
+  conflicts TEXT,
+  specialist_involved TEXT,
+  specialist_name TEXT,
+  fee_sharing_details TEXT,
+  referral_source TEXT,
+  priority TEXT,
+  internal_notes TEXT,
+  status TEXT DEFAULT 'Prospective',
+  letter_sent TEXT,
+  letter_executed TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Enable Row Level Security
+ALTER TABLE clients ENABLE ROW LEVEL SECURITY;
+
+-- Policy: Only authenticated users with @margolispllc.com emails can view
+CREATE POLICY "Margolis users can view clients"
+  ON clients FOR SELECT
+  TO authenticated
+  USING (
+    auth.jwt()->>'email' LIKE '%@margolispllc.com'
+  );
+
+-- Policy: Only authenticated Margolis users can insert
+CREATE POLICY "Margolis users can insert clients"
+  ON clients FOR INSERT
+  TO authenticated
+  WITH CHECK (
+    auth.jwt()->>'email' LIKE '%@margolispllc.com'
+  );
+
+-- Policy: Only authenticated Margolis users can update
+CREATE POLICY "Margolis users can update clients"
+  ON clients FOR UPDATE
+  TO authenticated
+  USING (
+    auth.jwt()->>'email' LIKE '%@margolispllc.com'
+  );
+
+-- Policy: Only authenticated Margolis users can delete
+CREATE POLICY "Margolis users can delete clients"
+  ON clients FOR DELETE
+  TO authenticated
+  USING (
+    auth.jwt()->>'email' LIKE '%@margolispllc.com'
+  );</pre>
+      </li>
+      <li>Go to <strong>Authentication → Providers</strong> and:
+        <ul style="margin: 8px 0 8px 20px;">
+          <li>Disable <strong>Enable anonymous sign-ins</strong> (if enabled)</li>
+          <li>Confirm <strong>Email</strong> provider is enabled</li>
+        </ul>
+      </li>
+      <li><strong>IMPORTANT EMAIL RESTRICTION:</strong> Go to <strong>Authentication → Settings</strong> and scroll to <strong>"Email domains allowed to sign up"</strong>. Add: <code>margolispllc.com</code></li>
+      <li>Go to <strong>Settings → API</strong></li>
+      <li>Copy your <code>Project URL</code> and <code>anon public key</code></li>
+      <li>Paste them below:</li>
+    </ol>
+    <div class="form-grid" style="margin-top: 20px;">
+      <div class="form-group full-width">
+        <label>Supabase URL</label>
+        <input type="text" id="supabaseUrl" placeholder="https://xxxxx.supabase.co">
+      </div>
+      <div class="form-group full-width">
+        <label>Supabase Key (anon public)</label>
+        <input type="text" id="supabaseKey" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
+      </div>
+    </div>
+    <button class="btn btn-primary btn-full" onclick="saveSupabaseConfig()" style="margin-top: 20px;">
+      Save & Continue to Login
+    </button>
+  </div>
+</div>
+
+<!-- AUTH SCREEN -->
+<div class="auth-container" id="authContainer">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="authLogoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#8FAF8F;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#6B8F6B;stop-opacity:1" />
+          </linearGradient>
+        </defs>
+        <!-- Document with corner fold -->
+        <path d="M50 30 L130 30 L130 50 L150 70 L150 170 L50 170 Z" fill="url(#authLogoGradient)" opacity="0.15"/>
+        <path d="M130 30 L130 50 L150 70 Z" fill="url(#authLogoGradient)" opacity="0.25"/>
+        <path d="M50 30 L130 30 L130 50 L150 70 L150 170 L50 170 Z" fill="none" stroke="url(#authLogoGradient)" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M130 30 L130 50 L150 70" fill="none" stroke="url(#authLogoGradient)" stroke-width="3" stroke-linejoin="round"/>
+        
+        <!-- Checkmark -->
+        <path d="M75 90 L90 105 L125 70" fill="none" stroke="url(#authLogoGradient)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+        
+        <!-- Lines for text -->
+        <line x1="70" y1="130" x2="130" y2="130" stroke="url(#authLogoGradient)" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
+        <line x1="70" y1="145" x2="115" y2="145" stroke="url(#authLogoGradient)" stroke-width="3" stroke-linecap="round" opacity="0.4"/>
+      </svg>
+      <h1>Intakr</h1>
+      <p>Client Intake System</p>
+    </div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchAuthTab('login')">Sign In</button>
+      <button class="auth-tab" onclick="switchAuthTab('signup')">Sign Up</button>
+    </div>
+
+    <!-- LOGIN FORM -->
+    <div class="auth-form active" id="loginForm">
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="loginEmail" placeholder="your@email.com">
+      </div>
+      <div class="form-group" style="margin-top: 16px;">
+        <label>Password</label>
+        <input type="password" id="loginPassword" placeholder="••••••••">
+      </div>
+      <button class="btn btn-primary btn-full" onclick="handleLogin()" id="loginBtn" style="margin-top: 24px;">
+        Sign In
+      </button>
+      <p class="help-text" style="text-align: center; margin-top: 16px;">
+        <button onclick="switchAuthTab('reset')" style="background: none; border: none; color: var(--sage-dark); text-decoration: underline; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 12px;">
+          Forgot password?
+        </button>
+      </p>
+      <p class="help-text" style="text-align: center; margin-top: 8px;">
+        First time? Click "Sign Up" above to create an account.
+      </p>
+    </div>
+
+    <!-- SIGNUP FORM -->
+    <div class="auth-form" id="signupForm">
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" id="signupName" placeholder="John Doe">
+      </div>
+      <div class="form-group" style="margin-top: 16px;">
+        <label>Email</label>
+        <input type="email" id="signupEmail" placeholder="yourname@margolispllc.com">
+        <p class="help-text">Must be a @margolispllc.com email address</p>
+      </div>
+      <div class="form-group" style="margin-top: 16px;">
+        <label>Password</label>
+        <input type="password" id="signupPassword" placeholder="••••••••">
+        <p class="help-text">At least 6 characters</p>
+      </div>
+      <button class="btn btn-primary btn-full" onclick="handleSignup()" id="signupBtn" style="margin-top: 24px;">
+        Create Account
+      </button>
+      <p class="help-text" style="text-align: center; margin-top: 16px;">
+        Already have an account? Click "Sign In" above.
+      </p>
+    </div>
+
+    <!-- PASSWORD RESET FORM -->
+    <div class="auth-form" id="resetForm">
+      <p style="color: var(--warm-gray); margin-bottom: 24px; text-align: center; font-size: 14px;">
+        Enter your email address and we'll send you a link to reset your password.
+      </p>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="resetEmail" placeholder="your@email.com">
+      </div>
+      <button class="btn btn-primary btn-full" onclick="handlePasswordReset()" id="resetBtn" style="margin-top: 24px;">
+        Send Reset Link
+      </button>
+      <p class="help-text" style="text-align: center; margin-top: 16px;">
+        <button onclick="switchAuthTab('login')" style="background: none; border: none; color: var(--sage-dark); text-decoration: underline; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 12px;">
+          Back to Sign In
+        </button>
+      </p>
+    </div>
+
+    <!-- UPDATE PASSWORD FORM (after clicking reset link) -->
+    <div class="auth-form" id="updatePasswordForm">
+      <p style="color: var(--warm-gray); margin-bottom: 24px; text-align: center; font-size: 14px;">
+        Enter your new password below.
+      </p>
+      <div class="form-group">
+        <label>New Password</label>
+        <input type="password" id="newPassword" placeholder="••••••••">
+        <p class="help-text">At least 6 characters</p>
+      </div>
+      <div class="form-group" style="margin-top: 16px;">
+        <label>Confirm Password</label>
+        <input type="password" id="confirmPassword" placeholder="••••••••">
+      </div>
+      <button class="btn btn-primary btn-full" onclick="handleUpdatePassword()" id="updatePasswordBtn" style="margin-top: 24px;">
+        Update Password
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div class="app-container" id="appContainer">
+
+<div class="header">
+  <div class="header-left">
+    <svg class="header-logo" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#8FAF8F;stop-opacity:1" />
+          <stop offset="100%" style="stop-color:#6B8F6B;stop-opacity:1" />
+        </linearGradient>
+      </defs>
+      <!-- Document with corner fold -->
+      <path d="M50 30 L130 30 L130 50 L150 70 L150 170 L50 170 Z" fill="url(#logoGradient)" opacity="0.15"/>
+      <path d="M130 30 L130 50 L150 70 Z" fill="url(#logoGradient)" opacity="0.25"/>
+      <path d="M50 30 L130 30 L130 50 L150 70 L150 170 L50 170 Z" fill="none" stroke="url(#logoGradient)" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M130 30 L130 50 L150 70" fill="none" stroke="url(#logoGradient)" stroke-width="3" stroke-linejoin="round"/>
+      
+      <!-- Checkmark -->
+      <path d="M75 90 L90 105 L125 70" fill="none" stroke="url(#logoGradient)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+      
+      <!-- Lines for text -->
+      <line x1="70" y1="130" x2="130" y2="130" stroke="url(#logoGradient)" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
+      <line x1="70" y1="145" x2="115" y2="145" stroke="url(#logoGradient)" stroke-width="3" stroke-linecap="round" opacity="0.4"/>
+    </svg>
+    <div class="header-divider"></div>
+    <div class="header-text">
+      <h1>Intakr</h1>
+      <p>By Margolis PLLC</p>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="header-badge">Secure</div>
+    <div class="user-menu">
+      <span id="userEmail">user@example.com</span>
+      <button onclick="handleLogout()">Sign Out</button>
+    </div>
+  </div>
+</div>
+
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('intake')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+    New Intake
+  </button>
+  <button class="tab-btn" onclick="switchTab('dashboard')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+    Client Tracker
+    <span class="count" id="trackerCount">0</span>
+  </button>
+</div>
+
+<div class="tab-content active" id="tab-intake">
+<div class="main">
+  <div class="intro">
+    <h2>New Matter Intake</h2>
+    <p>Complete this form to generate the engagement letter and add the matter to the master tracker.</p>
+  </div>
+
+  <form id="intakeForm" novalidate>
+    <div class="form-card">
+      <div class="form-section-header">
+        <div class="section-number">1</div>
+        <h3>Client Information</h3>
+      </div>
+      <div class="form-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Client Type <span class="required">*</span></label>
+            <select id="clientType" required>
+              <option value="">Select…</option>
+              <option value="Individual">Individual</option>
+              <option value="Business Entity">Business Entity</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Entity Name <span class="hint">(if business)</span></label>
+            <input type="text" id="entityName" placeholder="e.g., Acme Holdings LLC">
+          </div>
+          <div class="form-group">
+            <label>Contact Full Name <span class="required">*</span></label>
+            <input type="text" id="contactName" placeholder="First and Last Name" required>
+          </div>
+          <div class="form-group">
+            <label>Title / Role <span class="hint">(if business)</span></label>
+            <input type="text" id="contactTitle" placeholder="e.g., CEO, Managing Member">
+          </div>
+          <div class="form-group">
+            <label>Email <span class="required">*</span></label>
+            <input type="email" id="clientEmail" placeholder="email@example.com" required>
+          </div>
+          <div class="form-group">
+            <label>Phone</label>
+            <input type="tel" id="clientPhone" placeholder="(555) 555-5555">
+          </div>
+          <div class="form-group full-width">
+            <label>Mailing Address</label>
+            <input type="text" id="clientAddress" placeholder="Street, City, State ZIP">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <div class="form-section-header">
+        <div class="section-number">2</div>
+        <h3>Matter Details</h3>
+      </div>
+      <div class="form-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Matter Type <span class="required">*</span></label>
+            <select id="matterType" required>
+              <option value="">Select…</option>
+              <option value="Corporate/Business Formation">Corporate / Business Formation</option>
+              <option value="Commercial Litigation">Commercial Litigation</option>
+              <option value="Real Estate">Real Estate</option>
+              <option value="Employment">Employment</option>
+              <option value="Intellectual Property">Intellectual Property</option>
+              <option value="Contract Drafting/Review">Contract Drafting / Review</option>
+              <option value="Regulatory/Compliance">Regulatory / Compliance</option>
+              <option value="M&A/Transactions">M&A / Transactions</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Attorney in Charge <span class="required">*</span></label>
+            <select id="attorney" required>
+              <option value="">Select…</option>
+              <option value="Matt A. Margolis, Esq.">Matt A. Margolis, Esq.</option>
+              <option value="Karina S. Margolis, Esq.">Karina S. Margolis, Esq.</option>
+            </select>
+          </div>
+          <div class="form-group full-width">
+            <label>Matter Description <span class="required">*</span></label>
+            <textarea id="matterDescription" placeholder="Brief description of the matter…" required></textarea>
+          </div>
+          <div class="form-group full-width">
+            <label>Adverse / Opposing Party <span class="hint">(if any)</span></label>
+            <input type="text" id="adverseParty" placeholder="Name of opposing party or N/A">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <div class="form-section-header">
+        <div class="section-number">3</div>
+        <h3>Fee Structure</h3>
+      </div>
+      <div class="form-body">
+        <div class="form-grid">
+          <div class="form-group full-width">
+            <label>Fee Type <span class="required">*</span></label>
+            <div class="fee-toggle">
+              <input type="radio" name="feeType" id="feeHourly" value="Hourly" checked>
+              <label for="feeHourly" class="active">Hourly Rate</label>
+              <input type="radio" name="feeType" id="feeFlat" value="Flat Fee">
+              <label for="feeFlat">Flat Fee</label>
+              <input type="radio" name="feeType" id="feeHybrid" value="Hybrid">
+              <label for="feeHybrid">Hybrid</label>
+            </div>
+          </div>
+          <div class="form-group conditional-field visible" id="hourlyRateGroup">
+            <label>Attorney Hourly Rate</label>
+            <input type="text" id="hourlyRate" value="$500.00" placeholder="$500.00">
+          </div>
+          <div class="form-group conditional-field visible" id="paralegalRateGroup">
+            <label>Paralegal Hourly Rate</label>
+            <input type="text" id="paralegalRate" value="$225.00" placeholder="$225.00">
+          </div>
+          <div class="form-group conditional-field" id="flatFeeGroup">
+            <label>Flat Fee Amount</label>
+            <input type="text" id="flatFeeAmount" placeholder="e.g., $5,000.00">
+          </div>
+          <div class="form-group">
+            <label>Retainer Amount</label>
+            <input type="text" id="retainerAmount" placeholder="e.g., $5,000.00">
+          </div>
+          <div class="form-group">
+            <label>Engagement Date <span class="required">*</span></label>
+            <input type="date" id="engagementDate" required>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <div class="form-section-header">
+        <div class="section-number">4</div>
+        <h3>Conflicts & Referral</h3>
+      </div>
+      <div class="form-body">
+        <div class="form-grid">
+          <div class="form-group full-width">
+            <label>Known Conflicts</label>
+            <textarea id="conflicts" placeholder="Describe any known or potential conflicts of interest, or type 'None'"></textarea>
+          </div>
+          <div class="form-group full-width">
+            <label>Will a specialist or co-counsel be involved?</label>
+            <select id="specialistInvolved">
+              <option value="No">No</option>
+              <option value="Yes">Yes</option>
+            </select>
+          </div>
+        </div>
+        <div class="specialist-fields" id="specialistFields">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Specialist / Co-Counsel Name</label>
+              <input type="text" id="specialistName" placeholder="Name">
+            </div>
+            <div class="form-group">
+              <label>Fee-Sharing Arrangement</label>
+              <input type="text" id="feeSharingDetails" placeholder="Describe arrangement">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <div class="form-section-header">
+        <div class="section-number">5</div>
+        <h3>Internal Notes</h3>
+      </div>
+      <div class="form-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Referral Source</label>
+            <input type="text" id="referralSource" placeholder="How did they find us?">
+          </div>
+          <div class="form-group">
+            <label>Priority</label>
+            <select id="priority">
+              <option value="Normal">Normal</option>
+              <option value="High">High</option>
+              <option value="Urgent">Urgent</option>
+            </select>
+          </div>
+          <div class="form-group full-width">
+            <label>Internal Notes</label>
+            <textarea id="internalNotes" placeholder="Any additional notes for the file…"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button type="button" class="btn btn-primary" onclick="generateAll()" id="generateBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+        Generate Letter + Add to Tracker
+      </button>
+      <button type="button" class="btn btn-secondary" onclick="addToTrackerOnly()" id="trackerBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+        Add to Tracker Only
+      </button>
+      <button type="reset" class="btn btn-secondary" onclick="resetForm()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+        Clear
+      </button>
+    </div>
+  </form>
+</div>
+</div>
+
+<div class="tab-content" id="tab-dashboard">
+<div class="dashboard">
+  <div class="dash-header">
+    <h2>Client Tracker</h2>
+    <div class="dash-actions">
+      <button class="btn btn-secondary btn-sm" onclick="renderDashboard()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+        Refresh
+      </button>
+      <button class="btn btn-primary btn-sm" onclick="exportMasterExcel()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export Master Excel
+      </button>
+      <button class="btn btn-danger btn-sm" onclick="clearAllData()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        Clear All Data
+      </button>
+    </div>
+  </div>
+
+  <div class="stats-row" id="statsRow"></div>
+  <div class="tracker-table-wrap">
+    <div id="trackerTableContainer"></div>
+  </div>
+</div>
+</div>
+
+</div>
+
+<div class="status-bar" id="statusBar">
+  <span id="statusText"></span>
+</div>
+
+<script>
+let supabase = null;
+let currentUser = null;
+
+function initSupabase() {
+  const config = JSON.parse(localStorage.getItem('supabase_config') || '{}');
+  if (config.url && config.key) {
+    supabase = window.supabase.createClient(config.url, config.key);
+    return true;
+  }
+  return false;
+}
+
+function saveSupabaseConfig() {
+  const url = document.getElementById('supabaseUrl').value.trim();
+  const key = document.getElementById('supabaseKey').value.trim();
+  
+  if (!url || !key) {
+    showStatus('Please enter both URL and Key', 'error');
+    return;
+  }
+  
+  localStorage.setItem('supabase_config', JSON.stringify({ url, key }));
+  
+  if (initSupabase()) {
+    document.getElementById('setupModal').classList.add('hidden');
+    showStatus('✓ Database connected! Please sign in.', 'success');
+  }
+}
+
+function switchAuthTab(tab) {
+  document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+  
+  if (tab === 'login') {
+    document.querySelectorAll('.auth-tab')[0].classList.add('active');
+    document.getElementById('loginForm').classList.add('active');
+  } else if (tab === 'signup') {
+    document.querySelectorAll('.auth-tab')[1].classList.add('active');
+    document.getElementById('signupForm').classList.add('active');
+  } else if (tab === 'reset') {
+    document.getElementById('resetForm').classList.add('active');
+  } else if (tab === 'update-password') {
+    document.getElementById('updatePasswordForm').classList.add('active');
+  }
+}
+
+async function handleLogin() {
+  const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+  const password = document.getElementById('loginPassword').value;
+  
+  if (!email || !password) {
+    showStatus('Please enter email and password', 'error');
+    return;
+  }
+  
+  // Client-side email domain validation
+  if (!email.endsWith('@margolispllc.com')) {
+    showStatus('Access restricted: Only @margolispllc.com email addresses are allowed', 'error');
+    return;
+  }
+  
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="loading-spinner"></div> Signing In...';
+  
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+    
+    if (error) throw error;
+    
+    currentUser = data.user;
+    
+    // Double-check email domain after authentication
+    if (!currentUser.email.endsWith('@margolispllc.com')) {
+      await supabase.auth.signOut();
+      throw new Error('Access restricted to Margolis PLLC employees only');
+    }
+    
+    showApp();
+    showStatus('✓ Welcome back!', 'success');
+  } catch (e) {
+    showStatus('Login failed: ' + e.message, 'error');
+    btn.disabled = false;
+    btn.innerHTML = 'Sign In';
+  }
+}
+
+async function handleSignup() {
+  const name = document.getElementById('signupName').value.trim();
+  const email = document.getElementById('signupEmail').value.trim().toLowerCase();
+  const password = document.getElementById('signupPassword').value;
+  
+  if (!name || !email || !password) {
+    showStatus('Please fill in all fields', 'error');
+    return;
+  }
+  
+  // Client-side email domain validation
+  if (!email.endsWith('@margolispllc.com')) {
+    showStatus('Access restricted: Only @margolispllc.com email addresses are allowed', 'error');
+    return;
+  }
+  
+  if (password.length < 6) {
+    showStatus('Password must be at least 6 characters', 'error');
+    return;
+  }
+  
+  const btn = document.getElementById('signupBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="loading-spinner"></div> Creating Account...';
+  
+  try {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { full_name: name }
+      }
+    });
+    
+    if (error) throw error;
+    
+    if (data.user) {
+      if (data.user.identities && data.user.identities.length === 0) {
+        showStatus('This email is already registered. Please sign in.', 'error');
+        switchAuthTab('login');
+        document.getElementById('loginEmail').value = email;
+      } else {
+        currentUser = data.user;
+        showApp();
+        showStatus('✓ Account created! Welcome to Margolis PLLC.', 'success');
+      }
+    }
+  } catch (e) {
+    showStatus('Signup failed: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = 'Create Account';
+  }
+}
+
+async function handlePasswordReset() {
+  const email = document.getElementById('resetEmail').value.trim();
+  
+  if (!email) {
+    showStatus('Please enter your email address', 'error');
+    return;
+  }
+  
+  const btn = document.getElementById('resetBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="loading-spinner"></div> Sending...';
+  
+  try {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + window.location.pathname
+    });
+    
+    if (error) throw error;
+    
+    showStatus('✓ Password reset link sent! Check your email.', 'success');
+    setTimeout(() => switchAuthTab('login'), 3000);
+  } catch (e) {
+    showStatus('Error: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = 'Send Reset Link';
+  }
+}
+
+async function handleUpdatePassword() {
+  const newPassword = document.getElementById('newPassword').value;
+  const confirmPassword = document.getElementById('confirmPassword').value;
+  
+  if (!newPassword || !confirmPassword) {
+    showStatus('Please fill in both password fields', 'error');
+    return;
+  }
+  
+  if (newPassword.length < 6) {
+    showStatus('Password must be at least 6 characters', 'error');
+    return;
+  }
+  
+  if (newPassword !== confirmPassword) {
+    showStatus('Passwords do not match', 'error');
+    return;
+  }
+  
+  const btn = document.getElementById('updatePasswordBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="loading-spinner"></div> Updating...';
+  
+  try {
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword
+    });
+    
+    if (error) throw error;
+    
+    showStatus('✓ Password updated successfully!', 'success');
+    showApp();
+  } catch (e) {
+    showStatus('Error: ' + e.message, 'error');
+    btn.disabled = false;
+    btn.innerHTML = 'Update Password';
+  }
+}
+
+async function handleLogout() {
+  try {
+    await supabase.auth.signOut();
+    currentUser = null;
+    document.getElementById('authContainer').style.display = 'flex';
+    document.getElementById('appContainer').classList.remove('visible');
+    showStatus('Signed out successfully', 'success');
+  } catch (e) {
+    showStatus('Error signing out: ' + e.message, 'error');
+  }
+}
+
+function showApp() {
+  document.getElementById('authContainer').style.display = 'none';
+  document.getElementById('appContainer').classList.add('visible');
+  
+  // Verify email domain one more time before showing app
+  if (!currentUser.email.endsWith('@margolispllc.com')) {
+    handleLogout();
+    showStatus('Access denied: Not a Margolis PLLC email address', 'error');
+    return;
+  }
+  
+  document.getElementById('userEmail').textContent = currentUser.email;
+  updateTrackerCount();
+  renderDashboard();
+}
+
+async function checkAuth() {
+  const { data: { session } } = await supabase.auth.getSession();
+  
+  // Check if user is coming from password reset email
+  const hashParams = new URLSearchParams(window.location.hash.substring(1));
+  const accessToken = hashParams.get('access_token');
+  const type = hashParams.get('type');
+  
+  if (type === 'recovery' && accessToken) {
+    // User clicked password reset link - verify email domain first
+    if (session && session.user) {
+      if (!session.user.email.endsWith('@margolispllc.com')) {
+        await supabase.auth.signOut();
+        showStatus('Access restricted to Margolis PLLC employees only', 'error');
+        return;
+      }
+      currentUser = session.user;
+    }
+    switchAuthTab('update-password');
+    return;
+  }
+  
+  if (session) {
+    // Verify email domain on session restore
+    if (!session.user.email.endsWith('@margolispllc.com')) {
+      await supabase.auth.signOut();
+      showStatus('Access restricted to Margolis PLLC employees only', 'error');
+      return;
+    }
+    currentUser = session.user;
+    showApp();
+  }
+}
+
+async function getClients() {
+  if (!supabase) return [];
+  try {
+    const { data, error } = await supabase
+      .from('clients')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    return data || [];
+  } catch (e) {
+    console.error('Error fetching clients:', e);
+    showStatus('Error loading clients: ' + e.message, 'error');
+    return [];
+  }
+}
+
+async function addClient(d) {
+  if (!supabase) {
+    showStatus('Database not connected', 'error');
+    return null;
+  }
+  
+  try {
+    const { data, error } = await supabase
+      .from('clients')
+      .insert([{
+        user_id: currentUser.id,
+        client_type: d.clientType,
+        entity_name: d.entityName,
+        contact_name: d.contactName,
+        contact_title: d.contactTitle,
+        client_email: d.clientEmail,
+        client_phone: d.clientPhone,
+        client_address: d.clientAddress,
+        matter_type: d.matterType,
+        attorney: d.attorney,
+        matter_description: d.matterDescription,
+        adverse_party: d.adverseParty,
+        fee_type: d.feeType,
+        hourly_rate: d.hourlyRate,
+        paralegal_rate: d.paralegalRate,
+        flat_fee_amount: d.flatFeeAmount,
+        retainer_amount: d.retainerAmount,
+        engagement_date: d.engagementDate,
+        conflicts: d.conflicts,
+        specialist_involved: d.specialistInvolved,
+        specialist_name: d.specialistName,
+        fee_sharing_details: d.feeSharingDetails,
+        referral_source: d.referralSource,
+        priority: d.priority,
+        internal_notes: d.internalNotes,
+        status: 'Prospective'
+      }])
+      .select()
+      .single();
+    
+    if (error) throw error;
+    updateTrackerCount();
+    return data;
+  } catch (e) {
+    console.error('Error adding client:', e);
+    showStatus('Error saving client: ' + e.message, 'error');
+    return null;
+  }
+}
+
+async function updateClientStatus(id, status) {
+  if (!supabase) return;
+  
+  try {
+    const updates = { status };
+    if (status === 'Letter Sent') updates.letter_sent = new Date().toLocaleDateString();
+    if (status === 'Executed') updates.letter_executed = new Date().toLocaleDateString();
+    
+    const { error } = await supabase
+      .from('clients')
+      .update(updates)
+      .eq('id', id);
+    
+    if (error) throw error;
+    renderDashboard();
+  } catch (e) {
+    console.error('Error updating status:', e);
+    showStatus('Error updating status: ' + e.message, 'error');
+  }
+}
+
+async function deleteClient(id) {
+  if (!confirm('Delete this client from the tracker?')) return;
+  if (!supabase) return;
+  
+  try {
+    const { error } = await supabase
+      .from('clients')
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
+    renderDashboard();
+    showStatus('Client removed from tracker.', 'success');
+  } catch (e) {
+    console.error('Error deleting client:', e);
+    showStatus('Error deleting client: ' + e.message, 'error');
+  }
+}
+
+async function clearAllData() {
+  if (!confirm('This will permanently delete ALL client data. Are you sure?')) return;
+  if (!supabase) return;
+  
+  try {
+    const { error } = await supabase
+      .from('clients')
+      .delete()
+      .neq('id', '00000000-0000-0000-0000-000000000000');
+    
+    if (error) throw error;
+    renderDashboard();
+    showStatus('All tracker data cleared.', 'success');
+  } catch (e) {
+    console.error('Error clearing data:', e);
+    showStatus('Error clearing data: ' + e.message, 'error');
+  }
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  event.currentTarget.classList.add('active');
+  if (tab === 'dashboard') renderDashboard();
+}
+
+async function updateTrackerCount() {
+  const clients = await getClients();
+  document.getElementById('trackerCount').textContent = clients.length;
+}
+
+const feeRadios = document.querySelectorAll('input[name="feeType"]');
+const feeLabels = document.querySelectorAll('.fee-toggle label');
+
+feeRadios.forEach(radio => {
+  radio.addEventListener('change', () => {
+    feeLabels.forEach(l => l.classList.remove('active'));
+    radio.nextElementSibling.classList.add('active');
+    const val = radio.value;
+    document.getElementById('hourlyRateGroup').classList.toggle('visible', val === 'Hourly' || val === 'Hybrid');
+    document.getElementById('paralegalRateGroup').classList.toggle('visible', val === 'Hourly' || val === 'Hybrid');
+    document.getElementById('flatFeeGroup').classList.toggle('visible', val === 'Flat Fee' || val === 'Hybrid');
+  });
+});
+
+document.getElementById('specialistInvolved').addEventListener('change', (e) => {
+  document.getElementById('specialistFields').classList.toggle('visible', e.target.value === 'Yes');
+});
+
+document.getElementById('engagementDate').valueAsDate = new Date();
+
+function showStatus(msg, type = 'success') {
+  const bar = document.getElementById('statusBar');
+  document.getElementById('statusText').textContent = msg;
+  bar.className = 'status-bar visible ' + type;
+  setTimeout(() => bar.classList.remove('visible'), 4000);
+}
+
+function getFormData() {
+  const feeType = document.querySelector('input[name="feeType"]:checked').value;
+  return {
+    clientType: document.getElementById('clientType').value,
+    entityName: document.getElementById('entityName').value,
+    contactName: document.getElementById('contactName').value,
+    contactTitle: document.getElementById('contactTitle').value,
+    clientEmail: document.getElementById('clientEmail').value,
+    clientPhone: document.getElementById('clientPhone').value,
+    clientAddress: document.getElementById('clientAddress').value,
+    matterType: document.getElementById('matterType').value,
+    attorney: document.getElementById('attorney').value,
+    matterDescription: document.getElementById('matterDescription').value,
+    adverseParty: document.getElementById('adverseParty').value,
+    feeType,
+    hourlyRate: document.getElementById('hourlyRate').value,
+    paralegalRate: document.getElementById('paralegalRate').value,
+    flatFeeAmount: document.getElementById('flatFeeAmount').value,
+    retainerAmount: document.getElementById('retainerAmount').value,
+    engagementDate: document.getElementById('engagementDate').value,
+    conflicts: document.getElementById('conflicts').value,
+    specialistInvolved: document.getElementById('specialistInvolved').value,
+    specialistName: document.getElementById('specialistName').value,
+    feeSharingDetails: document.getElementById('feeSharingDetails').value,
+    referralSource: document.getElementById('referralSource').value,
+    priority: document.getElementById('priority').value,
+    internalNotes: document.getElementById('internalNotes').value,
+  };
+}
+
+function validateForm() {
+  const required = document.querySelectorAll('#intakeForm [required]');
+  let valid = true;
+  required.forEach(el => {
+    if (!el.value) { el.style.borderColor = '#C0392B'; valid = false; }
+    else { el.style.borderColor = ''; }
+  });
+  if (!valid) showStatus('Please fill in all required fields.', 'error');
+  return valid;
+}
+
+function resetForm() {
+  document.getElementById('intakeForm').reset();
+  document.querySelectorAll('#intakeForm [required]').forEach(el => el.style.borderColor = '');
+  feeLabels.forEach(l => l.classList.remove('active'));
+  document.querySelector('label[for="feeHourly"]').classList.add('active');
+  document.getElementById('hourlyRateGroup').classList.add('visible');
+  document.getElementById('paralegalRateGroup').classList.add('visible');
+  document.getElementById('flatFeeGroup').classList.remove('visible');
+  document.getElementById('specialistFields').classList.remove('visible');
+  document.getElementById('engagementDate').valueAsDate = new Date();
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr + 'T00:00:00');
+  return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+}
+
+function clientDisplayName(d) {
+  return d.entity_name || d.contact_name;
+}
+
+async function renderDashboard() {
+  const clients = await getClients();
+  updateTrackerCount();
+
+  const total = clients.length;
+  const prospective = clients.filter(c => c.status === 'Prospective').length;
+  const sent = clients.filter(c => c.status === 'Letter Sent').length;
+  const executed = clients.filter(c => c.status === 'Executed').length;
+
+  document.getElementById('statsRow').innerHTML = `
+    <div class="stat-card"><div class="stat-num">${total}</div><div class="stat-label">Total Clients</div></div>
+    <div class="stat-card"><div class="stat-num">${prospective}</div><div class="stat-label">Prospective</div></div>
+    <div class="stat-card"><div class="stat-num">${sent}</div><div class="stat-label">Letter Sent</div></div>
+    <div class="stat-card"><div class="stat-num">${executed}</div><div class="stat-label">Executed</div></div>
+  `;
+
+  if (clients.length === 0) {
+    document.getElementById('trackerTableContainer').innerHTML = `
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <p>No clients yet. Use the New Intake tab to add your first client.</p>
+      </div>`;
+    return;
+  }
+
+  const statusClass = s => {
+    if (s === 'Prospective') return 'status-prospective';
+    if (s === 'Letter Sent') return 'status-sent';
+    if (s === 'Executed') return 'status-executed';
+    if (s === 'Declined') return 'status-declined';
+    return '';
+  };
+
+  let rows = clients.map(c => `
+    <tr>
+      <td style="font-weight:600">${clientDisplayName(c)}</td>
+      <td>${c.matter_type}</td>
+      <td>${c.attorney ? c.attorney.split(',')[0] : ''}</td>
+      <td>${c.fee_type}</td>
+      <td>${c.engagement_date ? formatDate(c.engagement_date) : ''}</td>
+      <td><span class="status-pill ${statusClass(c.status)}">${c.status}</span></td>
+      <td>
+        <div class="row-actions">
+          <select onchange="updateClientStatus('${c.id}', this.value)">
+            <option value="Prospective" ${c.status==='Prospective'?'selected':''}>Prospective</option>
+            <option value="Letter Sent" ${c.status==='Letter Sent'?'selected':''}>Letter Sent</option>
+            <option value="Executed" ${c.status==='Executed'?'selected':''}>Executed</option>
+            <option value="Declined" ${c.status==='Declined'?'selected':''}>Declined</option>
+          </select>
+          <button onclick="regenLetter('${c.id}')" title="Re-generate letter">📄</button>
+          <button class="del" onclick="deleteClient('${c.id}')" title="Delete">✕</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+
+  document.getElementById('trackerTableContainer').innerHTML = `
+    <table class="tracker-table">
+      <thead><tr>
+        <th>Client</th><th>Matter</th><th>Attorney</th><th>Fee Type</th><th>Date</th><th>Status</th><th>Actions</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+const EXCEL_HEADERS = [
+  'Date Added','Client Name','Entity Name','Client Type','Contact','Email','Phone',
+  'Matter Type','Matter Description','Attorney','Fee Type','Rate/Amount',
+  'Retainer','Adverse Party','Conflicts','Specialist','Referral Source',
+  'Priority','Status','Letter Sent','Letter Executed','Notes'
+];
+
+function clientToRow(c) {
+  const rateInfo = c.fee_type === 'Hourly' ? `${c.hourly_rate}/hr` :
+                   c.fee_type === 'Flat Fee' ? `Flat: ${c.flat_fee_amount}` :
+                   `${c.hourly_rate}/hr + Flat: ${c.flat_fee_amount}`;
+  return [
+    c.engagement_date ? formatDate(c.engagement_date) : '',
+    clientDisplayName(c), c.entity_name, c.client_type, c.contact_name,
+    c.client_email, c.client_phone, c.matter_type, c.matter_description,
+    c.attorney, c.fee_type, rateInfo, c.retainer_amount,
+    c.adverse_party, c.conflicts,
+    c.specialist_involved === 'Yes' ? c.specialist_name : 'N/A',
+    c.referral_source, c.priority, c.status || 'Prospective',
+    c.letter_sent || '', c.letter_executed || '', c.internal_notes
+  ];
+}
+
+async function exportMasterExcel() {
+  const clients = await getClients();
+  if (clients.length === 0) { showStatus('No clients to export.', 'error'); return; }
+
+  const wb = XLSX.utils.book_new();
+  const data = [EXCEL_HEADERS, ...clients.map(clientToRow)];
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  ws['!cols'] = [
+    {wch:14},{wch:22},{wch:22},{wch:14},{wch:22},{wch:28},{wch:16},
+    {wch:22},{wch:36},{wch:24},{wch:12},{wch:22},
+    {wch:14},{wch:22},{wch:28},{wch:22},{wch:18},
+    {wch:10},{wch:16},{wch:20},{wch:22},{wch:30}
+  ];
+  XLSX.utils.book_append_sheet(wb, ws, 'Master Tracker');
+
+  const today = new Date().toISOString().slice(0,10);
+  XLSX.writeFile(wb, `Intakr_Master_Tracker_${today}.xlsx`);
+  showStatus(`✓ Master tracker exported with ${clients.length} client(s).`, 'success');
+}
+
+function exportSingleClientExcel(data) {
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet([EXCEL_HEADERS, clientToRow(data)]);
+  ws['!cols'] = [
+    {wch:14},{wch:22},{wch:22},{wch:14},{wch:22},{wch:28},{wch:16},
+    {wch:22},{wch:36},{wch:24},{wch:12},{wch:22},
+    {wch:14},{wch:22},{wch:28},{wch:22},{wch:18},
+    {wch:10},{wch:16},{wch:20},{wch:22},{wch:30}
+  ];
+  XLSX.utils.book_append_sheet(wb, ws, 'Client');
+  XLSX.writeFile(wb, `Intakr_Client_${clientDisplayName(data).replace(/[^a-zA-Z0-9]/g,'_')}.xlsx`);
+}
+
+async function generateEngagementLetter(data) {
+  const {
+    Document, Packer, Paragraph, TextRun, AlignmentType,
+    Header, BorderStyle
+  } = docx;
+
+  const name = clientDisplayName(data);
+  const dateFormatted = formatDate(data.engagement_date || data.engagementDate);
+  const sigName = (data.attorney || '').includes('Matt') ? 'Matt Margolis' : 'Karina Margolis';
+
+  let feeParagraph = '';
+  const feeType = data.fee_type || data.feeType;
+  if (feeType === 'Hourly') {
+    feeParagraph = `Legal Services: Hourly Rate: Fees will be based upon our standard hourly rates. Attorney rates are ${data.hourly_rate || data.hourlyRate || '$500.00'} per hour. Paralegal rates are ${data.paralegal_rate || data.paralegalRate || '$225.00'} per hour. Our rates may change periodically with 30 days' advance notice.`;
+  } else if (feeType === 'Flat Fee') {
+    feeParagraph = `Legal Services: Flat Fee: Fees for this matter will be a pre-negotiated flat fee of ${data.flat_fee_amount || data.flatFeeAmount} between the Client and the Firm ("Flat Fee"). The Flat Fee covers the scope of representation described above and does not include costs as described below.`;
+  } else {
+    feeParagraph = `Legal Services: Hybrid Fee: Fees will be based upon a combination of our standard hourly rates and a pre-negotiated flat fee. Attorney rates are ${data.hourly_rate || data.hourlyRate || '$500.00'} per hour. Paralegal rates are ${data.paralegal_rate || data.paralegalRate || '$225.00'} per hour. Additionally, a flat fee of ${data.flat_fee_amount || data.flatFeeAmount} has been agreed upon for certain defined portions of this engagement.`;
+  }
+
+  const bs = { font: 'Times New Roman', size: 22 };
+  const sp = { after: 200 };
+
+  function bp(text, opts = {}) {
+    return new Paragraph({
+      spacing: sp, alignment: AlignmentType.JUSTIFIED, ...opts,
+      children: [new TextRun({ ...bs, ...(opts.bold ? { bold: true } : {}), text })],
+    });
+  }
+  function blank() { return new Paragraph({ spacing: sp, children: [] }); }
+
+  const doc = new Document({
+    styles: { default: { document: { run: { font: 'Times New Roman', size: 22 } } } },
+    sections: [{
+      properties: {
+        page: {
+          size: { width: 12240, height: 15840 },
+          margin: { top: 1800, right: 1440, bottom: 1440, left: 1440 }
+        }
+      },
+      headers: {
+        default: new Header({
+          children: [
+            new Paragraph({ alignment: AlignmentType.RIGHT, spacing: { after: 40 }, children: [new TextRun({ font: 'Arial', size: 16, color: '888888', text: 'MATT A. MARGOLIS, ESQ.' })] }),
+            new Paragraph({ alignment: AlignmentType.RIGHT, spacing: { after: 40 }, children: [new TextRun({ font: 'Arial', size: 16, color: '888888', text: 'PARTNER' })] }),
+            new Paragraph({ alignment: AlignmentType.RIGHT, spacing: { after: 80 }, children: [new TextRun({ font: 'Arial', size: 16, color: '888888', text: 'MATTHEW@MARGOLISPLLC.COM' })] }),
+            new Paragraph({ alignment: AlignmentType.RIGHT, spacing: { after: 40 }, children: [new TextRun({ font: 'Arial', size: 16, color: '888888', text: 'KARINA S. MARGOLIS, ESQ.' })] }),
+            new Paragraph({ alignment: AlignmentType.RIGHT, spacing: { after: 40 }, children: [new TextRun({ font: 'Arial', size: 16, color: '888888', text: 'PARTNER' })] }),
+            new Paragraph({ alignment: AlignmentType.RIGHT, spacing: { after: 200 }, children: [new TextRun({ font: 'Arial', size: 16, color: '888888', text: 'KARINA@MARGOLISPLLC.COM' })] }),
+            new Paragraph({ border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: '8FAF8F', space: 1 } }, children: [] }),
+          ]
+        })
+      },
+      children: [
+        bp(dateFormatted),
+        blank(),
+        new Paragraph({ spacing: sp, children: [new TextRun({ ...bs, text: 'Re:\tEngagement Letter – ' }), new TextRun({ ...bs, text: `${data.matter_type || data.matterType} – ${name}` })] }),
+        blank(),
+        bp(`Dear ${data.contact_name || data.contactName}:`),
+        bp(`We are pleased that you seek to retain Margolis PLLC (the "Firm", "We", "Our" or "Us") to represent you (the "Client" or "You") in the above-referenced matter.`),
+        bp(feeParagraph),
+        bp('Payment: We expect to send our bills to you monthly. Our bills are due upon receipt.'),
+        bp('Thank you for retaining us and we look forward to working with you.'),
+        new Paragraph({ spacing: { after: 400 }, children: [] }),
+        bp('Sincerely,'),
+        blank(),
+        new Paragraph({ spacing: { after: 60 }, children: [new TextRun({ ...bs, bold: true, text: 'MARGOLIS PLLC' })] }),
+        blank(),
+        bp(`/s/ ${sigName}`),
+        new Paragraph({ spacing: { after: 60 }, children: [] }),
+        bp(`By: ${data.attorney}`),
+      ]
+    }]
+  });
+
+  const blob = await Packer.toBlob(doc);
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `Engagement_Letter_${name.replace(/[^a-zA-Z0-9]/g,'_')}.docx`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+async function generateAll() {
+  if (!validateForm()) return;
+  const data = getFormData();
+  
+  const btn = document.getElementById('generateBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="loading-spinner"></div> Generating...';
+  
+  try {
+    const saved = await addClient(data);
+    if (saved) {
+      exportSingleClientExcel(saved);
+      await generateEngagementLetter(data);
+      showStatus(`✓ ${clientDisplayName(data)} added to tracker — letter and Excel downloaded!`, 'success');
+      resetForm();
+    }
+  } catch(e) {
+    console.error(e);
+    showStatus('Error: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>Generate Letter + Add to Tracker`;
+  }
+}
+
+async function addToTrackerOnly() {
+  if (!validateForm()) return;
+  const data = getFormData();
+  
+  const btn = document.getElementById('trackerBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="loading-spinner"></div> Adding...';
+  
+  try {
+    const saved = await addClient(data);
+    if (saved) {
+      showStatus(`✓ ${clientDisplayName(data)} added to tracker.`, 'success');
+      resetForm();
+    }
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>Add to Tracker Only`;
+  }
+}
+
+async function regenLetter(id) {
+  const clients = await getClients();
+  const c = clients.find(x => x.id === id);
+  if (!c) return;
+  try {
+    await generateEngagementLetter(c);
+    showStatus(`✓ Engagement letter re-generated for ${clientDisplayName(c)}.`, 'success');
+  } catch(e) {
+    showStatus('Error: ' + e.message, 'error');
+  }
+}
+
+// Initialize
+(async function() {
+  if (!initSupabase()) {
+    document.getElementById('setupModal').classList.remove('hidden');
+  } else {
+    await checkAuth();
+  }
+})();
+</script>
+</body>
+</html>
