@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Intakr — Client Intake System</title>
+<title>Intakr – Client Intake System</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/docx/8.5.0/docx.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -170,68 +170,6 @@
   .auth-form { display: none; }
   .auth-form.active { display: block; }
 
-  .setup-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0,0,0,0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    padding: 20px;
-  }
-  .setup-modal.hidden { display: none; }
-  .setup-content {
-    background: var(--white);
-    border-radius: 16px;
-    max-width: 600px;
-    width: 100%;
-    padding: 40px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-    max-height: 90vh;
-    overflow-y: auto;
-  }
-  .setup-content h2 {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 28px;
-    font-weight: 700;
-    margin-bottom: 12px;
-    letter-spacing: -0.5px;
-  }
-  .setup-content p {
-    color: var(--warm-gray);
-    margin-bottom: 24px;
-    line-height: 1.6;
-  }
-  .setup-content ol {
-    margin-left: 20px;
-    margin-bottom: 24px;
-    color: var(--warm-gray);
-  }
-  .setup-content ol li {
-    margin-bottom: 12px;
-    line-height: 1.6;
-  }
-  .setup-content code {
-    background: var(--sage-pale);
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 13px;
-    color: var(--sage-dark);
-  }
-  .setup-content pre {
-    background: var(--sage-pale);
-    padding: 16px;
-    border-radius: 8px;
-    margin: 12px 0;
-    overflow-x: auto;
-    font-size: 11px;
-    line-height: 1.5;
-  }
-
   .tab-bar {
     background: var(--white);
     border-bottom: 1px solid var(--border);
@@ -387,10 +325,7 @@
     transition: all 0.25s ease;
     display: flex; align-items: center; gap: 8px; letter-spacing: 0.3px;
   }
-  .btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
   .btn-primary { background: var(--sage); color: var(--white); }
   .btn-primary:hover:not(:disabled) { background: var(--sage-dark); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(107,143,107,0.3); }
   .btn-secondary { background: var(--white); color: var(--charcoal); border: 1px solid var(--border); }
@@ -504,9 +439,7 @@
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
   }
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
+  @keyframes spin { to { transform: rotate(360deg); } }
 
   .help-text {
     font-size: 12px;
@@ -529,111 +462,6 @@
 </head>
 <body>
 
-<!-- SETUP MODAL -->
-<div class="setup-modal hidden" id="setupModal">
-  <div class="setup-content">
-    <h2>🔧 Initial Database Setup</h2>
-    <p>One-time setup to connect your Supabase database:</p>
-    <ol>
-      <li>Create a free account at <strong>supabase.com</strong></li>
-      <li>Create a new project</li>
-      <li>Go to <strong>SQL Editor</strong> and run this query:
-        <pre>-- Create clients table
-CREATE TABLE clients (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id UUID REFERENCES auth.users(id),
-  client_type TEXT,
-  entity_name TEXT,
-  contact_name TEXT,
-  contact_title TEXT,
-  client_email TEXT,
-  client_phone TEXT,
-  client_address TEXT,
-  matter_type TEXT,
-  attorney TEXT,
-  matter_description TEXT,
-  adverse_party TEXT,
-  fee_type TEXT,
-  hourly_rate TEXT,
-  paralegal_rate TEXT,
-  flat_fee_amount TEXT,
-  retainer_amount TEXT,
-  engagement_date TEXT,
-  conflicts TEXT,
-  specialist_involved TEXT,
-  specialist_name TEXT,
-  fee_sharing_details TEXT,
-  referral_source TEXT,
-  priority TEXT,
-  internal_notes TEXT,
-  status TEXT DEFAULT 'Prospective',
-  letter_sent TEXT,
-  letter_executed TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Enable Row Level Security
-ALTER TABLE clients ENABLE ROW LEVEL SECURITY;
-
--- Policy: Only authenticated users with @margolispllc.com emails can view
-CREATE POLICY "Margolis users can view clients"
-  ON clients FOR SELECT
-  TO authenticated
-  USING (
-    auth.jwt()->>'email' LIKE '%@margolispllc.com'
-  );
-
--- Policy: Only authenticated Margolis users can insert
-CREATE POLICY "Margolis users can insert clients"
-  ON clients FOR INSERT
-  TO authenticated
-  WITH CHECK (
-    auth.jwt()->>'email' LIKE '%@margolispllc.com'
-  );
-
--- Policy: Only authenticated Margolis users can update
-CREATE POLICY "Margolis users can update clients"
-  ON clients FOR UPDATE
-  TO authenticated
-  USING (
-    auth.jwt()->>'email' LIKE '%@margolispllc.com'
-  );
-
--- Policy: Only authenticated Margolis users can delete
-CREATE POLICY "Margolis users can delete clients"
-  ON clients FOR DELETE
-  TO authenticated
-  USING (
-    auth.jwt()->>'email' LIKE '%@margolispllc.com'
-  );</pre>
-      </li>
-      <li>Go to <strong>Authentication → Providers</strong> and:
-        <ul style="margin: 8px 0 8px 20px;">
-          <li>Disable <strong>Enable anonymous sign-ins</strong> (if enabled)</li>
-          <li>Confirm <strong>Email</strong> provider is enabled</li>
-        </ul>
-      </li>
-      <li><strong>IMPORTANT EMAIL RESTRICTION:</strong> Go to <strong>Authentication → Settings</strong> and scroll to <strong>"Email domains allowed to sign up"</strong>. Add: <code>margolispllc.com</code></li>
-      <li>Go to <strong>Settings → API</strong></li>
-      <li>Copy your <code>Project URL</code> and <code>anon public key</code></li>
-      <li>Paste them below:</li>
-    </ol>
-    <div class="form-grid" style="margin-top: 20px;">
-      <div class="form-group full-width">
-        <label>Supabase URL</label>
-        <input type="text" id="supabaseUrl" placeholder="https://xxxxx.supabase.co">
-      </div>
-      <div class="form-group full-width">
-        <label>Supabase Key (anon public)</label>
-        <input type="text" id="supabaseKey" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
-      </div>
-    </div>
-    <button class="btn btn-primary btn-full" onclick="saveSupabaseConfig()" style="margin-top: 20px;">
-      Save & Continue to Login
-    </button>
-  </div>
-</div>
-
 <!-- AUTH SCREEN -->
 <div class="auth-container" id="authContainer">
   <div class="auth-box">
@@ -645,16 +473,11 @@ CREATE POLICY "Margolis users can delete clients"
             <stop offset="100%" style="stop-color:#6B8F6B;stop-opacity:1" />
           </linearGradient>
         </defs>
-        <!-- Document with corner fold -->
         <path d="M50 30 L130 30 L130 50 L150 70 L150 170 L50 170 Z" fill="url(#authLogoGradient)" opacity="0.15"/>
         <path d="M130 30 L130 50 L150 70 Z" fill="url(#authLogoGradient)" opacity="0.25"/>
         <path d="M50 30 L130 30 L130 50 L150 70 L150 170 L50 170 Z" fill="none" stroke="url(#authLogoGradient)" stroke-width="3" stroke-linejoin="round"/>
         <path d="M130 30 L130 50 L150 70" fill="none" stroke="url(#authLogoGradient)" stroke-width="3" stroke-linejoin="round"/>
-        
-        <!-- Checkmark -->
         <path d="M75 90 L90 105 L125 70" fill="none" stroke="url(#authLogoGradient)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-        
-        <!-- Lines for text -->
         <line x1="70" y1="130" x2="130" y2="130" stroke="url(#authLogoGradient)" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
         <line x1="70" y1="145" x2="115" y2="145" stroke="url(#authLogoGradient)" stroke-width="3" stroke-linecap="round" opacity="0.4"/>
       </svg>
@@ -667,11 +490,10 @@ CREATE POLICY "Margolis users can delete clients"
       <button class="auth-tab" onclick="switchAuthTab('signup')">Sign Up</button>
     </div>
 
-    <!-- LOGIN FORM -->
     <div class="auth-form active" id="loginForm">
       <div class="form-group">
         <label>Email</label>
-        <input type="email" id="loginEmail" placeholder="your@email.com">
+        <input type="email" id="loginEmail" placeholder="your@margolispllc.com">
       </div>
       <div class="form-group" style="margin-top: 16px;">
         <label>Password</label>
@@ -690,7 +512,6 @@ CREATE POLICY "Margolis users can delete clients"
       </p>
     </div>
 
-    <!-- SIGNUP FORM -->
     <div class="auth-form" id="signupForm">
       <div class="form-group">
         <label>Full Name</label>
@@ -714,14 +535,13 @@ CREATE POLICY "Margolis users can delete clients"
       </p>
     </div>
 
-    <!-- PASSWORD RESET FORM -->
     <div class="auth-form" id="resetForm">
       <p style="color: var(--warm-gray); margin-bottom: 24px; text-align: center; font-size: 14px;">
         Enter your email address and we'll send you a link to reset your password.
       </p>
       <div class="form-group">
         <label>Email</label>
-        <input type="email" id="resetEmail" placeholder="your@email.com">
+        <input type="email" id="resetEmail" placeholder="your@margolispllc.com">
       </div>
       <button class="btn btn-primary btn-full" onclick="handlePasswordReset()" id="resetBtn" style="margin-top: 24px;">
         Send Reset Link
@@ -733,7 +553,6 @@ CREATE POLICY "Margolis users can delete clients"
       </p>
     </div>
 
-    <!-- UPDATE PASSWORD FORM (after clicking reset link) -->
     <div class="auth-form" id="updatePasswordForm">
       <p style="color: var(--warm-gray); margin-bottom: 24px; text-align: center; font-size: 14px;">
         Enter your new password below.
@@ -766,16 +585,11 @@ CREATE POLICY "Margolis users can delete clients"
           <stop offset="100%" style="stop-color:#6B8F6B;stop-opacity:1" />
         </linearGradient>
       </defs>
-      <!-- Document with corner fold -->
       <path d="M50 30 L130 30 L130 50 L150 70 L150 170 L50 170 Z" fill="url(#logoGradient)" opacity="0.15"/>
       <path d="M130 30 L130 50 L150 70 Z" fill="url(#logoGradient)" opacity="0.25"/>
       <path d="M50 30 L130 30 L130 50 L150 70 L150 170 L50 170 Z" fill="none" stroke="url(#logoGradient)" stroke-width="3" stroke-linejoin="round"/>
       <path d="M130 30 L130 50 L150 70" fill="none" stroke="url(#logoGradient)" stroke-width="3" stroke-linejoin="round"/>
-      
-      <!-- Checkmark -->
       <path d="M75 90 L90 105 L125 70" fill="none" stroke="url(#logoGradient)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-      
-      <!-- Lines for text -->
       <line x1="70" y1="130" x2="130" y2="130" stroke="url(#logoGradient)" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
       <line x1="70" y1="145" x2="115" y2="145" stroke="url(#logoGradient)" stroke-width="3" stroke-linecap="round" opacity="0.4"/>
     </svg>
@@ -1054,34 +868,14 @@ CREATE POLICY "Margolis users can delete clients"
 </div>
 
 <script>
-let supabase = null;
+// ============================================
+// SUPABASE CONFIG — HARDCODED FOR SECURITY
+// ============================================
+const SUPABASE_URL = 'https://jflxkrlxlvhrntodywth.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpmbHhrcmx4bHZocm50b2R5d3RoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEwODkxNDAsImV4cCI6MjA4NjY2NTE0MH0.jbeY9K4N6UOhbR8m9F0AOiUZJW7_p1ESY-7cssu5P2Y';
+
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let currentUser = null;
-
-function initSupabase() {
-  const config = JSON.parse(localStorage.getItem('supabase_config') || '{}');
-  if (config.url && config.key) {
-    supabase = window.supabase.createClient(config.url, config.key);
-    return true;
-  }
-  return false;
-}
-
-function saveSupabaseConfig() {
-  const url = document.getElementById('supabaseUrl').value.trim();
-  const key = document.getElementById('supabaseKey').value.trim();
-  
-  if (!url || !key) {
-    showStatus('Please enter both URL and Key', 'error');
-    return;
-  }
-  
-  localStorage.setItem('supabase_config', JSON.stringify({ url, key }));
-  
-  if (initSupabase()) {
-    document.getElementById('setupModal').classList.add('hidden');
-    showStatus('✓ Database connected! Please sign in.', 'success');
-  }
-}
 
 function switchAuthTab(tab) {
   document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
@@ -1104,37 +898,21 @@ async function handleLogin() {
   const email = document.getElementById('loginEmail').value.trim().toLowerCase();
   const password = document.getElementById('loginPassword').value;
   
-  if (!email || !password) {
-    showStatus('Please enter email and password', 'error');
-    return;
-  }
-  
-  // Client-side email domain validation
-  if (!email.endsWith('@margolispllc.com')) {
-    showStatus('Access restricted: Only @margolispllc.com email addresses are allowed', 'error');
-    return;
-  }
+  if (!email || !password) { showStatus('Please enter email and password', 'error'); return; }
+  if (!email.endsWith('@margolispllc.com')) { showStatus('Access restricted: Only @margolispllc.com email addresses are allowed', 'error'); return; }
   
   const btn = document.getElementById('loginBtn');
   btn.disabled = true;
   btn.innerHTML = '<div class="loading-spinner"></div> Signing In...';
   
   try {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
-    
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
-    
     currentUser = data.user;
-    
-    // Double-check email domain after authentication
     if (!currentUser.email.endsWith('@margolispllc.com')) {
       await supabase.auth.signOut();
       throw new Error('Access restricted to Margolis PLLC employees only');
     }
-    
     showApp();
     showStatus('✓ Welcome back!', 'success');
   } catch (e) {
@@ -1149,37 +927,17 @@ async function handleSignup() {
   const email = document.getElementById('signupEmail').value.trim().toLowerCase();
   const password = document.getElementById('signupPassword').value;
   
-  if (!name || !email || !password) {
-    showStatus('Please fill in all fields', 'error');
-    return;
-  }
-  
-  // Client-side email domain validation
-  if (!email.endsWith('@margolispllc.com')) {
-    showStatus('Access restricted: Only @margolispllc.com email addresses are allowed', 'error');
-    return;
-  }
-  
-  if (password.length < 6) {
-    showStatus('Password must be at least 6 characters', 'error');
-    return;
-  }
+  if (!name || !email || !password) { showStatus('Please fill in all fields', 'error'); return; }
+  if (!email.endsWith('@margolispllc.com')) { showStatus('Access restricted: Only @margolispllc.com email addresses are allowed', 'error'); return; }
+  if (password.length < 6) { showStatus('Password must be at least 6 characters', 'error'); return; }
   
   const btn = document.getElementById('signupBtn');
   btn.disabled = true;
   btn.innerHTML = '<div class="loading-spinner"></div> Creating Account...';
   
   try {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { full_name: name }
-      }
-    });
-    
+    const { data, error } = await supabase.auth.signUp({ email, password, options: { data: { full_name: name } } });
     if (error) throw error;
-    
     if (data.user) {
       if (data.user.identities && data.user.identities.length === 0) {
         showStatus('This email is already registered. Please sign in.', 'error');
@@ -1201,23 +959,15 @@ async function handleSignup() {
 
 async function handlePasswordReset() {
   const email = document.getElementById('resetEmail').value.trim();
-  
-  if (!email) {
-    showStatus('Please enter your email address', 'error');
-    return;
-  }
+  if (!email) { showStatus('Please enter your email address', 'error'); return; }
   
   const btn = document.getElementById('resetBtn');
   btn.disabled = true;
   btn.innerHTML = '<div class="loading-spinner"></div> Sending...';
   
   try {
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: window.location.origin + window.location.pathname
-    });
-    
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname });
     if (error) throw error;
-    
     showStatus('✓ Password reset link sent! Check your email.', 'success');
     setTimeout(() => switchAuthTab('login'), 3000);
   } catch (e) {
@@ -1232,32 +982,17 @@ async function handleUpdatePassword() {
   const newPassword = document.getElementById('newPassword').value;
   const confirmPassword = document.getElementById('confirmPassword').value;
   
-  if (!newPassword || !confirmPassword) {
-    showStatus('Please fill in both password fields', 'error');
-    return;
-  }
-  
-  if (newPassword.length < 6) {
-    showStatus('Password must be at least 6 characters', 'error');
-    return;
-  }
-  
-  if (newPassword !== confirmPassword) {
-    showStatus('Passwords do not match', 'error');
-    return;
-  }
+  if (!newPassword || !confirmPassword) { showStatus('Please fill in both password fields', 'error'); return; }
+  if (newPassword.length < 6) { showStatus('Password must be at least 6 characters', 'error'); return; }
+  if (newPassword !== confirmPassword) { showStatus('Passwords do not match', 'error'); return; }
   
   const btn = document.getElementById('updatePasswordBtn');
   btn.disabled = true;
   btn.innerHTML = '<div class="loading-spinner"></div> Updating...';
   
   try {
-    const { error } = await supabase.auth.updateUser({
-      password: newPassword
-    });
-    
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
     if (error) throw error;
-    
     showStatus('✓ Password updated successfully!', 'success');
     showApp();
   } catch (e) {
@@ -1282,14 +1017,11 @@ async function handleLogout() {
 function showApp() {
   document.getElementById('authContainer').style.display = 'none';
   document.getElementById('appContainer').classList.add('visible');
-  
-  // Verify email domain one more time before showing app
   if (!currentUser.email.endsWith('@margolispllc.com')) {
     handleLogout();
     showStatus('Access denied: Not a Margolis PLLC email address', 'error');
     return;
   }
-  
   document.getElementById('userEmail').textContent = currentUser.email;
   updateTrackerCount();
   renderDashboard();
@@ -1297,14 +1029,11 @@ function showApp() {
 
 async function checkAuth() {
   const { data: { session } } = await supabase.auth.getSession();
-  
-  // Check if user is coming from password reset email
   const hashParams = new URLSearchParams(window.location.hash.substring(1));
   const accessToken = hashParams.get('access_token');
   const type = hashParams.get('type');
   
   if (type === 'recovery' && accessToken) {
-    // User clicked password reset link - verify email domain first
     if (session && session.user) {
       if (!session.user.email.endsWith('@margolispllc.com')) {
         await supabase.auth.signOut();
@@ -1318,7 +1047,6 @@ async function checkAuth() {
   }
   
   if (session) {
-    // Verify email domain on session restore
     if (!session.user.email.endsWith('@margolispllc.com')) {
       await supabase.auth.signOut();
       showStatus('Access restricted to Margolis PLLC employees only', 'error');
@@ -1330,13 +1058,8 @@ async function checkAuth() {
 }
 
 async function getClients() {
-  if (!supabase) return [];
   try {
-    const { data, error } = await supabase
-      .from('clients')
-      .select('*')
-      .order('created_at', { ascending: false });
-    
+    const { data, error } = await supabase.from('clients').select('*').order('created_at', { ascending: false });
     if (error) throw error;
     return data || [];
   } catch (e) {
@@ -1347,45 +1070,19 @@ async function getClients() {
 }
 
 async function addClient(d) {
-  if (!supabase) {
-    showStatus('Database not connected', 'error');
-    return null;
-  }
-  
   try {
-    const { data, error } = await supabase
-      .from('clients')
-      .insert([{
-        user_id: currentUser.id,
-        client_type: d.clientType,
-        entity_name: d.entityName,
-        contact_name: d.contactName,
-        contact_title: d.contactTitle,
-        client_email: d.clientEmail,
-        client_phone: d.clientPhone,
-        client_address: d.clientAddress,
-        matter_type: d.matterType,
-        attorney: d.attorney,
-        matter_description: d.matterDescription,
-        adverse_party: d.adverseParty,
-        fee_type: d.feeType,
-        hourly_rate: d.hourlyRate,
-        paralegal_rate: d.paralegalRate,
-        flat_fee_amount: d.flatFeeAmount,
-        retainer_amount: d.retainerAmount,
-        engagement_date: d.engagementDate,
-        conflicts: d.conflicts,
-        specialist_involved: d.specialistInvolved,
-        specialist_name: d.specialistName,
-        fee_sharing_details: d.feeSharingDetails,
-        referral_source: d.referralSource,
-        priority: d.priority,
-        internal_notes: d.internalNotes,
-        status: 'Prospective'
-      }])
-      .select()
-      .single();
-    
+    const { data, error } = await supabase.from('clients').insert([{
+      user_id: currentUser.id,
+      client_type: d.clientType, entity_name: d.entityName, contact_name: d.contactName,
+      contact_title: d.contactTitle, client_email: d.clientEmail, client_phone: d.clientPhone,
+      client_address: d.clientAddress, matter_type: d.matterType, attorney: d.attorney,
+      matter_description: d.matterDescription, adverse_party: d.adverseParty, fee_type: d.feeType,
+      hourly_rate: d.hourlyRate, paralegal_rate: d.paralegalRate, flat_fee_amount: d.flatFeeAmount,
+      retainer_amount: d.retainerAmount, engagement_date: d.engagementDate, conflicts: d.conflicts,
+      specialist_involved: d.specialistInvolved, specialist_name: d.specialistName,
+      fee_sharing_details: d.feeSharingDetails, referral_source: d.referralSource,
+      priority: d.priority, internal_notes: d.internalNotes, status: 'Prospective'
+    }]).select().single();
     if (error) throw error;
     updateTrackerCount();
     return data;
@@ -1397,18 +1094,11 @@ async function addClient(d) {
 }
 
 async function updateClientStatus(id, status) {
-  if (!supabase) return;
-  
   try {
     const updates = { status };
     if (status === 'Letter Sent') updates.letter_sent = new Date().toLocaleDateString();
     if (status === 'Executed') updates.letter_executed = new Date().toLocaleDateString();
-    
-    const { error } = await supabase
-      .from('clients')
-      .update(updates)
-      .eq('id', id);
-    
+    const { error } = await supabase.from('clients').update(updates).eq('id', id);
     if (error) throw error;
     renderDashboard();
   } catch (e) {
@@ -1419,14 +1109,8 @@ async function updateClientStatus(id, status) {
 
 async function deleteClient(id) {
   if (!confirm('Delete this client from the tracker?')) return;
-  if (!supabase) return;
-  
   try {
-    const { error } = await supabase
-      .from('clients')
-      .delete()
-      .eq('id', id);
-    
+    const { error } = await supabase.from('clients').delete().eq('id', id);
     if (error) throw error;
     renderDashboard();
     showStatus('Client removed from tracker.', 'success');
@@ -1438,14 +1122,8 @@ async function deleteClient(id) {
 
 async function clearAllData() {
   if (!confirm('This will permanently delete ALL client data. Are you sure?')) return;
-  if (!supabase) return;
-  
   try {
-    const { error } = await supabase
-      .from('clients')
-      .delete()
-      .neq('id', '00000000-0000-0000-0000-000000000000');
-    
+    const { error } = await supabase.from('clients').delete().neq('id', '00000000-0000-0000-0000-000000000000');
     if (error) throw error;
     renderDashboard();
     showStatus('All tracker data cleared.', 'success');
@@ -1470,7 +1148,6 @@ async function updateTrackerCount() {
 
 const feeRadios = document.querySelectorAll('input[name="feeType"]');
 const feeLabels = document.querySelectorAll('.fee-toggle label');
-
 feeRadios.forEach(radio => {
   radio.addEventListener('change', () => {
     feeLabels.forEach(l => l.classList.remove('active'));
@@ -1561,7 +1238,6 @@ function clientDisplayName(d) {
 async function renderDashboard() {
   const clients = await getClients();
   updateTrackerCount();
-
   const total = clients.length;
   const prospective = clients.filter(c => c.status === 'Prospective').length;
   const sent = clients.filter(c => c.status === 'Letter Sent').length;
@@ -1607,7 +1283,7 @@ async function renderDashboard() {
             <option value="Executed" ${c.status==='Executed'?'selected':''}>Executed</option>
             <option value="Declined" ${c.status==='Declined'?'selected':''}>Declined</option>
           </select>
-          <button onclick="regenLetter('${c.id}')" title="Re-generate letter">📄</button>
+          <button onclick="regenLetter('${c.id}')" title="Re-generate letter">🔄</button>
           <button class="del" onclick="deleteClient('${c.id}')" title="Delete">✕</button>
         </div>
       </td>
@@ -1649,18 +1325,11 @@ function clientToRow(c) {
 async function exportMasterExcel() {
   const clients = await getClients();
   if (clients.length === 0) { showStatus('No clients to export.', 'error'); return; }
-
   const wb = XLSX.utils.book_new();
   const data = [EXCEL_HEADERS, ...clients.map(clientToRow)];
   const ws = XLSX.utils.aoa_to_sheet(data);
-  ws['!cols'] = [
-    {wch:14},{wch:22},{wch:22},{wch:14},{wch:22},{wch:28},{wch:16},
-    {wch:22},{wch:36},{wch:24},{wch:12},{wch:22},
-    {wch:14},{wch:22},{wch:28},{wch:22},{wch:18},
-    {wch:10},{wch:16},{wch:20},{wch:22},{wch:30}
-  ];
+  ws['!cols'] = [{wch:14},{wch:22},{wch:22},{wch:14},{wch:22},{wch:28},{wch:16},{wch:22},{wch:36},{wch:24},{wch:12},{wch:22},{wch:14},{wch:22},{wch:28},{wch:22},{wch:18},{wch:10},{wch:16},{wch:20},{wch:22},{wch:30}];
   XLSX.utils.book_append_sheet(wb, ws, 'Master Tracker');
-
   const today = new Date().toISOString().slice(0,10);
   XLSX.writeFile(wb, `Intakr_Master_Tracker_${today}.xlsx`);
   showStatus(`✓ Master tracker exported with ${clients.length} client(s).`, 'success');
@@ -1669,22 +1338,13 @@ async function exportMasterExcel() {
 function exportSingleClientExcel(data) {
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet([EXCEL_HEADERS, clientToRow(data)]);
-  ws['!cols'] = [
-    {wch:14},{wch:22},{wch:22},{wch:14},{wch:22},{wch:28},{wch:16},
-    {wch:22},{wch:36},{wch:24},{wch:12},{wch:22},
-    {wch:14},{wch:22},{wch:28},{wch:22},{wch:18},
-    {wch:10},{wch:16},{wch:20},{wch:22},{wch:30}
-  ];
+  ws['!cols'] = [{wch:14},{wch:22},{wch:22},{wch:14},{wch:22},{wch:28},{wch:16},{wch:22},{wch:36},{wch:24},{wch:12},{wch:22},{wch:14},{wch:22},{wch:28},{wch:22},{wch:18},{wch:10},{wch:16},{wch:20},{wch:22},{wch:30}];
   XLSX.utils.book_append_sheet(wb, ws, 'Client');
   XLSX.writeFile(wb, `Intakr_Client_${clientDisplayName(data).replace(/[^a-zA-Z0-9]/g,'_')}.xlsx`);
 }
 
 async function generateEngagementLetter(data) {
-  const {
-    Document, Packer, Paragraph, TextRun, AlignmentType,
-    Header, BorderStyle
-  } = docx;
-
+  const { Document, Packer, Paragraph, TextRun, AlignmentType, Header, BorderStyle } = docx;
   const name = clientDisplayName(data);
   const dateFormatted = formatDate(data.engagement_date || data.engagementDate);
   const sigName = (data.attorney || '').includes('Matt') ? 'Matt Margolis' : 'Karina Margolis';
@@ -1701,24 +1361,15 @@ async function generateEngagementLetter(data) {
 
   const bs = { font: 'Times New Roman', size: 22 };
   const sp = { after: 200 };
-
   function bp(text, opts = {}) {
-    return new Paragraph({
-      spacing: sp, alignment: AlignmentType.JUSTIFIED, ...opts,
-      children: [new TextRun({ ...bs, ...(opts.bold ? { bold: true } : {}), text })],
-    });
+    return new Paragraph({ spacing: sp, alignment: AlignmentType.JUSTIFIED, ...opts, children: [new TextRun({ ...bs, ...(opts.bold ? { bold: true } : {}), text })] });
   }
   function blank() { return new Paragraph({ spacing: sp, children: [] }); }
 
   const doc = new Document({
     styles: { default: { document: { run: { font: 'Times New Roman', size: 22 } } } },
     sections: [{
-      properties: {
-        page: {
-          size: { width: 12240, height: 15840 },
-          margin: { top: 1800, right: 1440, bottom: 1440, left: 1440 }
-        }
-      },
+      properties: { page: { size: { width: 12240, height: 15840 }, margin: { top: 1800, right: 1440, bottom: 1440, left: 1440 } } },
       headers: {
         default: new Header({
           children: [
@@ -1766,17 +1417,15 @@ async function generateEngagementLetter(data) {
 async function generateAll() {
   if (!validateForm()) return;
   const data = getFormData();
-  
   const btn = document.getElementById('generateBtn');
   btn.disabled = true;
   btn.innerHTML = '<div class="loading-spinner"></div> Generating...';
-  
   try {
     const saved = await addClient(data);
     if (saved) {
       exportSingleClientExcel(saved);
       await generateEngagementLetter(data);
-      showStatus(`✓ ${clientDisplayName(data)} added to tracker — letter and Excel downloaded!`, 'success');
+      showStatus(`✓ ${clientDisplayName(data)} added to tracker – letter and Excel downloaded!`, 'success');
       resetForm();
     }
   } catch(e) {
@@ -1791,11 +1440,9 @@ async function generateAll() {
 async function addToTrackerOnly() {
   if (!validateForm()) return;
   const data = getFormData();
-  
   const btn = document.getElementById('trackerBtn');
   btn.disabled = true;
   btn.innerHTML = '<div class="loading-spinner"></div> Adding...';
-  
   try {
     const saved = await addClient(data);
     if (saved) {
@@ -1820,14 +1467,8 @@ async function regenLetter(id) {
   }
 }
 
-// Initialize
-(async function() {
-  if (!initSupabase()) {
-    document.getElementById('setupModal').classList.remove('hidden');
-  } else {
-    await checkAuth();
-  }
-})();
+// Initialize — go straight to auth check, no setup needed
+checkAuth();
 </script>
 </body>
 </html>
