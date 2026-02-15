@@ -119,6 +119,31 @@
   .loading-spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin 0.8s linear infinite;}
   @keyframes spin{to{transform:rotate(360deg);}}
   .help-text{font-size:12px;color:var(--warm-gray);margin-top:8px;}
+  /* Review/Edit Engagement Letter Modal */
+  .letter-modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:200;display:none;align-items:center;justify-content:center;padding:24px;}
+  .letter-modal-overlay.visible{display:flex;}
+  .letter-modal{background:var(--white);border-radius:16px;max-width:900px;width:100%;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,0.2);overflow:hidden;}
+  .letter-modal-header{display:flex;align-items:center;justify-content:space-between;padding:20px 28px;border-bottom:1px solid var(--border);background:var(--sage-pale);flex-shrink:0;}
+  .letter-modal-header h2{font-size:20px;font-weight:700;color:var(--charcoal);display:flex;align-items:center;gap:10px;}
+  .letter-modal-header .modal-actions{display:flex;gap:10px;}
+  .letter-modal-body{overflow-y:auto;padding:28px;flex:1;}
+  .letter-section{margin-bottom:24px;border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+  .letter-section-header{background:var(--light-gray);padding:10px 16px;font-size:13px;font-weight:600;color:var(--sage-dark);text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+  .letter-section-header svg{width:14px;height:14px;opacity:0.6;}
+  .letter-section textarea{width:100%;border:none;padding:14px 16px;font-family:'DM Sans',sans-serif;font-size:13.5px;line-height:1.7;color:var(--charcoal);resize:vertical;min-height:60px;background:var(--white);outline:none;}
+  .letter-section textarea:focus{background:var(--cream);}
+  .letter-section textarea.tall{min-height:140px;}
+  .letter-section textarea.short{min-height:40px;}
+  .letter-section-row{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--border);}
+  .letter-section-row:last-child{border-bottom:none;}
+  .letter-section-field{padding:10px 16px;display:flex;flex-direction:column;gap:4px;}
+  .letter-section-field:first-child{border-right:1px solid var(--border);}
+  .letter-section-field label{font-size:11px;font-weight:600;color:var(--warm-gray);text-transform:uppercase;letter-spacing:0.5px;}
+  .letter-section-field input{border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:13px;font-family:'DM Sans',sans-serif;background:var(--cream);}
+  .letter-section-field input:focus{border-color:var(--sage);background:var(--white);outline:none;box-shadow:0 0 0 2px rgba(143,175,143,0.15);}
+  .letter-modal-footer{padding:16px 28px;border-top:1px solid var(--border);background:var(--light-gray);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
+  .letter-modal-footer .hint{font-size:12px;color:var(--warm-gray);}
+
   @media(max-width:640px){
     .form-grid{grid-template-columns:1fr;}.header{padding:16px 20px;flex-direction:column;gap:12px;}
     .tab-bar{padding:0 16px;}.tab-btn{padding:12px 16px;font-size:13px;}
@@ -290,6 +315,26 @@
 </div>
 </div>
 
+<!-- Review/Edit Engagement Letter Modal -->
+<div class="letter-modal-overlay" id="letterModal">
+  <div class="letter-modal">
+    <div class="letter-modal-header">
+      <h2><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Review Engagement Letter</h2>
+      <div class="modal-actions">
+        <button class="btn btn-secondary btn-sm" onclick="closeLetterModal()">Cancel</button>
+        <button class="btn btn-primary btn-sm" onclick="downloadFromReview()" id="modalDownloadBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download .docx</button>
+      </div>
+    </div>
+    <div class="letter-modal-body" id="letterModalBody">
+      <!-- Sections rendered dynamically -->
+    </div>
+    <div class="letter-modal-footer">
+      <span class="hint">Edit any section above, then click Download to generate your .docx file.</span>
+      <button class="btn btn-primary btn-sm" onclick="downloadFromReview()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download .docx</button>
+    </div>
+  </div>
+</div>
+
 <div class="status-bar" id="statusBar"><span id="statusText"></span></div>
 
 <script>
@@ -354,11 +399,14 @@ async function exportMasterExcel(){const c=await getClients();if(!c.length){show
 function exportSingleClientExcel(d){const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([XH,ctr(d)]),'Client');XLSX.writeFile(wb,`Intakr_${clientDisplayName(d).replace(/[^a-zA-Z0-9]/g,'_')}.xlsx`);}
 
 // =============================================
-// ENGAGEMENT LETTER — FULL TEMPLATE
+// ENGAGEMENT LETTER — REVIEW & EDIT FLOW
 // =============================================
-async function generateEngagementLetter(data) {
-  const { Document, Packer, Paragraph, TextRun, AlignmentType, Header, BorderStyle, UnderlineType, PageBreak } = window.docx;
 
+// Stored state for the current review session
+let _letterReviewMeta = null;
+let _letterReviewSections = null;
+
+function buildLetterSections(data) {
   const name = clientDisplayName(data);
   const contact = data.contact_name||data.contactName||'';
   const title = data.contact_title||data.contactTitle||'';
@@ -367,15 +415,12 @@ async function generateEngagementLetter(data) {
   const atty = data.attorney||'';
   const engDate = formatDate(data.engagement_date||data.engagementDate||'');
   const feeType = data.fee_type||data.feeType||'Hourly';
-  const hourly = data.hourly_rate||data.hourlyRate||'$500.00';
-  const para = data.paralegal_rate||data.paralegalRate||'$225.00';
   const flat = data.flat_fee_amount||data.flatFeeAmount||'';
   const monthly = data.monthly_fee||data.monthlyFee||data.retainer_amount||data.retainerAmount||'';
   const matterDesc = data.matter_description||data.matterDescription||'';
   const isEntity = (data.client_type||data.clientType)==='Business Entity';
   const clientLabel = isEntity ? name : contact;
 
-  // Determine signer
   let sigFull = '', sigShort = '';
   if (atty.includes('Matt')) { sigFull = 'Matt A. Margolis'; sigShort = 'Matt Margolis'; }
   else if (atty.includes('Karina')) { sigFull = 'Karina Margolis'; sigShort = 'Karina Margolis'; }
@@ -383,104 +428,210 @@ async function generateEngagementLetter(data) {
   else if (atty.includes('Hunter')) { sigFull = 'Hunter Sutherland'; sigShort = 'Hunter Sutherland'; }
   else { sigFull = 'Matt A. Margolis'; sigShort = 'Matt Margolis'; }
 
-  // Fee text for Section 6
   let feeText = '';
   if (feeType === 'Hourly') {
-    feeText = `Fees will be based upon our standard hourly rates. Our standard hourly rates are: Partner: $700/hour; Of Counsel: $600/hour; Associate: $500/hour; Paralegal: $250/hour, unless otherwise agreed in writing. Our rates may change periodically with 30 days' advance notice. Where possible, we may use attorneys and paralegals with lower hourly rates, without compromising the quality of representation. Upon request, we will provide an estimate of time required and potential costs before commencing legal work. Any estimate or range is not binding, is subject to periodic revision, and should not be construed as a promise or guarantee your matter can be concluded within the estimate or range of fees or costs.`;
+    feeText = `Fees will be based upon our standard hourly rates. Our standard hourly rates are: Partner: $700/hour; Of Counsel: $600/hour; Associate: $500/hour; Paralegal: $250/hour, unless otherwise agreed in writing. Our rates may change periodically with 30 days\u2019 advance notice. Where possible, we may use attorneys and paralegals with lower hourly rates, without compromising the quality of representation. Upon request, we will provide an estimate of time required and potential costs before commencing legal work. Any estimate or range is not binding, is subject to periodic revision, and should not be construed as a promise or guarantee your matter can be concluded within the estimate or range of fees or costs.`;
   } else if (feeType === 'Flat Fee') {
-    feeText = `Fees for this matter will be a pre-negotiated flat fee of ${flat} between the Client and the Firm ("Flat Fee"). The Flat Fee covers the scope of representation described above and does not include costs as described below.`;
+    feeText = `Fees for this matter will be a pre-negotiated flat fee of ${flat} between the Client and the Firm (\u201cFlat Fee\u201d). The Flat Fee covers the scope of representation described above and does not include costs as described below.`;
   } else if (feeType === 'Subscription') {
-    feeText = `If you elect for a subscription, which is a non-refundable retainer, fees will be ${monthly}. Our standard hourly rates are: Partner: $700/hour; Of Counsel: $600/hour; Associate: $500/hour; Paralegal: $250/hour, unless otherwise agreed in writing. Our rates may change periodically with 30 days' advance notice. Upon request, we will provide an estimate of time required and potential costs before commencing legal work outside the subscription. Any estimate or range, unless a Flat Fee or subscription arrangement, is not binding, is subject to periodic revision, and should not be construed as a promise or guarantee your matter can be concluded within the estimate or range of fees or costs.`;
+    feeText = `If you elect for a subscription, which is a non-refundable retainer, fees will be ${monthly}. Our standard hourly rates are: Partner: $700/hour; Of Counsel: $600/hour; Associate: $500/hour; Paralegal: $250/hour, unless otherwise agreed in writing. Our rates may change periodically with 30 days\u2019 advance notice. Upon request, we will provide an estimate of time required and potential costs before commencing legal work outside the subscription. Any estimate or range, unless a Flat Fee or subscription arrangement, is not binding, is subject to periodic revision, and should not be construed as a promise or guarantee your matter can be concluded within the estimate or range of fees or costs.`;
   } else {
-    feeText = `Fees will be based upon a combination of our standard hourly rates and a pre-negotiated flat fee. Our standard hourly rates are: Partner: $700/hour; Of Counsel: $600/hour; Associate: $500/hour; Paralegal: $250/hour, unless otherwise agreed in writing. Additionally, a flat fee of ${flat} has been agreed upon for certain defined portions of this engagement. Our rates may change periodically with 30 days' advance notice.`;
+    feeText = `Fees will be based upon a combination of our standard hourly rates and a pre-negotiated flat fee. Our standard hourly rates are: Partner: $700/hour; Of Counsel: $600/hour; Associate: $500/hour; Paralegal: $250/hour, unless otherwise agreed in writing. Additionally, a flat fee of ${flat} has been agreed upon for certain defined portions of this engagement. Our rates may change periodically with 30 days\u2019 advance notice.`;
   }
 
+  const meta = { name, contact, title, email, matter, atty, engDate, isEntity, clientLabel, sigFull, sigShort };
+
+  const sections = [
+    { id:'intro', label:'Introduction', text:`We are pleased that you seek to retain Margolis PLLC (the \u201cFirm\u201d, \u201cWe\u201d, \u201cOur\u201d or \u201cUs\u201d) to represent ${isEntity?name:'you'} (the \u201cClient\u201d or \u201cYou\u201d) in the above referenced matter. This engagement letter will govern the work to be performed by us as well as all other legal work (and related costs) accomplished by the Firm for the Client unless a different fee and cost arrangement for such work is agreed upon in writing by the parties.\n\nThis engagement letter, and the attached Exhibit A, describes the basis on which our Firm will provide legal services to the Client and bill for those services.` },
+    { id:'s1', label:'1. Attorney in Charge', text:`I will be the \u201cAttorney in Charge.\u201d Other attorneys may become involved in assisting me in the Representation (as defined below), but please always feel free to contact me directly with any questions or comments you may have with respect to the Client\u2019s relationship with the Firm and the work being performed.` },
+    { id:'s2', label:'2. Client', text:`You will be our only client in this matter. Unless we agree otherwise in writing, persons and entities related to you or sharing your interests including affiliated companies, owners, officers, directors, business partners, or family members are not our clients.` },
+    { id:'s3', label:'3. Scope', text:`The scope of our engagement and duties to you will relate solely to the above referenced matter. However, please note that this scope does not include: (1) tax law; (2) patent law; (3) public securities; (4) ERISA; (5) family law; and (6) bankruptcy/creditors rights. Our acceptance of this engagement does not mean we represent you or your interests in other matters. Any expansion of our scope of work in this matter, and any representation of you in other matters, will be set forth in a separate letter or agreement. If we undertake to represent you in other matters without specific terms of engagement, the terms of this engagement letter will apply.` },
+    { id:'s4', label:'4. What We Need From You', text:`Please keep us informed of developments that may affect the work we are doing for you. Also, we expect that you will commit sufficient resources to meet the demands of the matter and be available to attend meetings and necessary legal proceedings. Please provide us all documents and other information necessary for us to perform our work for you. We also ask that you promptly review and pay our invoices. Please ask us any questions you may have about our services or charges.` },
+    { id:'s5', label:'5. Advice About Possible Outcomes', text:`During the course of our representation, we may advise you about various courses of action or results that might be obtained. That advice will be based on the information and circumstances known to us at the time. You should not regard our advice as a promise of what may happen in the future or a guarantee of future results.` },
+    { id:'s6', label:'6. Legal Services Fees', text:feeText },
+    { id:'s7', label:'7. Costs', text:`The Client agrees to pay all costs, including, but not limited to, items such as copy costs, messenger and delivery service, Westlaw, Lexis-Nexis, and/or Alexi research, travel (including mileage, parking, airfare, lodging, meals and ground transportation), court costs and filing fees. Unless special arrangements are made at the outset, fees and expenses of others (such as outside copy services, experts, investigators, witnesses, consultants and court reporters) will not be paid by us and will be the responsibility of, and billed directly to, you.` },
+    { id:'s8', label:'8. Payment', text:`We expect to send our bills to you monthly. Our bills are due upon receipt. Invoices over 15 days aged are considered past due. Interest shall accrue on unpaid balances over 15 days at 1.5% simple interest. If we are not promptly paid, we reserve the right to withdraw from representing you or to suspend further service to you until such time as we reach a resolution regarding payment.` },
+    { id:'s9', label:'9. Conflicts of Interest and Waiver', text:`We have evaluated this engagement for conflicts of interest on the basis that we represent only you in this matter. We are not presently aware of any conflicts except as more fully detailed below. The Firm may represent other companies and individuals in a variety of matters. It is possible that during the time we are representing you, some of our present or future clients may have transactions or disputes with you including litigation or other adversarial proceedings. You have agreed that the Firm may continue to represent or may undertake in the future to represent other clients in any matter not substantially related to our work for you, even if the interests of such clients in those other matters are directly adverse to you or a related entity, and even if such representations would be simultaneous. You also have agreed, as part of this prospective consent, that we may represent one or more of the parties opposite or adverse to you in this matter, in any future new matters unrelated to our work for you, even if such representations would be simultaneous. We agree, however, that your prospective consent to conflicting representations will not apply in an instance where, as the result of our representation of you, we have obtained sensitive, proprietary or other confidential or non-public information that, if known to any such other client of ours, could be used in any such other matter by such other client to your material disadvantage, and if screening procedures and similar measures would be insufficient to protect and maintain the confidentiality of that information.` },
+    { id:'s10', label:'10. Specialist/Local Network and Fee Sharing', text:`For certain matters, I may recommend a specialist or engage an attorney to provide specialized advice or legal services to you. Additionally, in some instances, I may have fee sharing arrangement with certain specialists whereby a portion of such specialists\u2019 fees are paid to me and a portion of the fees are retained by such specialist. By executing this engagement letter, you hereby acknowledge and consent to: (1) the existence of my written agreement with such specialist to divide the fee and that such division of fees will be made; and (2) the identity of the individuals or firms that are parties to this division have been disclosed to you; (3) the terms of the division have been disclosed to you. Unless we agree otherwise in writing, you will be responsible for the fees and expenses of such outside professionals, whether they are retained by me or by you directly and you acknowledge the existence of and consent to any fee sharing arrangements between me and my recommended specialists.` },
+    { id:'s11', label:'11. Use of Artificial Intelligence Tools', text:`The Firm may use artificial intelligence (\u201cAI\u201d) tools and software in connection with providing legal services to you, including but not limited to research, document review and drafting assistance. You hereby acknowledge and consent to our use of such AI tools subject to the following conditions: (1) all AI-generated work product will be reviewed, edited, and verified by qualified attorneys before being provided to you or relied upon in your matter; (2) we will not input your confidential information into AI systems that do not provide adequate data security and confidentiality protections; (3) you acknowledge that AI tools may have limitations, including potential for errors, biases, or incomplete analysis, and that such tools are used to supplement, not replace, professional legal judgment; (4) we will maintain appropriate oversight and quality control measures to ensure that any AI-assisted work meets our professional standards; (5) our use of AI tools does not diminish our professional responsibilities to you under applicable rules of professional conduct; and (6) you may request information about our AI usage policies or opt out of AI tool usage for your matter by providing written notice, though such opt-out may affect the efficiency and cost of our services. This consent shall remain in effect throughout our representation unless you revoke it in writing.` },
+    { id:'s12', label:'12. Termination of Engagement', text:`You may terminate our engagement at any time by written notice. Likewise, the Firm may also terminate this engagement at any time by written notice, subject to applicable rules of professional conduct. In the event we terminate our representation, we will take such steps as are reasonably practicable to protect your interests in the above matter, and you agree to take all steps necessary to free us of any obligation to perform further. We reserve the right to withdraw from our representation if, among other things, you fail to honor the terms of this engagement letter, you fail to cooperate or follow our advice on a material matter, or any fact or circumstance would, in our view, render our continuing representation unlawful or unethical. If we elect to withdraw, you will cooperate with us in taking all steps necessary to complete our withdrawal. If our engagement terminates for any reason, you will remain responsible for paying for all services rendered and costs or expenses paid or incurred on your behalf through and including the date of any withdrawal or termination.` },
+    { id:'s13', label:'13. Conclusion of Representation; Document Retention', text:`Unless previously terminated, our representation will conclude when we complete the specific services you have retained us to perform. At your request, we will return your papers and property to you upon our receipt of final payment. We will retain our own files pertaining to the matter, including, for example, firm administrative records, internal lawyers\u2019 work product such as drafts, notes, internal memoranda and legal and factual research.\n\nPlease retain all documents that we send you in accordance with your own records retention practices. All documents we retain will be transferred to the person responsible for administering our records retention program at the end of our representation. Unless we agree otherwise, documents and other materials we retain may be destroyed or disposed of within a reasonable time after termination or conclusion of this engagement. The firm discourages substantive or important communications with our clients by text message. The firm does not maintain text messages sent to or received from clients, or their contents, and does not consider text messages to be, and does not maintain text messages as, part of the client\u2019s file. Text messages are not retained as part of a client\u2019s file materials under our Document Retention Policy.` },
+    { id:'s14', label:'14. Post-Engagement Matters', text:`You are engaging the Firm to provide legal services in connection with a specific matter. After the matter concludes, we may inform you from time to time of developments and changes in the law that might interest you, by newsletter or otherwise. These communications, however, do not create a new attorney-client relationship.\n\nAfter this matter is concluded, changes in law or circumstances may occur that could impact your future rights and liabilities. Unless you specifically engage us to provide advice on matters arising in the future, we have no continuing obligation to advise you with respect to future developments.` },
+    { id:'s15', label:'15. Choice of Law & Venue', text:`The relationship between you and the Firm, including the validity, construction, and enforceability of this engagement letter, shall be governed in all respects by the law and professional conduct rules of Florida, without regard to conflicts of laws principles. The parties agree that any disputes arising under this engagement shall be brought in Palm Beach County, Florida.` },
+    { id:'closing', label:'Closing', text:`This engagement letter, and the attached Exhibit A, constitutes the arrangement upon which we have agreed to undertake representation of the legal matters described in this letter. Please review the foregoing. If the arrangement described in this engagement letter is not acceptable to you in all respects, please call or email me. If it meets with your approval, kindly sign a copy of this letter on behalf of the Client and return it to me via email. When I receive the fully executed engagement letter, this engagement letter will constitute the arrangement between the Client and the Firm.\n\nThank you for retaining us and we look forward to working with you.` },
+    { id:'exhibit', label:'Exhibit A \u2014 Scope of Services', text: matterDesc || '[Scope of services to be detailed here]' },
+  ];
+
+  return { meta, sections };
+}
+
+function openLetterReview(data) {
+  const { meta, sections } = buildLetterSections(data);
+  _letterReviewMeta = meta;
+  _letterReviewSections = sections;
+
+  const container = document.getElementById('letterModalBody');
+  let html = '';
+
+  // Header fields (date, recipient, re line, greeting)
+  html += `<div class="letter-section"><div class="letter-section-header"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> Letter Header</div>`;
+  html += `<div class="letter-section-row"><div class="letter-section-field"><label>Date</label><input type="text" id="rev_date" value="${meta.engDate}"></div><div class="letter-section-field"><label>Recipient</label><input type="text" id="rev_recipient" value="${meta.clientLabel}"></div></div>`;
+  if (meta.isEntity && meta.contact) {
+    html += `<div class="letter-section-row"><div class="letter-section-field"><label>Attention</label><input type="text" id="rev_attention" value="${meta.contact}${meta.title?', '+meta.title:''}"></div><div class="letter-section-field"><label>Email</label><input type="text" id="rev_email" value="${meta.email}"></div></div>`;
+  } else {
+    html += `<div class="letter-section-row"><div class="letter-section-field"><label>Email</label><input type="text" id="rev_email" value="${meta.email}"></div><div class="letter-section-field"><label>Attorney</label><input type="text" id="rev_atty" value="${meta.sigFull}"></div></div>`;
+  }
+  html += `<div class="letter-section-row"><div class="letter-section-field" style="grid-column:1/-1;border-right:none;"><label>Re: Line</label><input type="text" id="rev_re" value="Engagement Letter \u2014 ${meta.matter} \u2014 ${meta.clientLabel}" style="width:100%"></div></div>`;
+  html += `<div class="letter-section-row"><div class="letter-section-field" style="grid-column:1/-1;border-right:none;"><label>Greeting</label><input type="text" id="rev_greeting" value="Dear ${meta.contact}:" style="width:100%"></div></div>`;
+  html += '</div>';
+
+  // Editable sections
+  sections.forEach(s => {
+    const tall = s.text.length > 400 ? ' tall' : '';
+    html += `<div class="letter-section"><div class="letter-section-header"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> ${s.label}</div>`;
+    html += `<textarea id="rev_${s.id}" class="${tall}">${s.text}</textarea></div>`;
+  });
+
+  container.innerHTML = html;
+
+  // Auto-resize textareas
+  container.querySelectorAll('textarea').forEach(ta => {
+    ta.style.height = 'auto';
+    ta.style.height = ta.scrollHeight + 'px';
+    ta.addEventListener('input', function(){ this.style.height='auto'; this.style.height=this.scrollHeight+'px'; });
+  });
+
+  document.getElementById('letterModal').classList.add('visible');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeLetterModal() {
+  document.getElementById('letterModal').classList.remove('visible');
+  document.body.style.overflow = '';
+  _letterReviewMeta = null;
+  _letterReviewSections = null;
+}
+
+async function downloadFromReview() {
+  if (!_letterReviewMeta || !_letterReviewSections) return;
+
+  const meta = _letterReviewMeta;
+  // Read edited values from the modal
+  const revDate = document.getElementById('rev_date').value;
+  const revRecipient = document.getElementById('rev_recipient').value;
+  const revAttention = document.getElementById('rev_attention') ? document.getElementById('rev_attention').value : '';
+  const revEmail = document.getElementById('rev_email').value;
+  const revRe = document.getElementById('rev_re').value;
+  const revGreeting = document.getElementById('rev_greeting').value;
+
+  const editedSections = {};
+  _letterReviewSections.forEach(s => {
+    editedSections[s.id] = document.getElementById('rev_'+s.id).value;
+  });
+
+  const { Document, Packer, Paragraph, TextRun, AlignmentType, Header, BorderStyle, UnderlineType } = window.docx;
+
   const f = 'Times New Roman', sz = 22;
-  const r = (text, opts={}) => new TextRun({ font:f, size:sz, ...opts, text });
-  const b = text => r(text, { bold:true });
-  const u = text => r(text, { underline:{type:UnderlineType.SINGLE} });
-  const bu = text => r(text, { bold:true, underline:{type:UnderlineType.SINGLE} });
-  const bi = text => r(text, { bold:true, italics:true, underline:{type:UnderlineType.SINGLE} });
+  const tr = (text, opts={}) => new TextRun({ font:f, size:sz, ...opts, text });
+  const bold = text => tr(text, { bold:true });
+  const ul = text => tr(text, { underline:{type:UnderlineType.SINGLE} });
+  const bu = text => tr(text, { bold:true, underline:{type:UnderlineType.SINGLE} });
+  const bi = text => tr(text, { bold:true, italics:true, underline:{type:UnderlineType.SINGLE} });
   const sp = { after: 200 };
 
   function pp(runs, opts={}) {
-    const children = Array.isArray(runs) ? runs : [r(runs)];
-    return new Paragraph({ spacing:sp, alignment:opts.align||AlignmentType.JUSTIFIED, children, ...(opts.indent?{indent:opts.indent}:{}) });
+    const children = Array.isArray(runs) ? runs : [tr(runs)];
+    return new Paragraph({ spacing:sp, alignment:opts.align||AlignmentType.JUSTIFIED, children });
   }
   function blank() { return new Paragraph({ spacing:sp, children:[] }); }
 
-  function sect(num, titleText, bodyText) {
-    return pp([r(`${num}. `), u(titleText+':'), r(' '+bodyText)]);
+  // Helper: convert textarea text (with \n) into multiple paragraphs
+  function textToParas(text, opts={}) {
+    return text.split('\n').filter(l=>l.trim()!=='').map(line => pp(line, opts));
+  }
+
+  // Helper: numbered section with editable text
+  function sectParas(num, titleLabel, text) {
+    const lines = text.split('\n').filter(l=>l.trim()!=='');
+    const result = [];
+    if (lines.length > 0) {
+      result.push(pp([tr(`${num}. `), ul(titleLabel+':'), tr(' '+lines[0])]));
+      for (let i=1; i<lines.length; i++) result.push(pp(lines[i]));
+    }
+    return result;
   }
 
   const body = [];
 
   // Date
-  body.push(pp(engDate, {align:AlignmentType.LEFT}));
+  body.push(pp(revDate, {align:AlignmentType.LEFT}));
   body.push(blank());
 
   // VIA ELECTRONIC MAIL ONLY
   body.push(pp([bi('VIA ELECTRONIC MAIL ONLY')]));
 
   // Address block
-  body.push(pp(clientLabel, {align:AlignmentType.LEFT}));
-  if (isEntity && contact) body.push(pp(`ATTENTION: ${contact}${title?', '+title:''}`, {align:AlignmentType.LEFT}));
-  if (email) body.push(pp(email, {align:AlignmentType.LEFT}));
+  body.push(pp(revRecipient, {align:AlignmentType.LEFT}));
+  if (revAttention) body.push(pp(`ATTENTION: ${revAttention}`, {align:AlignmentType.LEFT}));
+  if (revEmail) body.push(pp(revEmail, {align:AlignmentType.LEFT}));
   body.push(blank());
 
   // Re line
-  body.push(pp([b(`Re: Engagement Letter \u2014 ${matter} \u2014 ${clientLabel}`)]));
+  body.push(pp([bold(`Re: ${revRe}`)]));
   body.push(blank());
 
-  // Dear
-  body.push(pp(`Dear ${contact}:`));
+  // Greeting
+  body.push(pp(revGreeting));
 
   // Intro
-  body.push(pp(`We are pleased that you seek to retain Margolis PLLC (the \u201cFirm\u201d, \u201cWe\u201d, \u201cOur\u201d or \u201cUs\u201d) to represent ${isEntity?name:'you'} (the \u201cClient\u201d or \u201cYou\u201d) in the above referenced matter. This engagement letter will govern the work to be performed by us as well as all other legal work (and related costs) accomplished by the Firm for the Client unless a different fee and cost arrangement for such work is agreed upon in writing by the parties.`));
-  body.push(pp('This engagement letter, and the attached Exhibit A, describes the basis on which our Firm will provide legal services to the Client and bill for those services.'));
+  textToParas(editedSections.intro).forEach(p => body.push(p));
   body.push(blank());
 
-  // Numbered sections
-  body.push(sect(1,'Attorney in Charge',`I will be the \u201cAttorney in Charge.\u201d Other attorneys may become involved in assisting me in the Representation (as defined below), but please always feel free to contact me directly with any questions or comments you may have with respect to the Client\u2019s relationship with the Firm and the work being performed.`));
-  body.push(sect(2,'Client',`You will be our only client in this matter. Unless we agree otherwise in writing, persons and entities related to you or sharing your interests including affiliated companies, owners, officers, directors, business partners, or family members are not our clients.`));
-  body.push(sect(3,'Scope',`The scope of our engagement and duties to you will relate solely to the above referenced matter. However, please note that this scope does not include: (1) tax law; (2) patent law; (3) public securities; (4) ERISA; (5) family law; and (6) bankruptcy/creditors rights. Our acceptance of this engagement does not mean we represent you or your interests in other matters. Any expansion of our scope of work in this matter, and any representation of you in other matters, will be set forth in a separate letter or agreement. If we undertake to represent you in other matters without specific terms of engagement, the terms of this engagement letter will apply.`));
-  body.push(sect(4,'What we need from you',`Please keep us informed of developments that may affect the work we are doing for you. Also, we expect that you will commit sufficient resources to meet the demands of the matter and be available to attend meetings and necessary legal proceedings. Please provide us all documents and other information necessary for us to perform our work for you. We also ask that you promptly review and pay our invoices. Please ask us any questions you may have about our services or charges.`));
-  body.push(sect(5,'Advice about Possible Outcomes',`During the course of our representation, we may advise you about various courses of action or results that might be obtained. That advice will be based on the information and circumstances known to us at the time. You should not regard our advice as a promise of what may happen in the future or a guarantee of future results.`));
-  body.push(sect(6,'Legal Services Fees',feeText));
-  body.push(sect(7,'Costs',`The Client agrees to pay all costs, including, but not limited to, items such as copy costs, messenger and delivery service, Westlaw, Lexis-Nexis, and/or Alexi research, travel (including mileage, parking, airfare, lodging, meals and ground transportation), court costs and filing fees. Unless special arrangements are made at the outset, fees and expenses of others (such as outside copy services, experts, investigators, witnesses, consultants and court reporters) will not be paid by us and will be the responsibility of, and billed directly to, you.`));
-  body.push(sect(8,'Payment',`We expect to send our bills to you monthly. Our bills are due upon receipt. Invoices over 15 days aged are considered past due. Interest shall accrue on unpaid balances over 15 days at 1.5% simple interest. If we are not promptly paid, we reserve the right to withdraw from representing you or to suspend further service to you until such time as we reach a resolution regarding payment.`));
-  body.push(sect(9,'Conflicts of Interest and Waiver',`We have evaluated this engagement for conflicts of interest on the basis that we represent only you in this matter. We are not presently aware of any conflicts except as more fully detailed below. The Firm may represent other companies and individuals in a variety of matters. It is possible that during the time we are representing you, some of our present or future clients may have transactions or disputes with you including litigation or other adversarial proceedings. You have agreed that the Firm may continue to represent or may undertake in the future to represent other clients in any matter not substantially related to our work for you, even if the interests of such clients in those other matters are directly adverse to you or a related entity, and even if such representations would be simultaneous. You also have agreed, as part of this prospective consent, that we may represent one or more of the parties opposite or adverse to you in this matter, in any future new matters unrelated to our work for you, even if such representations would be simultaneous. We agree, however, that your prospective consent to conflicting representations will not apply in an instance where, as the result of our representation of you, we have obtained sensitive, proprietary or other confidential or non-public information that, if known to any such other client of ours, could be used in any such other matter by such other client to your material disadvantage, and if screening procedures and similar measures would be insufficient to protect and maintain the confidentiality of that information.`));
-  body.push(sect(10,'Specialist/Local Network and Fee Sharing',`For certain matters, I may recommend a specialist or engage an attorney to provide specialized advice or legal services to you. Additionally, in some instances, I may have fee sharing arrangement with certain specialists whereby a portion of such specialists\u2019 fees are paid to me and a portion of the fees are retained by such specialist. By executing this engagement letter, you hereby acknowledge and consent to: (1) the existence of my written agreement with such specialist to divide the fee and that such division of fees will be made; and (2) the identity of the individuals or firms that are parties to this division have been disclosed to you; (3) the terms of the division have been disclosed to you. Unless we agree otherwise in writing, you will be responsible for the fees and expenses of such outside professionals, whether they are retained by me or by you directly and you acknowledge the existence of and consent to any fee sharing arrangements between me and my recommended specialists.`));
-  body.push(sect(11,'Use of Artificial Intelligence Tools',`The Firm may use artificial intelligence (\u201cAI\u201d) tools and software in connection with providing legal services to you, including but not limited to research, document review and drafting assistance. You hereby acknowledge and consent to our use of such AI tools subject to the following conditions: (1) all AI-generated work product will be reviewed, edited, and verified by qualified attorneys before being provided to you or relied upon in your matter; (2) we will not input your confidential information into AI systems that do not provide adequate data security and confidentiality protections; (3) you acknowledge that AI tools may have limitations, including potential for errors, biases, or incomplete analysis, and that such tools are used to supplement, not replace, professional legal judgment; (4) we will maintain appropriate oversight and quality control measures to ensure that any AI-assisted work meets our professional standards; (5) our use of AI tools does not diminish our professional responsibilities to you under applicable rules of professional conduct; and (6) you may request information about our AI usage policies or opt out of AI tool usage for your matter by providing written notice, though such opt-out may affect the efficiency and cost of our services. This consent shall remain in effect throughout our representation unless you revoke it in writing.`));
-  body.push(sect(12,'Termination of Engagement',`You may terminate our engagement at any time by written notice. Likewise, the Firm may also terminate this engagement at any time by written notice, subject to applicable rules of professional conduct. In the event we terminate our representation, we will take such steps as are reasonably practicable to protect your interests in the above matter, and you agree to take all steps necessary to free us of any obligation to perform further. We reserve the right to withdraw from our representation if, among other things, you fail to honor the terms of this engagement letter, you fail to cooperate or follow our advice on a material matter, or any fact or circumstance would, in our view, render our continuing representation unlawful or unethical. If we elect to withdraw, you will cooperate with us in taking all steps necessary to complete our withdrawal. If our engagement terminates for any reason, you will remain responsible for paying for all services rendered and costs or expenses paid or incurred on your behalf through and including the date of any withdrawal or termination.`));
-  body.push(sect(13,'Conclusion of Representation; Retention and Disposition of Documents',`Unless previously terminated, our representation will conclude when we complete the specific services you have retained us to perform. At your request, we will return your papers and property to you upon our receipt of final payment. We will retain our own files pertaining to the matter, including, for example, firm administrative records, internal lawyers\u2019 work product such as drafts, notes, internal memoranda and legal and factual research.`));
-  body.push(pp(`Please retain all documents that we send you in accordance with your own records retention practices. All documents we retain will be transferred to the person responsible for administering our records retention program at the end of our representation. Unless we agree otherwise, documents and other materials we retain may be destroyed or disposed of within a reasonable time after termination or conclusion of this engagement. The firm discourages substantive or important communications with our clients by text message. The firm does not maintain text messages sent to or received from clients, or their contents, and does not consider text messages to be, and does not maintain text messages as, part of the client\u2019s file. Text messages are not retained as part of a client\u2019s file materials under our Document Retention Policy.`));
-  body.push(sect(14,'Post-Engagement Matters',`You are engaging the Firm to provide legal services in connection with a specific matter. After the matter concludes, we may inform you from time to time of developments and changes in the law that might interest you, by newsletter or otherwise. These communications, however, do not create a new attorney-client relationship.`));
-  body.push(pp(`After this matter is concluded, changes in law or circumstances may occur that could impact your future rights and liabilities. Unless you specifically engage us to provide advice on matters arising in the future, we have no continuing obligation to advise you with respect to future developments.`));
-  body.push(sect(15,'Choice of Law & Venue',`The relationship between you and the Firm, including the validity, construction, and enforceability of this engagement letter, shall be governed in all respects by the law and professional conduct rules of Florida, without regard to conflicts of laws principles. The parties agree that any disputes arising under this engagement shall be brought in Palm Beach County, Florida.`));
+  // Numbered sections 1-15
+  const sectionDefs = [
+    {num:1, key:'s1', title:'Attorney in Charge'},
+    {num:2, key:'s2', title:'Client'},
+    {num:3, key:'s3', title:'Scope'},
+    {num:4, key:'s4', title:'What we need from you'},
+    {num:5, key:'s5', title:'Advice about Possible Outcomes'},
+    {num:6, key:'s6', title:'Legal Services Fees'},
+    {num:7, key:'s7', title:'Costs'},
+    {num:8, key:'s8', title:'Payment'},
+    {num:9, key:'s9', title:'Conflicts of Interest and Waiver'},
+    {num:10, key:'s10', title:'Specialist/Local Network and Fee Sharing'},
+    {num:11, key:'s11', title:'Use of Artificial Intelligence Tools'},
+    {num:12, key:'s12', title:'Termination of Engagement'},
+    {num:13, key:'s13', title:'Conclusion of Representation; Retention and Disposition of Documents'},
+    {num:14, key:'s14', title:'Post-Engagement Matters'},
+    {num:15, key:'s15', title:'Choice of Law & Venue'},
+  ];
+  sectionDefs.forEach(sd => {
+    sectParas(sd.num, sd.title, editedSections[sd.key]).forEach(p => body.push(p));
+  });
 
   body.push(blank());
-  body.push(pp(`This engagement letter, and the attached Exhibit A, constitutes the arrangement upon which we have agreed to undertake representation of the legal matters described in this letter. Please review the foregoing. If the arrangement described in this engagement letter is not acceptable to you in all respects, please call or email me. If it meets with your approval, kindly sign a copy of this letter on behalf of the Client and return it to me via email. When I receive the fully executed engagement letter, this engagement letter will constitute the arrangement between the Client and the Firm.`));
-  body.push(pp('Thank you for retaining us and we look forward to working with you.'));
+
+  // Closing
+  textToParas(editedSections.closing).forEach(p => body.push(p));
   body.push(blank());
   body.push(blank());
 
   // Signature
   body.push(pp('Sincerely,', {align:AlignmentType.LEFT}));
   body.push(blank());
-  body.push(pp([b('MARGOLIS PLLC')], {align:AlignmentType.LEFT}));
+  body.push(pp([bold('MARGOLIS PLLC')], {align:AlignmentType.LEFT}));
   body.push(blank());
-  body.push(pp([bi(`/s/ ${sigFull}`)], {align:AlignmentType.LEFT}));
+  body.push(pp([bi(`/s/ ${meta.sigFull}`)], {align:AlignmentType.LEFT}));
   body.push(blank());
-  body.push(pp(`By: ${sigShort}, Esq.`, {align:AlignmentType.LEFT}));
+  body.push(pp(`By: ${meta.sigShort}, Esq.`, {align:AlignmentType.LEFT}));
   body.push(pp('For the Firm', {align:AlignmentType.LEFT}));
   body.push(blank());
   body.push(blank());
 
   // ACKNOWLEDGED AND AGREED
-  body.push(pp([b('ACKNOWLEDGED AND AGREED:')], {align:AlignmentType.LEFT}));
+  body.push(pp([bold('ACKNOWLEDGED AND AGREED:')], {align:AlignmentType.LEFT}));
   body.push(blank());
-  body.push(pp(clientLabel, {align:AlignmentType.LEFT}));
+  body.push(pp(revRecipient, {align:AlignmentType.LEFT}));
   body.push(blank());
   body.push(pp('By: _____________________________', {align:AlignmentType.LEFT}));
   body.push(pp('Name: __________________________', {align:AlignmentType.LEFT}));
@@ -491,7 +642,7 @@ async function generateEngagementLetter(data) {
   body.push(blank());
   body.push(new Paragraph({ spacing:sp, alignment:AlignmentType.CENTER, children:[bu('SCOPE OF SERVICES')] }));
   body.push(blank());
-  body.push(pp(matterDesc || '[Scope of services to be detailed here]'));
+  textToParas(editedSections.exhibit).forEach(p => body.push(p));
 
   // Header — first page only
   const headerChildren = [
@@ -529,16 +680,19 @@ async function generateEngagementLetter(data) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `Engagement_Letter_${name.replace(/[^a-zA-Z0-9]/g,'_')}.docx`;
+  a.download = `Engagement_Letter_${meta.name.replace(/[^a-zA-Z0-9]/g,'_')}.docx`;
   a.click();
   URL.revokeObjectURL(url);
+
+  closeLetterModal();
+  showStatus(`\u2713 Engagement letter downloaded for ${meta.name}.`,'success');
 }
 
-async function generateAll(){if(!validateForm())return;const d=getFormData();const btn=document.getElementById('generateBtn');btn.disabled=true;btn.innerHTML='<div class="loading-spinner"></div> Generating...';try{const saved=await addClient(d);if(saved){exportSingleClientExcel(saved);await generateEngagementLetter(d);showStatus(`\u2713 ${clientDisplayName(d)} added \u2013 letter downloaded!`,'success');resetForm();}}catch(e){showStatus('Error: '+e.message,'error');}finally{btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg> Generate Letter + Add to Tracker';}}
+async function generateAll(){if(!validateForm())return;const d=getFormData();const btn=document.getElementById('generateBtn');btn.disabled=true;btn.innerHTML='<div class="loading-spinner"></div> Generating...';try{const saved=await addClient(d);if(saved){exportSingleClientExcel(saved);openLetterReview(d);showStatus(`\u2713 ${clientDisplayName(d)} added \u2013 review your letter.`,'success');resetForm();}}catch(e){showStatus('Error: '+e.message,'error');}finally{btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg> Generate Letter + Add to Tracker';}}
 
 async function addToTrackerOnly(){if(!validateForm())return;const d=getFormData();const btn=document.getElementById('trackerBtn');btn.disabled=true;btn.innerHTML='<div class="loading-spinner"></div> Adding...';try{const saved=await addClient(d);if(saved){showStatus(`\u2713 ${clientDisplayName(d)} added.`,'success');resetForm();}}finally{btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg> Add to Tracker Only';}}
 
-async function regenLetter(id){const clients=await getClients();const c=clients.find(x=>x.id===id);if(!c)return;try{await generateEngagementLetter(c);showStatus(`\u2713 Letter re-generated for ${clientDisplayName(c)}.`,'success');}catch(e){showStatus('Error: '+e.message,'error');}}
+async function regenLetter(id){const clients=await getClients();const c=clients.find(x=>x.id===id);if(!c)return;openLetterReview(c);}
 
 checkAuth();
 </script>
