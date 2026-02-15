@@ -180,7 +180,7 @@
     </div>
     <div class="auth-form active" id="loginForm">
       <div class="form-group"><label>Email</label><input type="email" id="loginEmail" placeholder="your@margolispllc.com"></div>
-      <div class="form-group" style="margin-top:16px"><label>Password</label><input type="password" id="loginPassword" placeholder="••••••••"></div>
+      <div class="form-group" style="margin-top:16px"><label>Password</label><input type="password" id="loginPassword" placeholder="••••••••" onkeydown="if(event.key==='Enter')handleLogin()"></div>
       <button class="btn btn-primary btn-full" onclick="handleLogin()" id="loginBtn" style="margin-top:24px">Sign In</button>
       <p class="help-text" style="text-align:center;margin-top:16px"><button onclick="switchAuthTab('reset')" style="background:none;border:none;color:var(--sage-dark);text-decoration:underline;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px">Forgot password?</button></p>
       <p class="help-text" style="text-align:center;margin-top:8px">First time? Click "Sign Up" above.</p>
@@ -188,19 +188,19 @@
     <div class="auth-form" id="signupForm">
       <div class="form-group"><label>Full Name</label><input type="text" id="signupName" placeholder="John Doe"></div>
       <div class="form-group" style="margin-top:16px"><label>Email</label><input type="email" id="signupEmail" placeholder="yourname@margolispllc.com"><p class="help-text">Must be a @margolispllc.com email</p></div>
-      <div class="form-group" style="margin-top:16px"><label>Password</label><input type="password" id="signupPassword" placeholder="••••••••"><p class="help-text">At least 6 characters</p></div>
+      <div class="form-group" style="margin-top:16px"><label>Password</label><input type="password" id="signupPassword" placeholder="••••••••" onkeydown="if(event.key==='Enter')handleSignup()"><p class="help-text">At least 6 characters</p></div>
       <button class="btn btn-primary btn-full" onclick="handleSignup()" id="signupBtn" style="margin-top:24px">Create Account</button>
     </div>
     <div class="auth-form" id="resetForm">
       <p style="color:var(--warm-gray);margin-bottom:24px;text-align:center;font-size:14px">Enter your email and we'll send a reset link.</p>
-      <div class="form-group"><label>Email</label><input type="email" id="resetEmail" placeholder="your@margolispllc.com"></div>
+      <div class="form-group"><label>Email</label><input type="email" id="resetEmail" placeholder="your@margolispllc.com" onkeydown="if(event.key==='Enter')handlePasswordReset()"></div>
       <button class="btn btn-primary btn-full" onclick="handlePasswordReset()" id="resetBtn" style="margin-top:24px">Send Reset Link</button>
       <p class="help-text" style="text-align:center;margin-top:16px"><button onclick="switchAuthTab('login')" style="background:none;border:none;color:var(--sage-dark);text-decoration:underline;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px">Back to Sign In</button></p>
     </div>
     <div class="auth-form" id="updatePasswordForm">
       <p style="color:var(--warm-gray);margin-bottom:24px;text-align:center;font-size:14px">Enter your new password below.</p>
       <div class="form-group"><label>New Password</label><input type="password" id="newPassword" placeholder="••••••••"><p class="help-text">At least 6 characters</p></div>
-      <div class="form-group" style="margin-top:16px"><label>Confirm Password</label><input type="password" id="confirmPassword" placeholder="••••••••"></div>
+      <div class="form-group" style="margin-top:16px"><label>Confirm Password</label><input type="password" id="confirmPassword" placeholder="••••••••" onkeydown="if(event.key==='Enter')handleUpdatePassword()"></div>
       <button class="btn btn-primary btn-full" onclick="handleUpdatePassword()" id="updatePasswordBtn" style="margin-top:24px">Update Password</button>
     </div>
   </div>
@@ -230,8 +230,8 @@
   </div>
 </div>
 <div class="tab-bar">
-  <button class="tab-btn active" onclick="switchTab('intake')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg> New Intake</button>
-  <button class="tab-btn" onclick="switchTab('dashboard')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg> Client Tracker <span class="count" id="trackerCount">0</span></button>
+  <button class="tab-btn active" onclick="switchTab('intake',this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg> New Intake</button>
+  <button class="tab-btn" onclick="switchTab('dashboard',this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg> Client Tracker <span class="count" id="trackerCount">0</span></button>
 </div>
 
 <div class="tab-content active" id="tab-intake">
@@ -350,13 +350,22 @@ const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
 let currentUser=null;
 
+db.auth.onAuthStateChange((event,session)=>{
+  if(event==='SIGNED_OUT'||event==='TOKEN_REFRESHED'&&!session){
+    currentUser=null;
+    document.getElementById('authContainer').style.display='flex';
+    document.getElementById('appContainer').classList.remove('visible');
+    showStatus('Session expired \u2014 please sign in again.','error');
+  }
+});
+
 function switchAuthTab(t){document.querySelectorAll('.auth-tab').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.auth-form').forEach(x=>x.classList.remove('active'));if(t==='login'){document.querySelectorAll('.auth-tab')[0].classList.add('active');document.getElementById('loginForm').classList.add('active');}else if(t==='signup'){document.querySelectorAll('.auth-tab')[1].classList.add('active');document.getElementById('signupForm').classList.add('active');}else if(t==='reset'){document.getElementById('resetForm').classList.add('active');}else if(t==='update-password'){document.getElementById('updatePasswordForm').classList.add('active');}}
 
 async function handleLogin(){const e=document.getElementById('loginEmail').value.trim().toLowerCase(),p=document.getElementById('loginPassword').value;if(!e||!p){showStatus('Please enter email and password','error');return;}if(!e.endsWith('@margolispllc.com')){showStatus('Access restricted to @margolispllc.com','error');return;}const b=document.getElementById('loginBtn');b.disabled=true;b.innerHTML='<div class="loading-spinner"></div> Signing In...';try{const{data,error}=await db.auth.signInWithPassword({email:e,password:p});if(error)throw error;currentUser=data.user;if(!currentUser.email.endsWith('@margolispllc.com')){await db.auth.signOut();throw new Error('Access restricted');}showApp();showStatus('\u2713 Welcome back!','success');}catch(x){showStatus('Login failed: '+x.message,'error');b.disabled=false;b.innerHTML='Sign In';}}
 
 async function handleSignup(){const n=document.getElementById('signupName').value.trim(),e=document.getElementById('signupEmail').value.trim().toLowerCase(),p=document.getElementById('signupPassword').value;if(!n||!e||!p){showStatus('Please fill in all fields','error');return;}if(!e.endsWith('@margolispllc.com')){showStatus('Access restricted to @margolispllc.com','error');return;}if(p.length<6){showStatus('Password must be at least 6 characters','error');return;}const b=document.getElementById('signupBtn');b.disabled=true;b.innerHTML='<div class="loading-spinner"></div> Creating...';try{const{data,error}=await db.auth.signUp({email:e,password:p,options:{data:{full_name:n}}});if(error)throw error;if(data.user){if(data.user.identities&&data.user.identities.length===0){showStatus('Email already registered. Try signing in or resetting your password.','error');switchAuthTab('login');}else if(data.session){currentUser=data.user;showApp();showStatus('\u2713 Account created!','success');}else{showStatus('\u2713 Account created! Check your email for a confirmation link, then sign in.','success');switchAuthTab('login');}}}catch(x){showStatus('Signup failed: '+x.message,'error');}finally{b.disabled=false;b.innerHTML='Create Account';}}
 
-async function handlePasswordReset(){const e=document.getElementById('resetEmail').value.trim();if(!e){showStatus('Enter your email','error');return;}const b=document.getElementById('resetBtn');b.disabled=true;b.innerHTML='<div class="loading-spinner"></div> Sending...';try{const{error}=await db.auth.resetPasswordForEmail(e,{redirectTo:window.location.origin+window.location.pathname});if(error)throw error;showStatus('\u2713 Reset link sent!','success');setTimeout(()=>switchAuthTab('login'),3000);}catch(x){showStatus('Error: '+x.message,'error');}finally{b.disabled=false;b.innerHTML='Send Reset Link';}}
+async function handlePasswordReset(){const e=document.getElementById('resetEmail').value.trim().toLowerCase();if(!e){showStatus('Enter your email','error');return;}if(!e.endsWith('@margolispllc.com')){showStatus('Access restricted to @margolispllc.com','error');return;}const b=document.getElementById('resetBtn');b.disabled=true;b.innerHTML='<div class="loading-spinner"></div> Sending...';try{const{error}=await db.auth.resetPasswordForEmail(e,{redirectTo:window.location.origin+window.location.pathname});if(error)throw error;showStatus('\u2713 Reset link sent!','success');setTimeout(()=>switchAuthTab('login'),3000);}catch(x){showStatus('Error: '+x.message,'error');}finally{b.disabled=false;b.innerHTML='Send Reset Link';}}
 
 async function handleUpdatePassword(){const n=document.getElementById('newPassword').value,c=document.getElementById('confirmPassword').value;if(!n||!c){showStatus('Fill in both fields','error');return;}if(n.length<6){showStatus('Min 6 characters','error');return;}if(n!==c){showStatus('Passwords do not match','error');return;}const b=document.getElementById('updatePasswordBtn');b.disabled=true;b.innerHTML='<div class="loading-spinner"></div> Updating...';try{const{error}=await db.auth.updateUser({password:n});if(error)throw error;showStatus('\u2713 Password updated!','success');showApp();}catch(x){showStatus('Error: '+x.message,'error');b.disabled=false;b.innerHTML='Update Password';}}
 
@@ -451,13 +460,13 @@ async function getClients(){try{const{data,error}=await db.from('clients').selec
 
 async function addClient(d){try{const{data,error}=await db.from('clients').insert([{user_id:currentUser.id,client_type:d.clientType,entity_name:d.entityName,contact_name:d.contactName,contact_title:d.contactTitle,client_email:d.clientEmail,client_phone:d.clientPhone,client_address:d.clientAddress,matter_type:d.matterType,attorney:d.attorney,matter_description:d.matterDescription,adverse_party:d.adverseParty,fee_type:d.feeType,hourly_rate:d.hourlyRate,paralegal_rate:d.paralegalRate,flat_fee_amount:d.flatFeeAmount,retainer_amount:d.retainerAmount,engagement_date:d.engagementDate,conflicts:d.conflicts,specialist_involved:d.specialistInvolved,specialist_name:d.specialistName,fee_sharing_details:d.feeSharingDetails,referral_source:d.referralSource,priority:d.priority,internal_notes:d.internalNotes,status:'Prospective'}]).select().single();if(error)throw error;updateTrackerCount();return data;}catch(e){showStatus('Error: '+e.message,'error');return null;}}
 
-async function updateClientStatus(id,s){try{const u={status:s};if(s==='Letter Sent')u.letter_sent=new Date().toLocaleDateString();if(s==='Executed')u.letter_executed=new Date().toLocaleDateString();const{error}=await db.from('clients').update(u).eq('id',id);if(error)throw error;renderDashboard();}catch(e){showStatus('Error: '+e.message,'error');}}
+async function updateClientStatus(id,s){try{const u={status:s};const today=new Date().toISOString().slice(0,10);if(s==='Letter Sent')u.letter_sent=today;if(s==='Executed')u.letter_executed=today;const{error}=await db.from('clients').update(u).eq('id',id);if(error)throw error;renderDashboard();}catch(e){showStatus('Error: '+e.message,'error');}}
 
 async function deleteClient(id){if(!confirm('Delete this client?'))return;try{const{error}=await db.from('clients').delete().eq('id',id);if(error)throw error;renderDashboard();showStatus('Removed.','success');}catch(e){showStatus('Error: '+e.message,'error');}}
 
-async function clearAllData(){if(!confirm('Permanently delete ALL data?'))return;try{const{error}=await db.from('clients').delete().neq('id','00000000-0000-0000-0000-000000000000');if(error)throw error;renderDashboard();showStatus('Cleared.','success');}catch(e){showStatus('Error: '+e.message,'error');}}
+async function clearAllData(){if(prompt('This will permanently delete ALL client records. Type DELETE to confirm')!=='DELETE')return;try{const{error}=await db.from('clients').delete().neq('id','00000000-0000-0000-0000-000000000000');if(error)throw error;renderDashboard();showStatus('Cleared.','success');}catch(e){showStatus('Error: '+e.message,'error');}}
 
-function switchTab(t){document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));document.getElementById('tab-'+t).classList.add('active');event.currentTarget.classList.add('active');if(t==='dashboard')renderDashboard();}
+function switchTab(t,btn){document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));document.getElementById('tab-'+t).classList.add('active');if(btn)btn.classList.add('active');if(t==='dashboard')renderDashboard();}
 
 async function updateTrackerCount(){const c=await getClients();document.getElementById('trackerCount').textContent=c.length;}
 
@@ -467,7 +476,9 @@ feeRadios.forEach(r=>{r.addEventListener('change',()=>{feeLabels.forEach(l=>l.cl
 document.getElementById('specialistInvolved').addEventListener('change',e=>{document.getElementById('specialistFields').classList.toggle('visible',e.target.value==='Yes');});
 document.getElementById('engagementDate').valueAsDate=new Date();
 
-function showStatus(m,t='success'){const b=document.getElementById('statusBar');document.getElementById('statusText').textContent=m;b.className='status-bar visible '+t;setTimeout(()=>b.classList.remove('visible'),4000);}
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+
+function showStatus(m,t='success'){const b=document.getElementById('statusBar');document.getElementById('statusText').textContent=m;b.className='status-bar visible '+t;const ms=t==='error'?6000:m.length>60?5000:4000;setTimeout(()=>b.classList.remove('visible'),ms);}
 
 function getFormData(){return{clientType:document.getElementById('clientType').value,entityName:document.getElementById('entityName').value,contactName:document.getElementById('contactName').value,contactTitle:document.getElementById('contactTitle').value,clientEmail:document.getElementById('clientEmail').value,clientPhone:document.getElementById('clientPhone').value,clientAddress:document.getElementById('clientAddress').value,matterType:document.getElementById('matterType').value,attorney:document.getElementById('attorney').value,matterDescription:document.getElementById('matterDescription').value,adverseParty:document.getElementById('adverseParty').value,feeType:document.querySelector('input[name="feeType"]:checked').value,hourlyRate:document.getElementById('hourlyRate').value,paralegalRate:document.getElementById('paralegalRate').value,flatFeeAmount:document.getElementById('flatFeeAmount').value,monthlyFee:document.getElementById('monthlyFee').value,retainerAmount:document.getElementById('retainerAmount').value,engagementDate:document.getElementById('engagementDate').value,conflicts:document.getElementById('conflicts').value,specialistInvolved:document.getElementById('specialistInvolved').value,specialistName:document.getElementById('specialistName').value,feeSharingDetails:document.getElementById('feeSharingDetails').value,referralSource:document.getElementById('referralSource').value,priority:document.getElementById('priority').value,internalNotes:document.getElementById('internalNotes').value};}
 
@@ -478,7 +489,7 @@ function resetForm(){document.getElementById('intakeForm').reset();document.quer
 function formatDate(s){if(!s)return'';const d=new Date(s+'T00:00:00');return d.toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});}
 function clientDisplayName(d){return d.entity_name||d.contact_name||d.entityName||d.contactName||'Unknown';}
 
-async function renderDashboard(){const clients=await getClients();updateTrackerCount();const t=clients.length,p=clients.filter(c=>c.status==='Prospective').length,s=clients.filter(c=>c.status==='Letter Sent').length,e=clients.filter(c=>c.status==='Executed').length;document.getElementById('statsRow').innerHTML=`<div class="stat-card"><div class="stat-num">${t}</div><div class="stat-label">Total</div></div><div class="stat-card"><div class="stat-num">${p}</div><div class="stat-label">Prospective</div></div><div class="stat-card"><div class="stat-num">${s}</div><div class="stat-label">Letter Sent</div></div><div class="stat-card"><div class="stat-num">${e}</div><div class="stat-label">Executed</div></div>`;if(!clients.length){document.getElementById('trackerTableContainer').innerHTML='<div class="empty-state"><p>No clients yet.</p></div>';return;}const sc=s=>({Prospective:'status-prospective','Letter Sent':'status-sent',Executed:'status-executed',Declined:'status-declined'}[s]||'');const rows=clients.map(c=>`<tr><td style="font-weight:600">${clientDisplayName(c)}</td><td>${c.matter_type||''}</td><td>${c.attorney?c.attorney.split(',')[0]:''}</td><td>${c.fee_type||''}</td><td>${c.engagement_date?formatDate(c.engagement_date):''}</td><td><span class="status-pill ${sc(c.status)}">${c.status}</span></td><td><div class="row-actions"><select onchange="updateClientStatus('${c.id}',this.value)"><option value="Prospective" ${c.status==='Prospective'?'selected':''}>Prospective</option><option value="Letter Sent" ${c.status==='Letter Sent'?'selected':''}>Letter Sent</option><option value="Executed" ${c.status==='Executed'?'selected':''}>Executed</option><option value="Declined" ${c.status==='Declined'?'selected':''}>Declined</option></select><button onclick="regenLetter('${c.id}')">🔄</button><button class="del" onclick="deleteClient('${c.id}')">✕</button></div></td></tr>`).join('');document.getElementById('trackerTableContainer').innerHTML=`<table class="tracker-table"><thead><tr><th>Client</th><th>Matter</th><th>Attorney</th><th>Fee</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead><tbody>${rows}</tbody></table>`;}
+async function renderDashboard(){const clients=await getClients();updateTrackerCount();const t=clients.length,p=clients.filter(c=>c.status==='Prospective').length,s=clients.filter(c=>c.status==='Letter Sent').length,e=clients.filter(c=>c.status==='Executed').length;document.getElementById('statsRow').innerHTML=`<div class="stat-card"><div class="stat-num">${t}</div><div class="stat-label">Total</div></div><div class="stat-card"><div class="stat-num">${p}</div><div class="stat-label">Prospective</div></div><div class="stat-card"><div class="stat-num">${s}</div><div class="stat-label">Letter Sent</div></div><div class="stat-card"><div class="stat-num">${e}</div><div class="stat-label">Executed</div></div>`;if(!clients.length){document.getElementById('trackerTableContainer').innerHTML='<div class="empty-state"><p>No clients yet.</p></div>';return;}const sc=s=>({Prospective:'status-prospective','Letter Sent':'status-sent',Executed:'status-executed',Declined:'status-declined'}[s]||'');const rows=clients.map(c=>`<tr><td style="font-weight:600">${esc(clientDisplayName(c))}</td><td>${esc(c.matter_type||'')}</td><td>${esc(c.attorney?c.attorney.split(',')[0]:'')}</td><td>${esc(c.fee_type||'')}</td><td>${c.engagement_date?esc(formatDate(c.engagement_date)):''}</td><td><span class="status-pill ${sc(c.status)}">${esc(c.status)}</span></td><td><div class="row-actions"><select onchange="updateClientStatus('${esc(c.id)}',this.value)"><option value="Prospective" ${c.status==='Prospective'?'selected':''}>Prospective</option><option value="Letter Sent" ${c.status==='Letter Sent'?'selected':''}>Letter Sent</option><option value="Executed" ${c.status==='Executed'?'selected':''}>Executed</option><option value="Declined" ${c.status==='Declined'?'selected':''}>Declined</option></select><button onclick="regenLetter('${esc(c.id)}')">🔄</button><button class="del" onclick="deleteClient('${esc(c.id)}')">✕</button></div></td></tr>`).join('');document.getElementById('trackerTableContainer').innerHTML=`<table class="tracker-table"><thead><tr><th>Client</th><th>Matter</th><th>Attorney</th><th>Fee</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead><tbody>${rows}</tbody></table>`;}
 
 const XH=['Date','Client','Entity','Type','Contact','Email','Phone','Matter','Description','Attorney','Fee Type','Rate','Retainer','Adverse','Conflicts','Specialist','Referral','Priority','Status','Letter Sent','Executed','Notes'];
 function ctr(c){const r=c.fee_type==='Hourly'?`${c.hourly_rate}/hr`:c.fee_type==='Flat Fee'?`Flat: ${c.flat_fee_amount}`:c.fee_type==='Subscription'?`Sub: ${c.retainer_amount}/mo`:`${c.hourly_rate}/hr + Flat: ${c.flat_fee_amount}`;return[c.engagement_date?formatDate(c.engagement_date):'',clientDisplayName(c),c.entity_name,c.client_type,c.contact_name,c.client_email,c.client_phone,c.matter_type,c.matter_description,c.attorney,c.fee_type,r,c.retainer_amount,c.adverse_party,c.conflicts,c.specialist_involved==='Yes'?c.specialist_name:'N/A',c.referral_source,c.priority,c.status||'Prospective',c.letter_sent||'',c.letter_executed||'',c.internal_notes];}
@@ -563,21 +574,21 @@ function openLetterReview(data) {
 
   // Header fields (date, recipient, re line, greeting)
   html += `<div class="letter-section"><div class="letter-section-header"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> Letter Header</div>`;
-  html += `<div class="letter-section-row"><div class="letter-section-field"><label>Date</label><input type="text" id="rev_date" value="${meta.engDate}"></div><div class="letter-section-field"><label>Recipient</label><input type="text" id="rev_recipient" value="${meta.clientLabel}"></div></div>`;
+  html += `<div class="letter-section-row"><div class="letter-section-field"><label>Date</label><input type="text" id="rev_date" value="${esc(meta.engDate)}"></div><div class="letter-section-field"><label>Recipient</label><input type="text" id="rev_recipient" value="${esc(meta.clientLabel)}"></div></div>`;
   if (meta.isEntity && meta.contact) {
-    html += `<div class="letter-section-row"><div class="letter-section-field"><label>Attention</label><input type="text" id="rev_attention" value="${meta.contact}${meta.title?', '+meta.title:''}"></div><div class="letter-section-field"><label>Email</label><input type="text" id="rev_email" value="${meta.email}"></div></div>`;
+    html += `<div class="letter-section-row"><div class="letter-section-field"><label>Attention</label><input type="text" id="rev_attention" value="${esc(meta.contact)}${meta.title?', '+esc(meta.title):''}"></div><div class="letter-section-field"><label>Email</label><input type="text" id="rev_email" value="${esc(meta.email)}"></div></div>`;
   } else {
-    html += `<div class="letter-section-row"><div class="letter-section-field"><label>Email</label><input type="text" id="rev_email" value="${meta.email}"></div><div class="letter-section-field"><label>Attorney</label><input type="text" id="rev_atty" value="${meta.sigFull}"></div></div>`;
+    html += `<div class="letter-section-row"><div class="letter-section-field"><label>Email</label><input type="text" id="rev_email" value="${esc(meta.email)}"></div><div class="letter-section-field"><label>Attorney</label><input type="text" id="rev_atty" value="${esc(meta.sigFull)}"></div></div>`;
   }
-  html += `<div class="letter-section-row"><div class="letter-section-field" style="grid-column:1/-1;border-right:none;"><label>Re: Line</label><input type="text" id="rev_re" value="Engagement Letter \u2014 ${meta.matter} \u2014 ${meta.clientLabel}" style="width:100%"></div></div>`;
-  html += `<div class="letter-section-row"><div class="letter-section-field" style="grid-column:1/-1;border-right:none;"><label>Greeting</label><input type="text" id="rev_greeting" value="Dear ${meta.contact}:" style="width:100%"></div></div>`;
+  html += `<div class="letter-section-row"><div class="letter-section-field" style="grid-column:1/-1;border-right:none;"><label>Re: Line</label><input type="text" id="rev_re" value="Engagement Letter \u2014 ${esc(meta.matter)} \u2014 ${esc(meta.clientLabel)}" style="width:100%"></div></div>`;
+  html += `<div class="letter-section-row"><div class="letter-section-field" style="grid-column:1/-1;border-right:none;"><label>Greeting</label><input type="text" id="rev_greeting" value="Dear ${esc(meta.contact)}:" style="width:100%"></div></div>`;
   html += '</div>';
 
   // Editable sections
   sections.forEach(s => {
     const tall = s.text.length > 400 ? ' tall' : '';
-    html += `<div class="letter-section"><div class="letter-section-header"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> ${s.label}</div>`;
-    html += `<textarea id="rev_${s.id}" class="${tall}">${s.text}</textarea></div>`;
+    html += `<div class="letter-section"><div class="letter-section-header"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> ${esc(s.label)}</div>`;
+    html += `<textarea id="rev_${s.id}" class="${tall}">${esc(s.text)}</textarea></div>`;
   });
 
   container.innerHTML = html;
@@ -600,8 +611,20 @@ function closeLetterModal() {
   _letterReviewSections = null;
 }
 
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape' && document.getElementById('letterModal').classList.contains('visible')) {
+    closeLetterModal();
+  }
+});
+
 async function downloadFromReview() {
   if (!_letterReviewMeta || !_letterReviewSections) return;
+
+  const dlBtns = document.querySelectorAll('[onclick="downloadFromReview()"]');
+  const savedLabels = [];
+  dlBtns.forEach(b => { savedLabels.push(b.innerHTML); b.disabled = true; b.innerHTML = '<div class="loading-spinner"></div> Generating...'; });
+
+  try {
 
   const meta = _letterReviewMeta;
   // Read edited values from the modal
@@ -813,6 +836,12 @@ async function downloadFromReview() {
 
   closeLetterModal();
   showStatus(`\u2713 Engagement letter downloaded for ${meta.name}.`,'success');
+
+  } catch(err) {
+    showStatus('Error generating letter: ' + err.message, 'error');
+  } finally {
+    dlBtns.forEach((b,i) => { b.disabled = false; b.innerHTML = savedLabels[i]; });
+  }
 }
 
 async function generateAll(){if(!validateForm())return;const d=getFormData();const btn=document.getElementById('generateBtn');btn.disabled=true;btn.innerHTML='<div class="loading-spinner"></div> Generating...';try{const saved=await addClient(d);if(saved){exportSingleClientExcel(saved);openLetterReview(d);showStatus(`\u2713 ${clientDisplayName(d)} added \u2013 review your letter.`,'success');resetForm();}}catch(e){showStatus('Error: '+e.message,'error');}finally{btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg> Generate Letter + Add to Tracker';}}
