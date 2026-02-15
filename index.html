@@ -473,16 +473,14 @@ function removeLogo() {
   showStatus('Logo removed.', 'success');
 }
 
-function getFirmLogoBuffer() {
+function getFirmLogoData() {
   const dataUrl = localStorage.getItem('firmLogoDataUrl');
   if (!dataUrl) return null;
   try {
     const base64 = dataUrl.split(',')[1];
     if (!base64) return null;
-    const binary = atob(base64);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-    return { buffer: bytes };
+    atob(base64); // validate the base64 is decodable
+    return { base64 };
   } catch (e) {
     // Corrupted localStorage data — clear it and continue without logo
     localStorage.removeItem('firmLogoDataUrl');
@@ -641,7 +639,7 @@ async function buildDocxBlob() {
   textToParas(editedSections.exhibit).forEach(p => body.push(p));
 
   const noBorders = { top:{style:TBorder.NONE,size:0}, bottom:{style:TBorder.NONE,size:0}, left:{style:TBorder.NONE,size:0}, right:{style:TBorder.NONE,size:0}, insideHorizontal:{style:TBorder.NONE,size:0}, insideVertical:{style:TBorder.NONE,size:0} };
-  const firmLogo = getFirmLogoBuffer();
+  const firmLogo = getFirmLogoData();
   const attorneyLines = [
     new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:40}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'MATT A. MARGOLIS, ESQ.'})] }),
     new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:40}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'PARTNER'})] }),
@@ -659,7 +657,7 @@ async function buildDocxBlob() {
 
   let headerChildren;
   if (firmLogo) {
-    const logoCell = new TableCell({ borders:noBorders, verticalAlign:VerticalAlign.TOP, width:{size:3400,type:WidthType.DXA}, children:[new Paragraph({children:[new ImageRun({data:firmLogo.buffer,transformation:{width:180,height:180}})]})] });
+    const logoCell = new TableCell({ borders:noBorders, verticalAlign:VerticalAlign.TOP, width:{size:3400,type:WidthType.DXA}, children:[new Paragraph({children:[new ImageRun({data:firmLogo.base64,transformation:{width:180,height:180}})]})] });
     const infoCell = new TableCell({ borders:noBorders, verticalAlign:VerticalAlign.TOP, width:{size:5960,type:WidthType.DXA}, children:attorneyLines });
     const headerTable = new Table({ rows:[new TableRow({children:[logoCell,infoCell]})], width:{size:9360,type:WidthType.DXA}, borders:noBorders });
     headerChildren = [headerTable, new Paragraph({spacing:{before:200},border:{bottom:{style:BorderStyle.SINGLE,size:6,color:'8FAF8F',space:1}},children:[]})];
