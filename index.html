@@ -188,7 +188,8 @@
   .approval-pending{background:var(--amber-pale);color:#9A7B00;}
   .approval-approved{background:var(--sage-pale);color:var(--sage-dark);}
   .approval-changes{background:#FBEAEA;color:var(--error);}
-  .approval-bar{display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid var(--border);border-radius:10px;margin-bottom:20px;flex-wrap:wrap;}
+  .approval-bar{display:flex;flex-direction:column;gap:12px;padding:16px 18px;border:1px solid var(--border);border-radius:10px;margin-bottom:20px;}
+  .approval-bar .approval-top-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
   .approval-bar.bar-draft{background:var(--light-gray);border-color:var(--border);}
   .approval-bar.bar-pending{background:var(--amber-pale);border-color:#E6D990;}
   .approval-bar.bar-approved{background:var(--sage-pale);border-color:var(--sage-light);}
@@ -196,10 +197,14 @@
   .approval-bar .approval-status-text{font-size:13px;font-weight:600;flex:1;}
   .approval-bar .approval-status-text small{font-weight:400;color:var(--warm-gray);display:block;font-size:11px;margin-top:2px;}
   .approval-bar .approval-actions{display:flex;gap:8px;flex-shrink:0;}
+  .approval-bar .reviewer-row{display:flex;align-items:center;gap:10px;padding-top:4px;}
+  .approval-bar .reviewer-row label{font-size:12px;font-weight:600;color:var(--dark);white-space:nowrap;}
+  .approval-bar .reviewer-select{padding:7px 12px;border-radius:8px;border:1px solid var(--border);font-size:13px;font-family:inherit;background:#fff;min-width:200px;cursor:pointer;}
+  .approval-bar .reviewer-select:focus{border-color:var(--navy);outline:none;box-shadow:0 0 0 2px rgba(44,62,80,0.12);}
   .btn-approve{background:#27AE60;color:#fff;border:none;}
   .btn-approve:hover:not(:disabled){background:#219a52;transform:translateY(-1px);box-shadow:0 4px 16px rgba(39,174,96,0.3);}
-  .btn-request-changes{background:var(--amber);color:#fff;border:none;}
-  .btn-request-changes:hover:not(:disabled){background:#cc9615;transform:translateY(-1px);}
+  .btn-send-back{background:#C0392B;color:#fff;border:none;}
+  .btn-send-back:hover:not(:disabled){background:#a93226;transform:translateY(-1px);box-shadow:0 4px 16px rgba(192,57,43,0.3);}
   .btn-submit-review{background:#2980B9;color:#fff;border:none;}
   .btn-submit-review:hover:not(:disabled){background:#2471a3;transform:translateY(-1px);box-shadow:0 4px 16px rgba(41,128,185,0.3);}
   .review-notes-box{background:var(--amber-pale);border:1px solid #E6D990;border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px;line-height:1.5;}
@@ -1063,7 +1068,7 @@ async function renderDashboard() {
     const clientIds = allClients.map(c => c.id);
     if (clientIds.length > 0) {
       const { data: letters } = await db.from('engagement_letters')
-        .select('client_id, approval_status, reviewed_by, review_notes, created_at')
+        .select('client_id, approval_status, reviewed_by, review_notes, assigned_reviewer, created_at')
         .in('client_id', clientIds)
         .order('created_at', { ascending: false });
       if (letters) {
@@ -1220,24 +1225,21 @@ async function submitForReview() {
 
     try {
       const blocks = [
-        { type: 'header', text: { type: 'plain_text', text: '\ud83d\udcdd Letter Needs Review', emoji: true } },
+        { type: 'header', text: { type: 'plain_text', text: `${escSlack(assignedReviewer)}: Letter Needs Your Approval`, emoji: true } },
         { type: 'section', fields: [
           { type: 'mrkdwn', text: `*Client:*\n${escSlack(meta.name)}` },
           { type: 'mrkdwn', text: `*Matter:*\n${escSlack(meta.matter)}` }
         ]},
         { type: 'section', fields: [
           { type: 'mrkdwn', text: `*Attorney:*\n${escSlack(meta.atty)}` },
-          { type: 'mrkdwn', text: `*Assigned Reviewer:*\n${escSlack(assignedReviewer)}` }
-        ]},
-        { type: 'section', fields: [
           { type: 'mrkdwn', text: `*Submitted by:*\n${escSlack(sentBy)}` }
         ]},
         { type: 'actions', elements: [
-          { type: 'button', text: { type: 'plain_text', text: 'Review in Intakr', emoji: true }, url: letterLink, style: 'primary' }
+          { type: 'button', text: { type: 'plain_text', text: 'Review & Approve in Intakr', emoji: true }, url: letterLink, style: 'primary' }
         ]}
       ];
       await notifySlack({
-        text: `Letter needs review: ${escSlack(meta.name)} - ${escSlack(meta.matter)}`,
+        text: `${escSlack(assignedReviewer)}: Letter needs your approval — ${escSlack(meta.name)} - ${escSlack(meta.matter)} (from ${escSlack(sentBy)})`,
         blocks
       });
     } catch (e) { /* Slack notification is best-effort */ }
@@ -1281,9 +1283,20 @@ async function approveLetter() {
     // Slack notification
     if (isSlackEnabled() && _letterReviewMeta) {
       const meta = _letterReviewMeta;
+      const approverName = matchUserToAttorney(currentUser.email) || currentUser.email;
       try {
         await notifySlack({
-          text: `\u2705 Letter approved: ${escSlack(meta.name)} - ${escSlack(meta.matter)} (by ${escSlack(currentUser.email)})`
+          text: `Letter approved: ${escSlack(meta.name)} - ${escSlack(meta.matter)}`,
+          blocks: [
+            { type: 'header', text: { type: 'plain_text', text: 'Letter Approved', emoji: true } },
+            { type: 'section', fields: [
+              { type: 'mrkdwn', text: `*Client:*\n${escSlack(meta.name)}` },
+              { type: 'mrkdwn', text: `*Matter:*\n${escSlack(meta.matter)}` }
+            ]},
+            { type: 'section', fields: [
+              { type: 'mrkdwn', text: `*Approved by:*\n${escSlack(approverName)}` }
+            ]}
+          ]
         });
       } catch (e) { /* best-effort */ }
     }
@@ -1292,12 +1305,14 @@ async function approveLetter() {
   }
 }
 
-async function requestChanges() {
-  const notes = prompt('What changes are needed?');
+async function sendBackWithEdits() {
+  const notes = prompt('Notes for the submitter (what needs to change, or what you edited):');
   if (notes === null) return;
-  if (!notes.trim()) { showStatus('Please provide notes about the requested changes.', 'error'); return; }
-  if (!_letterApprovalId && _letterClientId) {
-    const savedId = await saveLetterToDb('Pending Review');
+  if (!notes.trim()) { showStatus('Please provide notes explaining what needs to change.', 'error'); return; }
+
+  // Save the reviewer's edits as a new version before sending back
+  if (_letterClientId) {
+    const savedId = await saveLetterToDb('Changes Requested');
     if (savedId) _letterApprovalId = savedId;
   }
   if (!_letterApprovalId) { showStatus('Letter must be saved first. Try saving as draft.', 'error'); return; }
@@ -1327,14 +1342,26 @@ async function requestChanges() {
 
     _letterApprovalStatus = 'Changes Requested';
     updateApprovalBar(notes.trim(), currentUser.email);
-    showStatus('Changes requested.', 'success');
+    showStatus('Letter sent back with your edits and notes.', 'success');
 
-    // Slack notification
+    // Slack notification — notify the original submitter
     if (isSlackEnabled() && _letterReviewMeta) {
       const meta = _letterReviewMeta;
+      const reviewerName = matchUserToAttorney(currentUser.email) || currentUser.email;
       try {
         await notifySlack({
-          text: `\u270f\ufe0f Changes requested on letter: ${escSlack(meta.name)} - ${escSlack(meta.matter)}\nNotes: ${escSlack(notes.trim())} (by ${escSlack(currentUser.email)})`
+          text: `Letter sent back: ${escSlack(meta.name)} - ${escSlack(meta.matter)}`,
+          blocks: [
+            { type: 'header', text: { type: 'plain_text', text: 'Letter Sent Back for Revision', emoji: true } },
+            { type: 'section', fields: [
+              { type: 'mrkdwn', text: `*Client:*\n${escSlack(meta.name)}` },
+              { type: 'mrkdwn', text: `*Matter:*\n${escSlack(meta.matter)}` }
+            ]},
+            { type: 'section', fields: [
+              { type: 'mrkdwn', text: `*Reviewed by:*\n${escSlack(reviewerName)}` },
+              { type: 'mrkdwn', text: `*Notes:*\n${escSlack(notes.trim())}` }
+            ]}
+          ]
         });
       } catch (e) { /* best-effort */ }
     }
@@ -1379,44 +1406,54 @@ function updateApprovalBar(reviewNotes, reviewedBy) {
   }[status] || 'bar-draft';
 
   let html = `<div class="approval-bar ${barClass}">`;
+
+  // --- Top row: status text + action buttons ---
+  html += `<div class="approval-top-row">`;
   html += `<div class="approval-status-text">`;
 
   if (status === 'Draft') {
     html += `Status: Draft`;
-    html += `<small>Select a reviewer and submit when ready.</small>`;
+    html += `<small>Designate a reviewer below, then submit for approval.</small>`;
   } else if (status === 'Pending Review') {
     html += `Status: Pending Review`;
     const reviewer = _letterAssignedReviewer;
-    html += `<small>Assigned to ${reviewer ? esc(reviewer) : 'a reviewing attorney'}.</small>`;
+    html += `<small>Sent to ${reviewer ? esc(reviewer) : 'reviewer'} for approval.</small>`;
   } else if (status === 'Approved') {
     html += `Status: Approved`;
     if (reviewedBy) html += `<small>Approved by ${esc(reviewedBy)}</small>`;
   } else if (status === 'Changes Requested') {
-    html += `Status: Changes Requested`;
-    if (reviewedBy) html += `<small>Reviewed by ${esc(reviewedBy)}</small>`;
+    html += `Status: Sent Back`;
+    if (reviewedBy) html += `<small>Returned by ${esc(reviewedBy)} &mdash; see notes below. Edit the letter and resubmit.</small>`;
   }
 
   html += `</div><div class="approval-actions">`;
 
-  // Reviewer dropdown for Draft and Changes Requested
   if (status === 'Draft' || status === 'Changes Requested') {
-    const options = getReviewerOptions();
-    const selected = _letterAssignedReviewer || '';
-    html += `<select id="reviewerSelect" class="reviewer-select" style="padding:6px 10px;border-radius:6px;border:1px solid var(--border);font-size:12px;font-family:inherit;">`;
-    html += `<option value="">Select reviewer...</option>`;
-    options.forEach(name => {
-      const shortName = name.split(',')[0].split(' ').pop();
-      html += `<option value="${esc(name)}" ${name === selected ? 'selected' : ''}>${esc(shortName)}</option>`;
-    });
-    html += `</select>`;
-    html += `<button class="btn btn-sm btn-submit-review" onclick="submitForReview()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg> Submit for Review</button>`;
+    html += `<button class="btn btn-sm btn-submit-review" onclick="submitForReview()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg> Submit for Approval</button>`;
   }
   if (status === 'Pending Review') {
     html += `<button class="btn btn-sm btn-approve" onclick="approveLetter()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Approve</button>`;
-    html += `<button class="btn btn-sm btn-request-changes" onclick="requestChanges()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg> Request Changes</button>`;
+    html += `<button class="btn btn-sm btn-send-back" onclick="sendBackWithEdits()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 14l-4-4 4-4"/><path d="M5 10h11a4 4 0 0 1 0 8h-1"/></svg> Send Back with Edits</button>`;
   }
 
-  html += `</div></div>`;
+  html += `</div></div>`; // close top-row
+
+  // --- Reviewer picker row (Draft / Changes Requested) ---
+  if (status === 'Draft' || status === 'Changes Requested') {
+    const options = getReviewerOptions();
+    const selected = _letterAssignedReviewer || '';
+    html += `<div class="reviewer-row">`;
+    html += `<label>Assign Reviewer:</label>`;
+    html += `<select id="reviewerSelect" class="reviewer-select">`;
+    html += `<option value="">Choose who will review...</option>`;
+    options.forEach(name => {
+      html += `<option value="${esc(name)}" ${name === selected ? 'selected' : ''}>${esc(name)}</option>`;
+    });
+    html += `</select>`;
+    html += `</div>`;
+  }
+
+  html += `</div>`; // close approval-bar
 
   // Show review notes if status is Changes Requested
   if (status === 'Changes Requested' && reviewNotes) {
@@ -1759,13 +1796,12 @@ function showLetterModal(meta, sections, clientId, headerOverrides, savedVersion
     });
   });
 
-  // Render the approval bar
-  if (_letterApprovalStatus) {
-    updateApprovalBar(
-      approvalData ? approvalData.reviewNotes : null,
-      approvalData ? approvalData.reviewedBy : null
-    );
-  }
+  // Render the approval bar (always show — defaults to Draft for new letters)
+  if (!_letterApprovalStatus) _letterApprovalStatus = 'Draft';
+  updateApprovalBar(
+    approvalData ? approvalData.reviewNotes : null,
+    approvalData ? approvalData.reviewedBy : null
+  );
 
   document.getElementById('letterModal').classList.add('visible');
   document.body.style.overflow = 'hidden';
