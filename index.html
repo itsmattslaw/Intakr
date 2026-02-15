@@ -729,16 +729,16 @@ async function sendToSlack() {
           { type: 'mrkdwn', text: `*Attorney:*\n${meta.atty}` },
           { type: 'mrkdwn', text: `*Date:*\n${revDate}` }
         ]},
+        { type: 'actions', elements: [
+          { type: 'button', text: { type: 'plain_text', text: 'View in Intakr', emoji: true }, url: letterLink, style: 'primary' }
+        ]},
+        { type: 'context', elements: [
+          { type: 'mrkdwn', text: `Sent by ${sentBy} | <${letterLink}|Open in Intakr>` }
+        ]},
       ];
-      if (letterLink) {
-        blocks.push({ type: 'section', text: { type: 'mrkdwn', text: `<${letterLink}|View in Intakr>` } });
-      }
-      blocks.push({ type: 'context', elements: [
-        { type: 'mrkdwn', text: `Sent by ${sentBy}` }
-      ]});
 
       const slackPayload = {
-        text: `New Engagement Letter: ${meta.name} - ${meta.matter}`,
+        text: `New Engagement Letter: ${meta.name} - ${meta.matter} — ${letterLink}`,
         blocks: blocks
       };
       const body = 'payload=' + encodeURIComponent(JSON.stringify(slackPayload));
