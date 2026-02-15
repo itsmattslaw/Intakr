@@ -1163,11 +1163,12 @@ async function renderDashboard() {
 
 function matchUserToAttorney(email) {
   if (!email) return '';
-  const e = email.toLowerCase();
-  if (e.includes('matt')) return 'Matt A. Margolis, Esq.';
-  if (e.includes('karina')) return 'Karina Margolis, Esq.';
-  if (e.includes('jen')) return 'Jen Healy, Esq.';
-  if (e.includes('hunter')) return 'Hunter Sutherland, Esq.';
+  // Match on the local part (before @) to avoid false positives
+  const local = email.toLowerCase().split('@')[0];
+  if (local === 'matt' || local === 'mmargolis') return 'Matt A. Margolis, Esq.';
+  if (local === 'karina' || local === 'kmargolis') return 'Karina Margolis, Esq.';
+  if (local === 'jen' || local === 'jhealy') return 'Jen Healy, Esq.';
+  if (local === 'hunter' || local === 'hsutherland') return 'Hunter Sutherland, Esq.';
   return '';
 }
 
@@ -1187,28 +1188,24 @@ async function submitForReview() {
     return;
   }
 
-  // Save letter first if not saved
+  // Disable button to prevent double-clicks
+  const submitBtn = document.querySelector('.btn-submit-review');
+  if (submitBtn) submitBtn.disabled = true;
+
+  // Save letter first if not saved, or update existing
   let letterId = _lastSavedLetterId;
   if (!letterId) {
-    letterId = await saveLetterToDb('Pending Review');
+    letterId = await saveLetterToDb('Pending Review', assignedReviewer);
   } else {
-    // Update existing letter's approval status
     try {
       const { error } = await db.from('engagement_letters')
         .update({ approval_status: 'Pending Review', assigned_reviewer: assignedReviewer, reviewed_by: null, reviewed_at: null, review_notes: null })
         .eq('id', letterId);
       if (error) throw error;
-    } catch (e) { showStatus('Error: ' + e.message, 'error'); return; }
+    } catch (e) { showStatus('Error: ' + e.message, 'error'); if (submitBtn) submitBtn.disabled = false; return; }
   }
 
-  // Also store assigned_reviewer if letter was just created
-  if (letterId && assignedReviewer) {
-    try {
-      await db.from('engagement_letters')
-        .update({ assigned_reviewer: assignedReviewer })
-        .eq('id', letterId);
-    } catch (e) { /* best effort */ }
-  }
+  if (!letterId) { showStatus('Could not save letter. Check your connection and try again.', 'error'); if (submitBtn) submitBtn.disabled = false; return; }
 
   _letterApprovalStatus = 'Pending Review';
   _letterApprovalId = letterId;
@@ -1247,24 +1244,39 @@ async function submitForReview() {
 }
 
 async function approveLetter() {
+  if (!confirm('Approve this engagement letter?')) return;
+
+  // Disable buttons to prevent double-clicks
+  const approveBtn = document.querySelector('.btn-approve');
+  const sendBackBtn = document.querySelector('.btn-send-back');
+  if (approveBtn) approveBtn.disabled = true;
+  if (sendBackBtn) sendBackBtn.disabled = true;
+
   // Try to save first if no letter ID exists
   if (!_letterApprovalId && _letterClientId) {
     const savedId = await saveLetterToDb('Pending Review');
     if (savedId) _letterApprovalId = savedId;
   }
-  if (!_letterApprovalId) { showStatus('Letter must be saved before it can be approved. Try saving as draft first.', 'error'); return; }
+  if (!_letterApprovalId) { showStatus('Letter must be saved before it can be approved. Try saving as draft first.', 'error'); if (approveBtn) approveBtn.disabled = false; if (sendBackBtn) sendBackBtn.disabled = false; return; }
 
   // Prevent self-approval: check if current user created this letter
+  // SECURITY: do NOT silently skip — block the action if the check fails
   try {
-    const { data: letterData } = await db.from('engagement_letters')
+    const { data: letterData, error: fetchErr } = await db.from('engagement_letters')
       .select('created_by_email')
       .eq('id', _letterApprovalId)
       .single();
+    if (fetchErr) throw fetchErr;
     if (letterData && letterData.created_by_email === currentUser.email) {
       showStatus('You cannot approve your own letter. Another attorney must review it.', 'error');
+      if (approveBtn) approveBtn.disabled = false; if (sendBackBtn) sendBackBtn.disabled = false;
       return;
     }
-  } catch (e) { /* proceed if check fails */ }
+  } catch (e) {
+    showStatus('Could not verify letter ownership. Please try again.', 'error');
+    if (approveBtn) approveBtn.disabled = false; if (sendBackBtn) sendBackBtn.disabled = false;
+    return;
+  }
 
   try {
     const { error } = await db.from('engagement_letters')
@@ -1278,7 +1290,7 @@ async function approveLetter() {
 
     _letterApprovalStatus = 'Approved';
     updateApprovalBar();
-    showStatus('\u2713 Letter approved!', 'success');
+    showStatus('Letter approved!', 'success');
 
     // Slack notification
     if (isSlackEnabled() && _letterReviewMeta) {
@@ -1302,32 +1314,60 @@ async function approveLetter() {
     }
   } catch (e) {
     showStatus('Error: ' + e.message, 'error');
+    if (approveBtn) approveBtn.disabled = false; if (sendBackBtn) sendBackBtn.disabled = false;
   }
 }
 
-async function sendBackWithEdits() {
-  const notes = prompt('Notes for the submitter (what needs to change, or what you edited):');
-  if (notes === null) return;
-  if (!notes.trim()) { showStatus('Please provide notes explaining what needs to change.', 'error'); return; }
+function showSendBackNotesUI() {
+  // Prevent self-review BEFORE showing the UI — check the ORIGINAL letter's author
+  const originalId = _letterApprovalId;
+  if (!originalId) { showStatus('Letter must be saved before it can be reviewed.', 'error'); return; }
 
-  // Save the reviewer's edits as a new version before sending back
+  db.from('engagement_letters').select('created_by_email').eq('id', originalId).single()
+    .then(({ data }) => {
+      if (data && data.created_by_email === currentUser.email) {
+        showStatus('You cannot review your own letter. Another attorney must review it.', 'error');
+        return;
+      }
+      // Show inline notes area in the approval bar
+      const bar = document.getElementById('approvalBarContainer');
+      if (!bar) return;
+      const existing = document.getElementById('sendBackNotesArea');
+      if (existing) { existing.querySelector('textarea').focus(); return; }
+      const notesHtml = `<div id="sendBackNotesArea" style="margin-top:12px;padding:14px 16px;background:#FFF5F5;border:1px solid #ECC;border-radius:8px;">
+        <label style="font-size:12px;font-weight:600;display:block;margin-bottom:6px;">Notes for the submitter:</label>
+        <textarea id="sendBackNotes" rows="3" placeholder="Describe what you changed or what still needs work..." style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;resize:vertical;box-sizing:border-box;"></textarea>
+        <div style="display:flex;gap:8px;margin-top:8px;justify-content:flex-end;">
+          <button class="btn btn-sm" onclick="document.getElementById('sendBackNotesArea').remove()" style="background:var(--light-gray);color:var(--dark);">Cancel</button>
+          <button class="btn btn-sm btn-send-back" onclick="confirmSendBack()">Send Back</button>
+        </div>
+      </div>`;
+      bar.insertAdjacentHTML('beforeend', notesHtml);
+      document.getElementById('sendBackNotes').focus();
+    })
+    .catch(() => {
+      showStatus('Could not verify letter ownership. Please try again.', 'error');
+    });
+}
+
+async function confirmSendBack() {
+  const textarea = document.getElementById('sendBackNotes');
+  const notes = textarea ? textarea.value : '';
+  if (!notes.trim()) { showStatus('Please provide notes explaining what needs to change.', 'error'); if (textarea) textarea.focus(); return; }
+
+  // Disable button to prevent double-clicks
+  const btns = document.querySelectorAll('#sendBackNotesArea button');
+  btns.forEach(b => b.disabled = true);
+
+  // Save the reviewer's edits as a new version BEFORE changing status
+  // Remember the original letter's ID for the status update
+  const originalLetterId = _letterApprovalId;
+
   if (_letterClientId) {
     const savedId = await saveLetterToDb('Changes Requested');
     if (savedId) _letterApprovalId = savedId;
   }
-  if (!_letterApprovalId) { showStatus('Letter must be saved first. Try saving as draft.', 'error'); return; }
-
-  // Prevent self-review
-  try {
-    const { data: letterData } = await db.from('engagement_letters')
-      .select('created_by_email')
-      .eq('id', _letterApprovalId)
-      .single();
-    if (letterData && letterData.created_by_email === currentUser.email) {
-      showStatus('You cannot review your own letter. Another attorney must review it.', 'error');
-      return;
-    }
-  } catch (e) { /* proceed if check fails */ }
+  if (!_letterApprovalId) { showStatus('Letter must be saved first. Try saving as draft.', 'error'); btns.forEach(b => b.disabled = false); return; }
 
   try {
     const { error } = await db.from('engagement_letters')
@@ -1344,7 +1384,7 @@ async function sendBackWithEdits() {
     updateApprovalBar(notes.trim(), currentUser.email);
     showStatus('Letter sent back with your edits and notes.', 'success');
 
-    // Slack notification — notify the original submitter
+    // Slack notification
     if (isSlackEnabled() && _letterReviewMeta) {
       const meta = _letterReviewMeta;
       const reviewerName = matchUserToAttorney(currentUser.email) || currentUser.email;
@@ -1367,6 +1407,7 @@ async function sendBackWithEdits() {
     }
   } catch (e) {
     showStatus('Error: ' + e.message, 'error');
+    btns.forEach(b => b.disabled = false);
   }
 }
 
@@ -1433,7 +1474,7 @@ function updateApprovalBar(reviewNotes, reviewedBy) {
   }
   if (status === 'Pending Review') {
     html += `<button class="btn btn-sm btn-approve" onclick="approveLetter()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Approve</button>`;
-    html += `<button class="btn btn-sm btn-send-back" onclick="sendBackWithEdits()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 14l-4-4 4-4"/><path d="M5 10h11a4 4 0 0 1 0 8h-1"/></svg> Send Back with Edits</button>`;
+    html += `<button class="btn btn-sm btn-send-back" onclick="showSendBackNotesUI()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 14l-4-4 4-4"/><path d="M5 10h11a4 4 0 0 1 0 8h-1"/></svg> Send Back with Edits</button>`;
   }
 
   html += `</div></div>`; // close top-row
@@ -1604,7 +1645,7 @@ let _letterSavedThisSession = false;
 // Save the current letter to Supabase (called on download/Slack send)
 let _lastSavedLetterId = null;
 
-async function saveLetterToDb(approvalStatus) {
+async function saveLetterToDb(approvalStatus, assignedReviewer) {
   if (!_letterReviewMeta || !_letterReviewSections || !_letterClientId) return null;
   if (_letterSavedThisSession && !approvalStatus) return _lastSavedLetterId;
   // Capture references before any async work (modal close can null these)
@@ -1647,6 +1688,7 @@ async function saveLetterToDb(approvalStatus) {
       created_by_email: currentUser.email,
     };
     if (approvalStatus) insertData.approval_status = approvalStatus;
+    if (assignedReviewer) insertData.assigned_reviewer = assignedReviewer;
 
     const { data: inserted, error } = await db.from('engagement_letters')
       .insert([insertData]).select('id').single();
