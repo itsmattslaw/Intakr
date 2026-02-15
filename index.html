@@ -1472,6 +1472,10 @@ let _lastSavedLetterId = null;
 async function saveLetterToDb(approvalStatus) {
   if (!_letterReviewMeta || !_letterReviewSections || !_letterClientId) return null;
   if (_letterSavedThisSession && !approvalStatus) return _lastSavedLetterId;
+  // Capture references before any async work (modal close can null these)
+  const meta = _letterReviewMeta;
+  const sections = _letterReviewSections;
+  const clientId = _letterClientId;
 
   try {
     const headerData = {
@@ -1483,7 +1487,7 @@ async function saveLetterToDb(approvalStatus) {
       greeting: document.getElementById('rev_greeting')?.value || '',
     };
 
-    const editedSections = _letterReviewSections.map(s => ({
+    const editedSections = sections.map(s => ({
       id: s.id,
       label: s.label,
       text: sanitizeHtml(document.getElementById('rev_' + s.id)?.innerHTML || s.text),
@@ -1492,16 +1496,15 @@ async function saveLetterToDb(approvalStatus) {
     // Determine next version number for this client
     const { data: existing } = await db.from('engagement_letters')
       .select('version')
-      .eq('client_id', _letterClientId)
+      .eq('client_id', clientId)
       .order('version', { ascending: false })
       .limit(1);
 
     const nextVersion = (existing && existing.length > 0) ? existing[0].version + 1 : 1;
-    const meta = _letterReviewMeta;
     const fileName = `Engagement_Letter_${meta.name.replace(/[^a-zA-Z0-9]/g, '_')}_v${nextVersion}.docx`;
 
     const insertData = {
-      client_id: _letterClientId,
+      client_id: clientId,
       user_id: currentUser.id,
       version: nextVersion,
       letter_data: { meta, header: headerData, sections: editedSections },
