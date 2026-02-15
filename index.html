@@ -381,9 +381,17 @@ function handleLogoUpload(event) {
   const reader = new FileReader();
   reader.onload = function(e) {
     const dataUrl = e.target.result;
-    localStorage.setItem('firmLogoDataUrl', dataUrl);
+    try {
+      localStorage.setItem('firmLogoDataUrl', dataUrl);
+    } catch (err) {
+      showStatus('Logo too large to save. Try a smaller image.', 'error');
+      return;
+    }
     updateLogoButton(dataUrl);
     showStatus('\u2713 Logo saved! It will appear in all future engagement letters.', 'success');
+  };
+  reader.onerror = function() {
+    showStatus('Failed to read image file.', 'error');
   };
   reader.readAsDataURL(file);
 }
@@ -424,11 +432,18 @@ function removeLogo() {
 function getFirmLogoBuffer() {
   const dataUrl = localStorage.getItem('firmLogoDataUrl');
   if (!dataUrl) return null;
-  const base64 = dataUrl.split(',')[1];
-  const binary = atob(base64);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-  return { buffer: bytes, type: dataUrl.startsWith('data:image/png') ? 'png' : 'jpg' };
+  try {
+    const base64 = dataUrl.split(',')[1];
+    if (!base64) return null;
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return { buffer: bytes };
+  } catch (e) {
+    // Corrupted localStorage data — clear it and continue without logo
+    localStorage.removeItem('firmLogoDataUrl');
+    return null;
+  }
 }
 // --- End Logo ---
 
@@ -602,7 +617,7 @@ async function downloadFromReview() {
     editedSections[s.id] = document.getElementById('rev_'+s.id).value;
   });
 
-  const { Document, Packer, Paragraph, TextRun, ImageRun, AlignmentType, Header, BorderStyle, UnderlineType, TabStopType, TabStopPosition } = window.docx;
+  const { Document, Packer, Paragraph, TextRun, ImageRun, AlignmentType, Header, BorderStyle, UnderlineType } = window.docx;
 
   const f = 'Times New Roman', sz = 22;
   const tr = (text, opts={}) => new TextRun({ font:f, size:sz, ...opts, text });
@@ -719,7 +734,7 @@ async function downloadFromReview() {
 
   // Header — first page only
   const { Table, TableRow, TableCell, WidthType, VerticalAlign, BorderStyle: TBorder } = window.docx;
-  const noBorders = { top:{style:TBorder.NONE,size:0}, bottom:{style:TBorder.NONE,size:0}, left:{style:TBorder.NONE,size:0}, right:{style:TBorder.NONE,size:0} };
+  const noBorders = { top:{style:TBorder.NONE,size:0}, bottom:{style:TBorder.NONE,size:0}, left:{style:TBorder.NONE,size:0}, right:{style:TBorder.NONE,size:0}, insideHorizontal:{style:TBorder.NONE,size:0}, insideVertical:{style:TBorder.NONE,size:0} };
 
   const firmLogo = getFirmLogoBuffer();
   const attorneyLines = [
@@ -746,7 +761,7 @@ async function downloadFromReview() {
       width: { size: 3400, type: WidthType.DXA },
       children: [
         new Paragraph({ children: [
-          new ImageRun({ data: firmLogo.buffer, transformation: { width: 180, height: 180 }, type: firmLogo.type === 'png' ? 'png' : 'jpg' })
+          new ImageRun({ data: firmLogo.buffer, transformation: { width: 180, height: 180 } })
         ]})
       ]
     });
