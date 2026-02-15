@@ -701,7 +701,18 @@ async function sendToSlack() {
     const sentBy = currentUser ? currentUser.email : 'unknown';
 
     // Save letter first so we can link to it
-    const letterId = await saveLetterToDb();
+    let letterId = await saveLetterToDb();
+    // Fallback: look up latest letter for this client if save didn't return an ID
+    if (!letterId && _letterClientId) {
+      try {
+        const { data: latest } = await db.from('engagement_letters')
+          .select('id')
+          .eq('client_id', _letterClientId)
+          .order('created_at', { ascending: false })
+          .limit(1);
+        if (latest && latest.length > 0) letterId = latest[0].id;
+      } catch (e) { /* table may not exist */ }
+    }
     const baseUrl = window.location.origin + window.location.pathname;
     const letterLink = letterId ? `${baseUrl}?letter=${letterId}` : null;
 
@@ -855,9 +866,11 @@ let _letterSavedThisSession = false;
  */
 
 // Save the current letter to Supabase (called on download/Slack send)
+let _lastSavedLetterId = null;
+
 async function saveLetterToDb() {
-  if (!_letterReviewMeta || !_letterReviewSections || !_letterClientId) return;
-  if (_letterSavedThisSession) return;
+  if (!_letterReviewMeta || !_letterReviewSections || !_letterClientId) return null;
+  if (_letterSavedThisSession) return _lastSavedLetterId;
 
   try {
     const headerData = {
@@ -897,7 +910,8 @@ async function saveLetterToDb() {
 
     if (error) throw error;
     _letterSavedThisSession = true;
-    return inserted ? inserted.id : null;
+    _lastSavedLetterId = inserted ? inserted.id : null;
+    return _lastSavedLetterId;
   } catch (e) {
     // Fail silently — table may not exist yet
     console.warn('Letter save skipped:', e.message);
@@ -1031,6 +1045,7 @@ function closeLetterModal() {
   _letterReviewSections = null;
   _letterClientId = null;
   _letterSavedThisSession = false;
+  _lastSavedLetterId = null;
 }
 
 document.addEventListener('keydown', function(e) {
