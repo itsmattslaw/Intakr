@@ -652,7 +652,7 @@ async function buildDocxBlob() {
 
   let headerChildren;
   if (firmLogo) {
-    headerChildren = [new Paragraph({ alignment:AlignmentType.CENTER, children:[new ImageRun({data:firmLogo.base64,transformation:{width:180,height:180}})] })];
+    headerChildren = [new Paragraph({ alignment:AlignmentType.LEFT, children:[new ImageRun({data:firmLogo.base64,transformation:{width:180,height:180}})] })];
   } else {
     headerChildren = [];
   }
