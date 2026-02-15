@@ -144,6 +144,22 @@
   .letter-modal-footer{padding:16px 28px;border-top:1px solid var(--border);background:var(--light-gray);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
   .letter-modal-footer .hint{font-size:12px;color:var(--warm-gray);}
 
+  /* Document History Modal */
+  .doc-history-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:250;display:none;align-items:center;justify-content:center;padding:24px;}
+  .doc-history-overlay.visible{display:flex;}
+  .doc-history-panel{background:var(--white);border-radius:16px;max-width:640px;width:100%;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,0.2);overflow:hidden;}
+  .doc-history-header{display:flex;align-items:center;justify-content:space-between;padding:20px 28px;border-bottom:1px solid var(--border);background:var(--sage-pale);flex-shrink:0;}
+  .doc-history-header h2{font-size:18px;font-weight:700;color:var(--charcoal);display:flex;align-items:center;gap:10px;}
+  .doc-history-body{overflow-y:auto;padding:20px 28px;flex:1;}
+  .doc-version-card{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border:1px solid var(--border);border-radius:10px;margin-bottom:10px;transition:background 0.15s;}
+  .doc-version-card:hover{background:var(--sage-pale);}
+  .doc-version-info{display:flex;align-items:center;gap:12px;min-width:0;}
+  .doc-version-badge{background:var(--sage);color:var(--white);font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;white-space:nowrap;letter-spacing:0.3px;}
+  .doc-version-name{font-size:13px;font-weight:600;color:var(--charcoal);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:280px;}
+  .doc-version-detail{font-size:11px;color:var(--warm-gray);margin-top:2px;}
+  .doc-version-actions{display:flex;gap:6px;flex-shrink:0;}
+  .doc-saved-banner{background:var(--amber-pale);border:1px solid #E6D990;border-radius:8px;padding:10px 16px;margin-bottom:20px;font-size:12px;font-weight:500;color:#7A6800;display:flex;align-items:center;gap:8px;}
+
   .header-config-btn{display:flex;align-items:center;gap:6px;background:var(--cream);border:1px dashed var(--sage);border-radius:20px;padding:6px 14px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:var(--sage-dark);cursor:pointer;transition:all 0.2s;text-transform:uppercase;letter-spacing:0.5px;}
   .header-config-btn:hover{background:var(--sage-pale);border-style:solid;}
   .header-config-btn.active{border-style:solid;background:var(--sage-pale);}
@@ -347,6 +363,17 @@
         <button class="btn btn-primary btn-sm" onclick="downloadFromReview()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download .docx</button>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- Document History Modal -->
+<div class="doc-history-overlay" id="docHistoryModal">
+  <div class="doc-history-panel">
+    <div class="doc-history-header">
+      <h2><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> <span id="docHistoryTitle">Document History</span></h2>
+      <button class="btn btn-secondary btn-sm" onclick="closeDocHistoryModal()">Close</button>
+    </div>
+    <div class="doc-history-body" id="docHistoryBody"></div>
   </div>
 </div>
 
@@ -695,6 +722,9 @@ async function sendToSlack() {
 
     if (!resp.ok) throw new Error(`Zapier returned ${resp.status}`);
 
+    // Save letter to document storage (fire-and-forget)
+    saveLetterToDb();
+
     showStatus(`\u2713 Engagement letter sent to Slack for ${meta.name}.`, 'success');
   } catch (err) {
     showStatus('Slack error: ' + err.message, 'error');
@@ -737,7 +767,7 @@ function resetForm(){document.getElementById('intakeForm').reset();document.quer
 function formatDate(s){if(!s)return'';const d=new Date(s+'T00:00:00');return d.toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});}
 function clientDisplayName(d){return d.entity_name||d.contact_name||d.entityName||d.contactName||'Unknown';}
 
-async function renderDashboard(){const clients=await getClients();updateTrackerCount();const t=clients.length,p=clients.filter(c=>c.status==='Prospective').length,s=clients.filter(c=>c.status==='Letter Sent').length,e=clients.filter(c=>c.status==='Executed').length;document.getElementById('statsRow').innerHTML=`<div class="stat-card"><div class="stat-num">${t}</div><div class="stat-label">Total</div></div><div class="stat-card"><div class="stat-num">${p}</div><div class="stat-label">Prospective</div></div><div class="stat-card"><div class="stat-num">${s}</div><div class="stat-label">Letter Sent</div></div><div class="stat-card"><div class="stat-num">${e}</div><div class="stat-label">Executed</div></div>`;if(!clients.length){document.getElementById('trackerTableContainer').innerHTML='<div class="empty-state"><p>No clients yet.</p></div>';return;}const sc=s=>({Prospective:'status-prospective','Letter Sent':'status-sent',Executed:'status-executed',Declined:'status-declined'}[s]||'');const rows=clients.map(c=>`<tr><td style="font-weight:600">${esc(clientDisplayName(c))}</td><td>${esc(c.matter_type||'')}</td><td>${esc(c.attorney?c.attorney.split(',')[0]:'')}</td><td>${esc(c.fee_type||'')}</td><td>${c.engagement_date?esc(formatDate(c.engagement_date)):''}</td><td><span class="status-pill ${sc(c.status)}">${esc(c.status)}</span></td><td><div class="row-actions"><select onchange="updateClientStatus('${esc(c.id)}',this.value)"><option value="Prospective" ${c.status==='Prospective'?'selected':''}>Prospective</option><option value="Letter Sent" ${c.status==='Letter Sent'?'selected':''}>Letter Sent</option><option value="Executed" ${c.status==='Executed'?'selected':''}>Executed</option><option value="Declined" ${c.status==='Declined'?'selected':''}>Declined</option></select><button onclick="regenLetter('${esc(c.id)}')">🔄</button><button class="del" onclick="deleteClient('${esc(c.id)}')">✕</button></div></td></tr>`).join('');document.getElementById('trackerTableContainer').innerHTML=`<table class="tracker-table"><thead><tr><th>Client</th><th>Matter</th><th>Attorney</th><th>Fee</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead><tbody>${rows}</tbody></table>`;}
+async function renderDashboard(){const clients=await getClients();updateTrackerCount();const t=clients.length,p=clients.filter(c=>c.status==='Prospective').length,s=clients.filter(c=>c.status==='Letter Sent').length,e=clients.filter(c=>c.status==='Executed').length;document.getElementById('statsRow').innerHTML=`<div class="stat-card"><div class="stat-num">${t}</div><div class="stat-label">Total</div></div><div class="stat-card"><div class="stat-num">${p}</div><div class="stat-label">Prospective</div></div><div class="stat-card"><div class="stat-num">${s}</div><div class="stat-label">Letter Sent</div></div><div class="stat-card"><div class="stat-num">${e}</div><div class="stat-label">Executed</div></div>`;if(!clients.length){document.getElementById('trackerTableContainer').innerHTML='<div class="empty-state"><p>No clients yet.</p></div>';return;}const sc=s=>({Prospective:'status-prospective','Letter Sent':'status-sent',Executed:'status-executed',Declined:'status-declined'}[s]||'');const rows=clients.map(c=>`<tr><td style="font-weight:600">${esc(clientDisplayName(c))}</td><td>${esc(c.matter_type||'')}</td><td>${esc(c.attorney?c.attorney.split(',')[0]:'')}</td><td>${esc(c.fee_type||'')}</td><td>${c.engagement_date?esc(formatDate(c.engagement_date)):''}</td><td><span class="status-pill ${sc(c.status)}">${esc(c.status)}</span></td><td><div class="row-actions"><select onchange="updateClientStatus('${esc(c.id)}',this.value)"><option value="Prospective" ${c.status==='Prospective'?'selected':''}>Prospective</option><option value="Letter Sent" ${c.status==='Letter Sent'?'selected':''}>Letter Sent</option><option value="Executed" ${c.status==='Executed'?'selected':''}>Executed</option><option value="Declined" ${c.status==='Declined'?'selected':''}>Declined</option></select><button onclick="viewLetterHistory('${esc(c.id)}')" title="Document History">📄</button><button onclick="regenLetter('${esc(c.id)}')" title="Regenerate Letter">🔄</button><button class="del" onclick="deleteClient('${esc(c.id)}')" title="Delete">✕</button></div></td></tr>`).join('');document.getElementById('trackerTableContainer').innerHTML=`<table class="tracker-table"><thead><tr><th>Client</th><th>Matter</th><th>Attorney</th><th>Fee</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead><tbody>${rows}</tbody></table>`;}
 
 const XH=['Date','Client','Entity','Type','Contact','Email','Phone','Matter','Description','Attorney','Fee Type','Rate','Retainer','Adverse','Conflicts','Specialist','Referral','Priority','Status','Letter Sent','Executed','Notes'];
 function ctr(c){const r=c.fee_type==='Hourly'?`${c.hourly_rate}/hr`:c.fee_type==='Flat Fee'?`Flat: ${c.flat_fee_amount}`:c.fee_type==='Subscription'?`Sub: ${c.retainer_amount}/mo`:`${c.hourly_rate}/hr + Flat: ${c.flat_fee_amount}`;return[c.engagement_date?formatDate(c.engagement_date):'',clientDisplayName(c),c.entity_name,c.client_type,c.contact_name,c.client_email,c.client_phone,c.matter_type,c.matter_description,c.attorney,c.fee_type,r,c.retainer_amount,c.adverse_party,c.conflicts,c.specialist_involved==='Yes'?c.specialist_name:'N/A',c.referral_source,c.priority,c.status||'Prospective',c.letter_sent||'',c.letter_executed||'',c.internal_notes];}
@@ -752,6 +782,93 @@ function exportSingleClientExcel(d){const wb=XLSX.utils.book_new();XLSX.utils.bo
 // Stored state for the current review session
 let _letterReviewMeta = null;
 let _letterReviewSections = null;
+let _letterClientId = null;
+let _letterSavedThisSession = false;
+
+/*
+ * =============================================
+ * SUPABASE MIGRATION — DOCUMENT STORAGE
+ * =============================================
+ * Run this SQL in the Supabase SQL Editor (Dashboard > SQL Editor) to enable document storage:
+ *
+ * CREATE TABLE engagement_letters (
+ *   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+ *   client_id UUID NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+ *   user_id UUID NOT NULL,
+ *   version INTEGER NOT NULL DEFAULT 1,
+ *   letter_data JSONB NOT NULL,
+ *   file_name TEXT NOT NULL,
+ *   created_by_email TEXT,
+ *   created_at TIMESTAMPTZ DEFAULT NOW()
+ * );
+ *
+ * ALTER TABLE engagement_letters ENABLE ROW LEVEL SECURITY;
+ *
+ * CREATE POLICY "Users can view own letters"
+ *   ON engagement_letters FOR SELECT
+ *   USING (auth.uid() = user_id);
+ *
+ * CREATE POLICY "Users can insert own letters"
+ *   ON engagement_letters FOR INSERT
+ *   WITH CHECK (auth.uid() = user_id);
+ *
+ * CREATE POLICY "Users can delete own letters"
+ *   ON engagement_letters FOR DELETE
+ *   USING (auth.uid() = user_id);
+ *
+ * CREATE INDEX idx_engagement_letters_client ON engagement_letters(client_id);
+ * CREATE INDEX idx_engagement_letters_user ON engagement_letters(user_id);
+ * =============================================
+ */
+
+// Save the current letter to Supabase (called on download/Slack send)
+async function saveLetterToDb() {
+  if (!_letterReviewMeta || !_letterReviewSections || !_letterClientId) return;
+  if (_letterSavedThisSession) return;
+
+  try {
+    const headerData = {
+      date: document.getElementById('rev_date')?.value || '',
+      recipient: document.getElementById('rev_recipient')?.value || '',
+      attention: document.getElementById('rev_attention')?.value || '',
+      email: document.getElementById('rev_email')?.value || '',
+      re: document.getElementById('rev_re')?.value || '',
+      greeting: document.getElementById('rev_greeting')?.value || '',
+    };
+
+    const editedSections = _letterReviewSections.map(s => ({
+      id: s.id,
+      label: s.label,
+      text: document.getElementById('rev_' + s.id)?.value || s.text,
+    }));
+
+    // Determine next version number for this client
+    const { data: existing } = await db.from('engagement_letters')
+      .select('version')
+      .eq('client_id', _letterClientId)
+      .order('version', { ascending: false })
+      .limit(1);
+
+    const nextVersion = (existing && existing.length > 0) ? existing[0].version + 1 : 1;
+    const meta = _letterReviewMeta;
+    const fileName = `Engagement_Letter_${meta.name.replace(/[^a-zA-Z0-9]/g, '_')}_v${nextVersion}.docx`;
+
+    const { error } = await db.from('engagement_letters').insert([{
+      client_id: _letterClientId,
+      user_id: currentUser.id,
+      version: nextVersion,
+      letter_data: { meta, header: headerData, sections: editedSections },
+      file_name: fileName,
+      created_by_email: currentUser.email,
+    }]);
+
+    if (error) throw error;
+    _letterSavedThisSession = true;
+  } catch (e) {
+    // Fail silently — table may not exist yet
+    console.warn('Letter save skipped:', e.message);
+  }
+}
 
 function buildLetterSections(data) {
   const name = clientDisplayName(data);
@@ -812,24 +929,43 @@ function buildLetterSections(data) {
   return { meta, sections };
 }
 
-function openLetterReview(data) {
+function openLetterReview(data, clientId) {
   const { meta, sections } = buildLetterSections(data);
+  showLetterModal(meta, sections, clientId);
+}
+
+function showLetterModal(meta, sections, clientId, headerOverrides, savedVersionLabel) {
   _letterReviewMeta = meta;
   _letterReviewSections = sections;
+  _letterClientId = clientId || null;
+  _letterSavedThisSession = !!savedVersionLabel;
+
+  const h = headerOverrides || {};
+  const hDate = h.date || meta.engDate;
+  const hRecipient = h.recipient || meta.clientLabel;
+  const hAttention = h.attention || ((meta.contact || '') + (meta.title ? ', ' + meta.title : ''));
+  const hEmail = h.email || meta.email;
+  const hRe = h.re || `Engagement Letter \u2014 ${meta.matter} \u2014 ${meta.clientLabel}`;
+  const hGreeting = h.greeting || `Dear ${meta.contact}:`;
 
   const container = document.getElementById('letterModalBody');
   let html = '';
 
+  // Saved-version banner
+  if (savedVersionLabel) {
+    html += `<div class="doc-saved-banner"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ${esc(savedVersionLabel)} &mdash; edit and re-download, or close to discard changes.</div>`;
+  }
+
   // Header fields (date, recipient, re line, greeting)
   html += `<div class="letter-section"><div class="letter-section-header"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> Letter Header</div>`;
-  html += `<div class="letter-section-row"><div class="letter-section-field"><label>Date</label><input type="text" id="rev_date" value="${esc(meta.engDate)}"></div><div class="letter-section-field"><label>Recipient</label><input type="text" id="rev_recipient" value="${esc(meta.clientLabel)}"></div></div>`;
+  html += `<div class="letter-section-row"><div class="letter-section-field"><label>Date</label><input type="text" id="rev_date" value="${esc(hDate)}"></div><div class="letter-section-field"><label>Recipient</label><input type="text" id="rev_recipient" value="${esc(hRecipient)}"></div></div>`;
   if (meta.isEntity && meta.contact) {
-    html += `<div class="letter-section-row"><div class="letter-section-field"><label>Attention</label><input type="text" id="rev_attention" value="${esc(meta.contact)}${meta.title?', '+esc(meta.title):''}"></div><div class="letter-section-field"><label>Email</label><input type="text" id="rev_email" value="${esc(meta.email)}"></div></div>`;
+    html += `<div class="letter-section-row"><div class="letter-section-field"><label>Attention</label><input type="text" id="rev_attention" value="${esc(hAttention)}"></div><div class="letter-section-field"><label>Email</label><input type="text" id="rev_email" value="${esc(hEmail)}"></div></div>`;
   } else {
-    html += `<div class="letter-section-row"><div class="letter-section-field"><label>Email</label><input type="text" id="rev_email" value="${esc(meta.email)}"></div><div class="letter-section-field"><label>Attorney</label><input type="text" id="rev_atty" value="${esc(meta.sigFull)}"></div></div>`;
+    html += `<div class="letter-section-row"><div class="letter-section-field"><label>Email</label><input type="text" id="rev_email" value="${esc(hEmail)}"></div><div class="letter-section-field"><label>Attorney</label><input type="text" id="rev_atty" value="${esc(meta.sigFull)}"></div></div>`;
   }
-  html += `<div class="letter-section-row"><div class="letter-section-field" style="grid-column:1/-1;border-right:none;"><label>Re: Line</label><input type="text" id="rev_re" value="Engagement Letter \u2014 ${esc(meta.matter)} \u2014 ${esc(meta.clientLabel)}" style="width:100%"></div></div>`;
-  html += `<div class="letter-section-row"><div class="letter-section-field" style="grid-column:1/-1;border-right:none;"><label>Greeting</label><input type="text" id="rev_greeting" value="Dear ${esc(meta.contact)}:" style="width:100%"></div></div>`;
+  html += `<div class="letter-section-row"><div class="letter-section-field" style="grid-column:1/-1;border-right:none;"><label>Re: Line</label><input type="text" id="rev_re" value="${esc(hRe)}" style="width:100%"></div></div>`;
+  html += `<div class="letter-section-row"><div class="letter-section-field" style="grid-column:1/-1;border-right:none;"><label>Greeting</label><input type="text" id="rev_greeting" value="${esc(hGreeting)}" style="width:100%"></div></div>`;
   html += '</div>';
 
   // Editable sections
@@ -858,13 +994,121 @@ function closeLetterModal() {
   document.body.style.overflow = '';
   _letterReviewMeta = null;
   _letterReviewSections = null;
+  _letterClientId = null;
+  _letterSavedThisSession = false;
 }
 
 document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape' && document.getElementById('letterModal').classList.contains('visible')) {
-    closeLetterModal();
+  if (e.key === 'Escape') {
+    if (document.getElementById('docHistoryModal').classList.contains('visible')) {
+      closeDocHistoryModal();
+    } else if (document.getElementById('letterModal').classList.contains('visible')) {
+      closeLetterModal();
+    }
   }
 });
+
+// =============================================
+// DOCUMENT HISTORY — VIEW, RE-OPEN, DELETE
+// =============================================
+
+function closeDocHistoryModal() {
+  document.getElementById('docHistoryModal').classList.remove('visible');
+  document.body.style.overflow = '';
+}
+
+async function viewLetterHistory(clientId) {
+  const modal = document.getElementById('docHistoryModal');
+  const body = document.getElementById('docHistoryBody');
+  const title = document.getElementById('docHistoryTitle');
+
+  body.innerHTML = '<div style="text-align:center;padding:40px"><div class="loading-spinner" style="border-color:var(--border);border-top-color:var(--sage);width:24px;height:24px"></div></div>';
+  modal.classList.add('visible');
+  document.body.style.overflow = 'hidden';
+
+  try {
+    const clients = await getClients();
+    const client = clients.find(c => c.id === clientId);
+    title.textContent = client ? `Documents \u2014 ${clientDisplayName(client)}` : 'Document History';
+
+    const { data, error } = await db.from('engagement_letters')
+      .select('*')
+      .eq('client_id', clientId)
+      .order('version', { ascending: false });
+
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      body.innerHTML = '<div class="empty-state"><p>No saved letters yet.</p><p class="help-text" style="margin-top:8px">Letters are automatically saved when you download or send to Slack.</p></div>';
+      return;
+    }
+
+    let html = `<p style="font-size:12px;color:var(--warm-gray);margin-bottom:16px">${data.length} version${data.length!==1?'s':''} saved</p>`;
+    data.forEach(letter => {
+      const date = new Date(letter.created_at).toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric', hour:'numeric', minute:'2-digit' });
+      html += `<div class="doc-version-card">
+        <div class="doc-version-info">
+          <div class="doc-version-badge">v${letter.version}</div>
+          <div>
+            <div class="doc-version-name">${esc(letter.file_name)}</div>
+            <div class="doc-version-detail">${esc(date)} \u00b7 ${esc(letter.created_by_email || 'Unknown')}</div>
+          </div>
+        </div>
+        <div class="doc-version-actions">
+          <button class="btn btn-secondary btn-sm" onclick="openSavedLetter('${esc(letter.id)}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Review</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteLetterVersion('${esc(letter.id)}')">&#10005;</button>
+        </div>
+      </div>`;
+    });
+
+    body.innerHTML = html;
+  } catch (e) {
+    const msg = (e.message || '').toLowerCase();
+    if (msg.includes('relation') || msg.includes('does not exist') || msg.includes('42P01')) {
+      body.innerHTML = '<div class="empty-state"><p>Document storage not set up yet.</p><p class="help-text" style="margin-top:12px">Run the SQL migration in Supabase to enable this feature.<br>See the code comments in index.html for the migration script.</p></div>';
+    } else {
+      body.innerHTML = `<div class="empty-state"><p>Error loading documents.</p><p class="help-text" style="margin-top:8px">${esc(e.message)}</p></div>`;
+    }
+  }
+}
+
+async function openSavedLetter(letterId) {
+  try {
+    const { data, error } = await db.from('engagement_letters')
+      .select('*')
+      .eq('id', letterId)
+      .single();
+
+    if (error) throw error;
+
+    closeDocHistoryModal();
+
+    const ld = data.letter_data;
+    const versionDate = new Date(data.created_at).toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' });
+    const versionLabel = `Saved version ${data.version} from ${versionDate}`;
+
+    showLetterModal(ld.meta, ld.sections, data.client_id, ld.header, versionLabel);
+  } catch (e) {
+    showStatus('Error opening letter: ' + e.message, 'error');
+  }
+}
+
+async function deleteLetterVersion(letterId) {
+  if (!confirm('Delete this saved letter version? This cannot be undone.')) return;
+  try {
+    const { error } = await db.from('engagement_letters').delete().eq('id', letterId);
+    if (error) throw error;
+    // Re-render the list: find the card and remove it, or refresh
+    const card = document.querySelector(`[onclick="openSavedLetter('${letterId}')"]`);
+    if (card) {
+      const versionCard = card.closest('.doc-version-card');
+      if (versionCard) versionCard.remove();
+    }
+    showStatus('Letter version deleted.', 'success');
+  } catch (e) {
+    showStatus('Error: ' + e.message, 'error');
+  }
+}
 
 async function downloadFromReview() {
   if (!_letterReviewMeta || !_letterReviewSections) return;
@@ -885,6 +1129,9 @@ async function downloadFromReview() {
   a.click();
   URL.revokeObjectURL(url);
 
+  // Save letter to document storage (fire-and-forget)
+  saveLetterToDb();
+
   closeLetterModal();
   showStatus(`\u2713 Engagement letter downloaded for ${meta.name}.`,'success');
 
@@ -897,11 +1144,11 @@ async function downloadFromReview() {
 
 
 
-async function generateAll(){if(!validateForm())return;const d=getFormData();const btn=document.getElementById('generateBtn');btn.disabled=true;btn.innerHTML='<div class="loading-spinner"></div> Generating...';try{const saved=await addClient(d);if(saved){exportSingleClientExcel(saved);openLetterReview(d);showStatus(`\u2713 ${clientDisplayName(d)} added \u2013 review your letter.`,'success');resetForm();}}catch(e){showStatus('Error: '+e.message,'error');}finally{btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg> Generate Letter + Add to Tracker';}}
+async function generateAll(){if(!validateForm())return;const d=getFormData();const btn=document.getElementById('generateBtn');btn.disabled=true;btn.innerHTML='<div class="loading-spinner"></div> Generating...';try{const saved=await addClient(d);if(saved){exportSingleClientExcel(saved);openLetterReview(d,saved.id);showStatus(`\u2713 ${clientDisplayName(d)} added \u2013 review your letter.`,'success');resetForm();}}catch(e){showStatus('Error: '+e.message,'error');}finally{btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg> Generate Letter + Add to Tracker';}}
 
 async function addToTrackerOnly(){if(!validateForm())return;const d=getFormData();const btn=document.getElementById('trackerBtn');btn.disabled=true;btn.innerHTML='<div class="loading-spinner"></div> Adding...';try{const saved=await addClient(d);if(saved){showStatus(`\u2713 ${clientDisplayName(d)} added.`,'success');resetForm();}}finally{btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg> Add to Tracker Only';}}
 
-async function regenLetter(id){const clients=await getClients();const c=clients.find(x=>x.id===id);if(!c)return;openLetterReview(c);}
+async function regenLetter(id){const clients=await getClients();const c=clients.find(x=>x.id===id);if(!c)return;openLetterReview(c,c.id);}
 
 checkAuth();
 </script>
