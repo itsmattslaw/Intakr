@@ -174,6 +174,36 @@
   .btn-slack:hover:not(:disabled){background:#611f69;transform:translateY(-1px);box-shadow:0 4px 16px rgba(74,21,75,0.3);}
   .btn-slack:disabled{background:#4A154B;}
 
+  /* Assignment & Approval Workflow */
+  .dash-filters{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap;}
+  .dash-filter-btn{font-family:'DM Sans',sans-serif;background:var(--white);border:1px solid var(--border);border-radius:20px;padding:7px 16px;font-size:12px;font-weight:500;color:var(--warm-gray);cursor:pointer;transition:all 0.2s;}
+  .dash-filter-btn:hover{color:var(--charcoal);border-color:var(--sage);}
+  .dash-filter-btn.active{background:var(--sage);color:var(--white);border-color:var(--sage);font-weight:600;}
+  .assigned-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:500;padding:3px 10px;border-radius:10px;white-space:nowrap;}
+  .assigned-badge.has-assignee{background:#E3F2FD;color:#1565C0;}
+  .assigned-badge.no-assignee{background:var(--light-gray);color:var(--warm-gray);}
+  .approval-pill{display:inline-block;padding:4px 10px;border-radius:12px;font-size:10px;font-weight:600;letter-spacing:0.3px;text-transform:uppercase;white-space:nowrap;}
+  .approval-draft{background:var(--light-gray);color:var(--warm-gray);}
+  .approval-pending{background:var(--amber-pale);color:#9A7B00;}
+  .approval-approved{background:var(--sage-pale);color:var(--sage-dark);}
+  .approval-changes{background:#FBEAEA;color:var(--error);}
+  .approval-bar{display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid var(--border);border-radius:10px;margin-bottom:20px;flex-wrap:wrap;}
+  .approval-bar.bar-draft{background:var(--light-gray);border-color:var(--border);}
+  .approval-bar.bar-pending{background:var(--amber-pale);border-color:#E6D990;}
+  .approval-bar.bar-approved{background:var(--sage-pale);border-color:var(--sage-light);}
+  .approval-bar.bar-changes{background:#FBEAEA;border-color:#ECC;}
+  .approval-bar .approval-status-text{font-size:13px;font-weight:600;flex:1;}
+  .approval-bar .approval-status-text small{font-weight:400;color:var(--warm-gray);display:block;font-size:11px;margin-top:2px;}
+  .approval-bar .approval-actions{display:flex;gap:8px;flex-shrink:0;}
+  .btn-approve{background:#27AE60;color:#fff;border:none;}
+  .btn-approve:hover:not(:disabled){background:#219a52;transform:translateY(-1px);box-shadow:0 4px 16px rgba(39,174,96,0.3);}
+  .btn-request-changes{background:var(--amber);color:#fff;border:none;}
+  .btn-request-changes:hover:not(:disabled){background:#cc9615;transform:translateY(-1px);}
+  .btn-submit-review{background:#2980B9;color:#fff;border:none;}
+  .btn-submit-review:hover:not(:disabled){background:#2471a3;transform:translateY(-1px);box-shadow:0 4px 16px rgba(41,128,185,0.3);}
+  .review-notes-box{background:var(--amber-pale);border:1px solid #E6D990;border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px;line-height:1.5;}
+  .review-notes-box strong{display:block;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:#9A7B00;margin-bottom:4px;}
+
   @media(max-width:640px){
     .form-grid{grid-template-columns:1fr;}.header{padding:16px 20px;flex-direction:column;gap:12px;}
     .tab-bar{padding:0 16px;}.tab-btn{padding:12px 16px;font-size:13px;}
@@ -281,6 +311,7 @@
       <div class="form-body"><div class="form-grid">
         <div class="form-group"><label>Matter Type <span class="required">*</span></label><select id="matterType" required><option value="">Select…</option><option value="Corporate/Business Formation">Corporate / Business Formation</option><option value="Commercial Litigation">Commercial Litigation</option><option value="Real Estate">Real Estate</option><option value="Employment">Employment</option><option value="Intellectual Property">Intellectual Property</option><option value="Contract Drafting/Review">Contract Drafting / Review</option><option value="Regulatory/Compliance">Regulatory / Compliance</option><option value="M&A/Transactions">M&A / Transactions</option><option value="Other">Other</option></select></div>
         <div class="form-group"><label>Attorney in Charge <span class="required">*</span></label><select id="attorney" required><option value="">Select…</option><option value="Matt A. Margolis, Esq.">Matt A. Margolis, Esq.</option><option value="Karina Margolis, Esq.">Karina Margolis, Esq.</option><option value="Jen Healy, Esq.">Jen Healy, Esq.</option><option value="Hunter Sutherland, Esq.">Hunter Sutherland, Esq.</option></select></div>
+        <div class="form-group"><label>Assign To <span class="hint">(optional)</span></label><select id="assignTo"><option value="">Not assigned</option><option value="Matt A. Margolis, Esq.">Matt A. Margolis, Esq.</option><option value="Karina Margolis, Esq.">Karina Margolis, Esq.</option><option value="Jen Healy, Esq.">Jen Healy, Esq.</option><option value="Hunter Sutherland, Esq.">Hunter Sutherland, Esq.</option></select></div>
         <div class="form-group full-width"><label>Matter Description <span class="required">*</span></label><textarea id="matterDescription" placeholder="Brief description of the matter…" required></textarea></div>
         <div class="form-group full-width"><label>Adverse / Opposing Party <span class="hint">(if any)</span></label><input type="text" id="adverseParty" placeholder="Name of opposing party or N/A"></div>
       </div></div>
@@ -342,6 +373,12 @@
       <button class="btn btn-danger btn-sm" onclick="clearAllData()">Clear All</button>
     </div>
   </div>
+  <div class="dash-filters" id="dashFilters">
+    <button class="dash-filter-btn active" onclick="setDashFilter('all',this)">All Matters</button>
+    <button class="dash-filter-btn" onclick="setDashFilter('mine',this)">My Matters</button>
+    <button class="dash-filter-btn" onclick="setDashFilter('assigned',this)">Assigned to Me</button>
+    <button class="dash-filter-btn" onclick="setDashFilter('review',this)">Needs Review</button>
+  </div>
   <div class="stats-row" id="statsRow"></div>
   <div class="tracker-table-wrap"><div id="trackerTableContainer"></div></div>
 </div>
@@ -363,8 +400,9 @@
       <!-- Sections rendered dynamically -->
     </div>
     <div class="letter-modal-footer">
-      <span class="hint">Edit any section above, then click Download to generate your .docx file.</span>
+      <span class="hint">Edit sections above. Save draft, submit for review, or download.</span>
       <div style="display:flex;gap:10px;">
+        <button class="btn btn-secondary btn-sm" onclick="saveDraft()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save Draft</button>
         <button class="btn btn-slack btn-sm slack-send-btn" onclick="sendToSlack()" style="display:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 10c-.83 0-1.5-.67-1.5-1.5v-5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5z"/><path d="M20.5 10H19V8.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/><path d="M9.5 14c.83 0 1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5S8 21.33 8 20.5v-5c0-.83.67-1.5 1.5-1.5z"/><path d="M3.5 14H5v1.5c0 .83-.67 1.5-1.5 1.5S2 16.33 2 15.5 2.67 14 3.5 14z"/><path d="M14 14.5c0-.83.67-1.5 1.5-1.5h5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5h-5c-.83 0-1.5-.67-1.5-1.5z"/><path d="M15.5 19H14v1.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5-.67-1.5-1.5-1.5z"/><path d="M10 9.5C10 10.33 9.33 11 8.5 11h-5C2.67 11 2 10.33 2 9.5S2.67 8 3.5 8h5c.83 0 1.5.67 1.5 1.5z"/><path d="M8.5 5H10V3.5C10 2.67 9.33 2 8.5 2S7 2.67 7 3.5 7.67 5 8.5 5z"/></svg> Send to Slack</button>
         <button class="btn btn-primary btn-sm" onclick="downloadFromReview()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download .docx</button>
       </div>
@@ -390,6 +428,9 @@ const SUPABASE_URL='https://jflxkrlxlvhrntodywth.supabase.co';
 const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpmbHhrcmx4bHZocm50b2R5d3RoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEwODkxNDAsImV4cCI6MjA4NjY2NTE0MH0.jbeY9K4N6UOhbR8m9F0AOiUZJW7_p1ESY-7cssu5P2Y';
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
 let currentUser=null;
+let _dashFilter='all';
+let _letterApprovalStatus=null;
+let _letterApprovalId=null;
 
 db.auth.onAuthStateChange((event,session)=>{
   if(event==='SIGNED_OUT'||event==='TOKEN_REFRESHED'&&!session){
@@ -800,7 +841,7 @@ async function sendToSlack() {
 
 async function getClients(){try{const{data,error}=await db.from('clients').select('*').order('created_at',{ascending:false});if(error)throw error;return data||[];}catch(e){showStatus('Error: '+e.message,'error');return[];}}
 
-async function addClient(d){try{const{data,error}=await db.from('clients').insert([{user_id:currentUser.id,client_type:d.clientType,entity_name:d.entityName,contact_name:d.contactName,contact_title:d.contactTitle,client_email:d.clientEmail,client_phone:d.clientPhone,client_address:d.clientAddress,matter_type:d.matterType,attorney:d.attorney,matter_description:d.matterDescription,adverse_party:d.adverseParty,fee_type:d.feeType,hourly_rate:d.hourlyRate,paralegal_rate:d.paralegalRate,flat_fee_amount:d.flatFeeAmount,retainer_amount:d.retainerAmount,engagement_date:d.engagementDate,conflicts:d.conflicts,specialist_involved:d.specialistInvolved,specialist_name:d.specialistName,fee_sharing_details:d.feeSharingDetails,referral_source:d.referralSource,priority:d.priority,internal_notes:d.internalNotes,status:'Prospective'}]).select().single();if(error)throw error;updateTrackerCount();return data;}catch(e){showStatus('Error: '+e.message,'error');return null;}}
+async function addClient(d){try{const{data,error}=await db.from('clients').insert([{user_id:currentUser.id,client_type:d.clientType,entity_name:d.entityName,contact_name:d.contactName,contact_title:d.contactTitle,client_email:d.clientEmail,client_phone:d.clientPhone,client_address:d.clientAddress,matter_type:d.matterType,attorney:d.attorney,assigned_to:d.assignTo||null,matter_description:d.matterDescription,adverse_party:d.adverseParty,fee_type:d.feeType,hourly_rate:d.hourlyRate,paralegal_rate:d.paralegalRate,flat_fee_amount:d.flatFeeAmount,retainer_amount:d.retainerAmount,engagement_date:d.engagementDate,conflicts:d.conflicts,specialist_involved:d.specialistInvolved,specialist_name:d.specialistName,fee_sharing_details:d.feeSharingDetails,referral_source:d.referralSource,priority:d.priority,internal_notes:d.internalNotes,status:'Prospective'}]).select().single();if(error)throw error;updateTrackerCount();return data;}catch(e){showStatus('Error: '+e.message,'error');return null;}}
 
 async function updateClientStatus(id,s){try{const u={status:s};const today=new Date().toISOString().slice(0,10);if(s==='Letter Sent')u.letter_sent=today;if(s==='Executed')u.letter_executed=today;const{error}=await db.from('clients').update(u).eq('id',id);if(error)throw error;renderDashboard();}catch(e){showStatus('Error: '+e.message,'error');}}
 
@@ -826,19 +867,339 @@ function textToEditorHtml(text){
 
 function showStatus(m,t='success'){const b=document.getElementById('statusBar');document.getElementById('statusText').textContent=m;b.className='status-bar visible '+t;const ms=t==='error'?6000:m.length>60?5000:4000;setTimeout(()=>b.classList.remove('visible'),ms);}
 
-function getFormData(){return{clientType:document.getElementById('clientType').value,entityName:document.getElementById('entityName').value,contactName:document.getElementById('contactName').value,contactTitle:document.getElementById('contactTitle').value,clientEmail:document.getElementById('clientEmail').value,clientPhone:document.getElementById('clientPhone').value,clientAddress:document.getElementById('clientAddress').value,matterType:document.getElementById('matterType').value,attorney:document.getElementById('attorney').value,matterDescription:document.getElementById('matterDescription').value,adverseParty:document.getElementById('adverseParty').value,feeType:document.querySelector('input[name="feeType"]:checked').value,hourlyRate:document.getElementById('hourlyRate').value,paralegalRate:document.getElementById('paralegalRate').value,flatFeeAmount:document.getElementById('flatFeeAmount').value,monthlyFee:document.getElementById('monthlyFee').value,retainerAmount:document.getElementById('retainerAmount').value,engagementDate:document.getElementById('engagementDate').value,conflicts:document.getElementById('conflicts').value,specialistInvolved:document.getElementById('specialistInvolved').value,specialistName:document.getElementById('specialistName').value,feeSharingDetails:document.getElementById('feeSharingDetails').value,referralSource:document.getElementById('referralSource').value,priority:document.getElementById('priority').value,internalNotes:document.getElementById('internalNotes').value};}
+function getFormData(){return{clientType:document.getElementById('clientType').value,entityName:document.getElementById('entityName').value,contactName:document.getElementById('contactName').value,contactTitle:document.getElementById('contactTitle').value,clientEmail:document.getElementById('clientEmail').value,clientPhone:document.getElementById('clientPhone').value,clientAddress:document.getElementById('clientAddress').value,matterType:document.getElementById('matterType').value,attorney:document.getElementById('attorney').value,assignTo:document.getElementById('assignTo').value,matterDescription:document.getElementById('matterDescription').value,adverseParty:document.getElementById('adverseParty').value,feeType:document.querySelector('input[name="feeType"]:checked').value,hourlyRate:document.getElementById('hourlyRate').value,paralegalRate:document.getElementById('paralegalRate').value,flatFeeAmount:document.getElementById('flatFeeAmount').value,monthlyFee:document.getElementById('monthlyFee').value,retainerAmount:document.getElementById('retainerAmount').value,engagementDate:document.getElementById('engagementDate').value,conflicts:document.getElementById('conflicts').value,specialistInvolved:document.getElementById('specialistInvolved').value,specialistName:document.getElementById('specialistName').value,feeSharingDetails:document.getElementById('feeSharingDetails').value,referralSource:document.getElementById('referralSource').value,priority:document.getElementById('priority').value,internalNotes:document.getElementById('internalNotes').value};}
 
 function validateForm(){const r=document.querySelectorAll('#intakeForm [required]');let v=true;r.forEach(el=>{if(!el.value){el.style.borderColor='#C0392B';v=false;}else{el.style.borderColor='';}});if(!v)showStatus('Please fill in all required fields.','error');return v;}
 
-function resetForm(){document.getElementById('intakeForm').reset();document.querySelectorAll('#intakeForm [required]').forEach(el=>el.style.borderColor='');feeLabels.forEach(l=>l.classList.remove('active'));document.querySelector('label[for="feeHourly"]').classList.add('active');document.getElementById('hourlyRateGroup').classList.add('visible');document.getElementById('paralegalRateGroup').classList.add('visible');document.getElementById('flatFeeGroup').classList.remove('visible');document.getElementById('monthlyFeeGroup').classList.remove('visible');document.getElementById('specialistFields').classList.remove('visible');document.getElementById('engagementDate').valueAsDate=new Date();}
+function resetForm(){document.getElementById('intakeForm').reset();document.querySelectorAll('#intakeForm [required]').forEach(el=>el.style.borderColor='');feeLabels.forEach(l=>l.classList.remove('active'));document.querySelector('label[for="feeHourly"]').classList.add('active');document.getElementById('hourlyRateGroup').classList.add('visible');document.getElementById('paralegalRateGroup').classList.add('visible');document.getElementById('flatFeeGroup').classList.remove('visible');document.getElementById('monthlyFeeGroup').classList.remove('visible');document.getElementById('specialistFields').classList.remove('visible');document.getElementById('assignTo').value='';document.getElementById('engagementDate').valueAsDate=new Date();}
 
 function formatDate(s){if(!s)return'';const d=new Date(s+'T00:00:00');return d.toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});}
 function clientDisplayName(d){return d.entity_name||d.contact_name||d.entityName||d.contactName||'Unknown';}
 
-async function renderDashboard(){const clients=await getClients();updateTrackerCount();const t=clients.length,p=clients.filter(c=>c.status==='Prospective').length,s=clients.filter(c=>c.status==='Letter Sent').length,e=clients.filter(c=>c.status==='Executed').length;document.getElementById('statsRow').innerHTML=`<div class="stat-card"><div class="stat-num">${t}</div><div class="stat-label">Total</div></div><div class="stat-card"><div class="stat-num">${p}</div><div class="stat-label">Prospective</div></div><div class="stat-card"><div class="stat-num">${s}</div><div class="stat-label">Letter Sent</div></div><div class="stat-card"><div class="stat-num">${e}</div><div class="stat-label">Executed</div></div>`;if(!clients.length){document.getElementById('trackerTableContainer').innerHTML='<div class="empty-state"><p>No clients yet.</p></div>';return;}const sc=s=>({Prospective:'status-prospective','Letter Sent':'status-sent',Executed:'status-executed',Declined:'status-declined'}[s]||'');const rows=clients.map(c=>`<tr><td style="font-weight:600">${esc(clientDisplayName(c))}</td><td>${esc(c.matter_type||'')}</td><td>${esc(c.attorney?c.attorney.split(',')[0]:'')}</td><td>${esc(c.fee_type||'')}</td><td>${c.engagement_date?esc(formatDate(c.engagement_date)):''}</td><td><span class="status-pill ${sc(c.status)}">${esc(c.status)}</span></td><td><div class="row-actions"><select onchange="updateClientStatus('${esc(c.id)}',this.value)"><option value="Prospective" ${c.status==='Prospective'?'selected':''}>Prospective</option><option value="Letter Sent" ${c.status==='Letter Sent'?'selected':''}>Letter Sent</option><option value="Executed" ${c.status==='Executed'?'selected':''}>Executed</option><option value="Declined" ${c.status==='Declined'?'selected':''}>Declined</option></select><button onclick="viewLetterHistory('${esc(c.id)}')" title="Document History">📄</button><button onclick="regenLetter('${esc(c.id)}')" title="Regenerate Letter">🔄</button><button class="del" onclick="deleteClient('${esc(c.id)}')" title="Delete">✕</button></div></td></tr>`).join('');document.getElementById('trackerTableContainer').innerHTML=`<table class="tracker-table"><thead><tr><th>Client</th><th>Matter</th><th>Attorney</th><th>Fee</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead><tbody>${rows}</tbody></table>`;}
+function setDashFilter(filter, btn) {
+  _dashFilter = filter;
+  document.querySelectorAll('.dash-filter-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderDashboard();
+}
 
-const XH=['Date','Client','Entity','Type','Contact','Email','Phone','Matter','Description','Attorney','Fee Type','Rate','Retainer','Adverse','Conflicts','Specialist','Referral','Priority','Status','Letter Sent','Executed','Notes'];
-function ctr(c){const r=c.fee_type==='Hourly'?`${c.hourly_rate}/hr`:c.fee_type==='Flat Fee'?`Flat: ${c.flat_fee_amount}`:c.fee_type==='Subscription'?`Sub: ${c.retainer_amount}/mo`:`${c.hourly_rate}/hr + Flat: ${c.flat_fee_amount}`;return[c.engagement_date?formatDate(c.engagement_date):'',clientDisplayName(c),c.entity_name,c.client_type,c.contact_name,c.client_email,c.client_phone,c.matter_type,c.matter_description,c.attorney,c.fee_type,r,c.retainer_amount,c.adverse_party,c.conflicts,c.specialist_involved==='Yes'?c.specialist_name:'N/A',c.referral_source,c.priority,c.status||'Prospective',c.letter_sent||'',c.letter_executed||'',c.internal_notes];}
+function getAttyShortName(name) {
+  if (!name) return '';
+  return name.split(',')[0].split(' ').pop() || name.split(',')[0];
+}
+
+async function renderDashboard() {
+  const allClients = await getClients();
+  updateTrackerCount();
+
+  // Fetch latest letter approval status per client
+  let letterStatusMap = {};
+  try {
+    const clientIds = allClients.map(c => c.id);
+    if (clientIds.length > 0) {
+      const { data: letters } = await db.from('engagement_letters')
+        .select('client_id, approval_status, reviewed_by, review_notes, created_at')
+        .in('client_id', clientIds)
+        .order('created_at', { ascending: false });
+      if (letters) {
+        letters.forEach(l => {
+          if (!letterStatusMap[l.client_id]) {
+            letterStatusMap[l.client_id] = l;
+          }
+        });
+      }
+    }
+  } catch (e) { /* table may not exist yet */ }
+
+  // Determine current user's attorney name for filtering
+  const userEmail = currentUser ? currentUser.email : '';
+  const userAttyName = matchUserToAttorney(userEmail);
+
+  // Apply filter
+  let clients = allClients;
+  if (_dashFilter === 'mine') {
+    clients = allClients.filter(c => c.user_id === currentUser.id);
+  } else if (_dashFilter === 'assigned') {
+    clients = allClients.filter(c => {
+      const assignedName = c.assigned_to || '';
+      return assignedName && (assignedName === userAttyName || c.user_id !== currentUser.id);
+    });
+  } else if (_dashFilter === 'review') {
+    clients = allClients.filter(c => {
+      const ls = letterStatusMap[c.id];
+      return ls && ls.approval_status === 'Pending Review';
+    });
+  }
+
+  const t = allClients.length;
+  const p = allClients.filter(c => c.status === 'Prospective').length;
+  const pr = Object.values(letterStatusMap).filter(l => l.approval_status === 'Pending Review').length;
+  const s = allClients.filter(c => c.status === 'Letter Sent').length;
+  const e = allClients.filter(c => c.status === 'Executed').length;
+
+  document.getElementById('statsRow').innerHTML =
+    `<div class="stat-card"><div class="stat-num">${t}</div><div class="stat-label">Total</div></div>` +
+    `<div class="stat-card"><div class="stat-num">${p}</div><div class="stat-label">Prospective</div></div>` +
+    `<div class="stat-card"><div class="stat-num">${pr}</div><div class="stat-label">Pending Review</div></div>` +
+    `<div class="stat-card"><div class="stat-num">${s}</div><div class="stat-label">Letter Sent</div></div>` +
+    `<div class="stat-card"><div class="stat-num">${e}</div><div class="stat-label">Executed</div></div>`;
+
+  if (!clients.length) {
+    const msg = _dashFilter === 'all' ? 'No clients yet.' :
+      _dashFilter === 'mine' ? 'No matters created by you.' :
+      _dashFilter === 'assigned' ? 'No matters assigned to you.' :
+      'No letters pending review.';
+    document.getElementById('trackerTableContainer').innerHTML = `<div class="empty-state"><p>${msg}</p></div>`;
+    return;
+  }
+
+  const sc = s => ({ Prospective:'status-prospective', 'Letter Sent':'status-sent', Executed:'status-executed', Declined:'status-declined' }[s] || '');
+  const approvalClass = s => ({ Draft:'approval-draft', 'Pending Review':'approval-pending', Approved:'approval-approved', 'Changes Requested':'approval-changes' }[s] || 'approval-draft');
+
+  const rows = clients.map(c => {
+    const ls = letterStatusMap[c.id];
+    const letterStatus = ls ? ls.approval_status || 'Draft' : '\u2014';
+    const letterPill = ls ? `<span class="approval-pill ${approvalClass(letterStatus)}">${esc(letterStatus)}</span>` : `<span style="color:var(--warm-gray);font-size:11px">\u2014</span>`;
+    const assignedShort = c.assigned_to ? getAttyShortName(c.assigned_to) : '';
+    const assignedHtml = assignedShort ? `<span class="assigned-badge has-assignee">${esc(assignedShort)}</span>` : `<span style="color:var(--warm-gray);font-size:11px">\u2014</span>`;
+
+    return `<tr>
+      <td style="font-weight:600">${esc(clientDisplayName(c))}</td>
+      <td>${esc(c.matter_type || '')}</td>
+      <td>${esc(c.attorney ? c.attorney.split(',')[0] : '')}</td>
+      <td>${assignedHtml}</td>
+      <td>${c.engagement_date ? esc(formatDate(c.engagement_date)) : ''}</td>
+      <td><span class="status-pill ${sc(c.status)}">${esc(c.status)}</span></td>
+      <td>${letterPill}</td>
+      <td><div class="row-actions">
+        <select onchange="updateClientStatus('${esc(c.id)}',this.value)">
+          <option value="Prospective" ${c.status === 'Prospective' ? 'selected' : ''}>Prospective</option>
+          <option value="Letter Sent" ${c.status === 'Letter Sent' ? 'selected' : ''}>Letter Sent</option>
+          <option value="Executed" ${c.status === 'Executed' ? 'selected' : ''}>Executed</option>
+          <option value="Declined" ${c.status === 'Declined' ? 'selected' : ''}>Declined</option>
+        </select>
+        <button onclick="viewLetterHistory('${esc(c.id)}')" title="Document History">\ud83d\udcc4</button>
+        <button onclick="regenLetter('${esc(c.id)}')" title="Regenerate Letter">\ud83d\udd04</button>
+        <button class="del" onclick="deleteClient('${esc(c.id)}')" title="Delete">\u2715</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('trackerTableContainer').innerHTML =
+    `<table class="tracker-table"><thead><tr>
+      <th>Client</th><th>Matter</th><th>Attorney</th><th>Assigned</th><th>Date</th><th>Status</th><th>Letter</th><th>Actions</th>
+    </tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function matchUserToAttorney(email) {
+  if (!email) return '';
+  const e = email.toLowerCase();
+  if (e.includes('matt')) return 'Matt A. Margolis, Esq.';
+  if (e.includes('karina')) return 'Karina Margolis, Esq.';
+  if (e.includes('jen')) return 'Jen Healy, Esq.';
+  if (e.includes('hunter')) return 'Hunter Sutherland, Esq.';
+  return '';
+}
+
+// =============================================
+// APPROVAL WORKFLOW FUNCTIONS
+// =============================================
+
+async function submitForReview() {
+  if (!_letterClientId) { showStatus('No client linked to this letter.', 'error'); return; }
+
+  // Save letter first if not saved
+  let letterId = _lastSavedLetterId;
+  if (!letterId) {
+    letterId = await saveLetterToDb('Pending Review');
+  } else {
+    // Update existing letter's approval status
+    try {
+      const { error } = await db.from('engagement_letters')
+        .update({ approval_status: 'Pending Review', reviewed_by: null, reviewed_at: null, review_notes: null })
+        .eq('id', letterId);
+      if (error) throw error;
+    } catch (e) { showStatus('Error: ' + e.message, 'error'); return; }
+  }
+
+  _letterApprovalStatus = 'Pending Review';
+  _letterApprovalId = letterId;
+  updateApprovalBar();
+  showStatus('\u2713 Letter submitted for review.', 'success');
+
+  // Send Slack notification if configured
+  const webhookUrl = localStorage.getItem('slackWebhookUrl');
+  if (webhookUrl && _letterReviewMeta) {
+    const meta = _letterReviewMeta;
+    const baseUrl = window.location.origin + window.location.pathname;
+    const letterLink = letterId ? `${baseUrl}?letter=${letterId}` : baseUrl;
+    const sentBy = currentUser ? currentUser.email : 'unknown';
+
+    try {
+      const isSlackDirect = webhookUrl.startsWith('https://hooks.slack.com/');
+      if (isSlackDirect) {
+        const blocks = [
+          { type: 'header', text: { type: 'plain_text', text: '\ud83d\udcdd Letter Needs Review', emoji: true } },
+          { type: 'section', fields: [
+            { type: 'mrkdwn', text: `*Client:*\n${meta.name}` },
+            { type: 'mrkdwn', text: `*Matter:*\n${meta.matter}` }
+          ]},
+          { type: 'section', fields: [
+            { type: 'mrkdwn', text: `*Attorney:*\n${meta.atty}` },
+            { type: 'mrkdwn', text: `*Submitted by:*\n${sentBy}` }
+          ]},
+          { type: 'actions', elements: [
+            { type: 'button', text: { type: 'plain_text', text: 'Review in Intakr', emoji: true }, url: letterLink, style: 'primary' }
+          ]}
+        ];
+        const payload = 'payload=' + encodeURIComponent(JSON.stringify({
+          text: `Letter needs review: ${meta.name} - ${meta.matter}`,
+          blocks
+        }));
+        await fetch(webhookUrl, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: payload });
+      }
+    } catch (e) { /* Slack notification is best-effort */ }
+  }
+}
+
+async function approveLetter() {
+  if (!_letterApprovalId) { showStatus('No letter to approve.', 'error'); return; }
+
+  try {
+    const { error } = await db.from('engagement_letters')
+      .update({
+        approval_status: 'Approved',
+        reviewed_by: currentUser.email,
+        reviewed_at: new Date().toISOString()
+      })
+      .eq('id', _letterApprovalId);
+    if (error) throw error;
+
+    _letterApprovalStatus = 'Approved';
+    updateApprovalBar();
+    showStatus('\u2713 Letter approved!', 'success');
+
+    // Slack notification
+    const webhookUrl = localStorage.getItem('slackWebhookUrl');
+    if (webhookUrl && _letterReviewMeta) {
+      const meta = _letterReviewMeta;
+      try {
+        const isSlackDirect = webhookUrl.startsWith('https://hooks.slack.com/');
+        if (isSlackDirect) {
+          const payload = 'payload=' + encodeURIComponent(JSON.stringify({
+            text: `\u2705 Letter approved: ${meta.name} - ${meta.matter} (by ${currentUser.email})`
+          }));
+          await fetch(webhookUrl, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: payload });
+        }
+      } catch (e) { /* best-effort */ }
+    }
+  } catch (e) {
+    showStatus('Error: ' + e.message, 'error');
+  }
+}
+
+async function requestChanges() {
+  const notes = prompt('What changes are needed?');
+  if (notes === null) return;
+  if (!notes.trim()) { showStatus('Please provide notes about the requested changes.', 'error'); return; }
+  if (!_letterApprovalId) { showStatus('No letter selected.', 'error'); return; }
+
+  try {
+    const { error } = await db.from('engagement_letters')
+      .update({
+        approval_status: 'Changes Requested',
+        reviewed_by: currentUser.email,
+        reviewed_at: new Date().toISOString(),
+        review_notes: notes.trim()
+      })
+      .eq('id', _letterApprovalId);
+    if (error) throw error;
+
+    _letterApprovalStatus = 'Changes Requested';
+    updateApprovalBar(notes.trim(), currentUser.email);
+    showStatus('Changes requested.', 'success');
+
+    // Slack notification
+    const webhookUrl = localStorage.getItem('slackWebhookUrl');
+    if (webhookUrl && _letterReviewMeta) {
+      const meta = _letterReviewMeta;
+      try {
+        const isSlackDirect = webhookUrl.startsWith('https://hooks.slack.com/');
+        if (isSlackDirect) {
+          const payload = 'payload=' + encodeURIComponent(JSON.stringify({
+            text: `\u270f\ufe0f Changes requested on letter: ${meta.name} - ${meta.matter}\nNotes: ${notes.trim()} (by ${currentUser.email})`
+          }));
+          await fetch(webhookUrl, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: payload });
+        }
+      } catch (e) { /* best-effort */ }
+    }
+  } catch (e) {
+    showStatus('Error: ' + e.message, 'error');
+  }
+}
+
+async function saveDraft() {
+  if (!_letterClientId) { showStatus('No client linked.', 'error'); return; }
+  const letterId = await saveLetterToDb('Draft');
+  if (letterId) {
+    _letterApprovalStatus = 'Draft';
+    _letterApprovalId = letterId;
+    updateApprovalBar();
+    showStatus('\u2713 Draft saved.', 'success');
+  }
+}
+
+function updateApprovalBar(reviewNotes, reviewedBy) {
+  const bar = document.getElementById('approvalBarContainer');
+  if (!bar) return;
+
+  const status = _letterApprovalStatus || 'Draft';
+  const barClass = {
+    Draft: 'bar-draft',
+    'Pending Review': 'bar-pending',
+    Approved: 'bar-approved',
+    'Changes Requested': 'bar-changes'
+  }[status] || 'bar-draft';
+
+  let html = `<div class="approval-bar ${barClass}">`;
+  html += `<div class="approval-status-text">`;
+
+  if (status === 'Draft') {
+    html += `Status: Draft`;
+    html += `<small>Save and submit for review when ready.</small>`;
+  } else if (status === 'Pending Review') {
+    html += `Status: Pending Review`;
+    html += `<small>Awaiting approval from a reviewing attorney.</small>`;
+  } else if (status === 'Approved') {
+    html += `Status: Approved`;
+    if (reviewedBy) html += `<small>Approved by ${esc(reviewedBy)}</small>`;
+  } else if (status === 'Changes Requested') {
+    html += `Status: Changes Requested`;
+    if (reviewedBy) html += `<small>Reviewed by ${esc(reviewedBy)}</small>`;
+  }
+
+  html += `</div><div class="approval-actions">`;
+
+  if (status === 'Draft' || status === 'Changes Requested') {
+    html += `<button class="btn btn-sm btn-submit-review" onclick="submitForReview()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg> Submit for Review</button>`;
+  }
+  if (status === 'Pending Review') {
+    html += `<button class="btn btn-sm btn-approve" onclick="approveLetter()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Approve</button>`;
+    html += `<button class="btn btn-sm btn-request-changes" onclick="requestChanges()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg> Request Changes</button>`;
+  }
+
+  html += `</div></div>`;
+
+  // Show review notes if status is Changes Requested
+  if (status === 'Changes Requested' && reviewNotes) {
+    html += `<div class="review-notes-box"><strong>Reviewer Notes</strong>${esc(reviewNotes)}</div>`;
+  }
+
+  bar.innerHTML = html;
+}
+
+const XH=['Date','Client','Entity','Type','Contact','Email','Phone','Matter','Description','Attorney','Assigned To','Fee Type','Rate','Retainer','Adverse','Conflicts','Specialist','Referral','Priority','Status','Letter Sent','Executed','Notes'];
+function ctr(c){const r=c.fee_type==='Hourly'?`${c.hourly_rate}/hr`:c.fee_type==='Flat Fee'?`Flat: ${c.flat_fee_amount}`:c.fee_type==='Subscription'?`Sub: ${c.retainer_amount}/mo`:`${c.hourly_rate}/hr + Flat: ${c.flat_fee_amount}`;return[c.engagement_date?formatDate(c.engagement_date):'',clientDisplayName(c),c.entity_name,c.client_type,c.contact_name,c.client_email,c.client_phone,c.matter_type,c.matter_description,c.attorney,c.assigned_to||'',c.fee_type,r,c.retainer_amount,c.adverse_party,c.conflicts,c.specialist_involved==='Yes'?c.specialist_name:'N/A',c.referral_source,c.priority,c.status||'Prospective',c.letter_sent||'',c.letter_executed||'',c.internal_notes];}
 
 async function exportMasterExcel(){const c=await getClients();if(!c.length){showStatus('No data.','error');return;}const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([XH,...c.map(ctr)]),'Tracker');XLSX.writeFile(wb,`Intakr_Master_${new Date().toISOString().slice(0,10)}.xlsx`);showStatus(`\u2713 Exported ${c.length} client(s).`,'success');}
 function exportSingleClientExcel(d){const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([XH,ctr(d)]),'Client');XLSX.writeFile(wb,`Intakr_${clientDisplayName(d).replace(/[^a-zA-Z0-9]/g,'_')}.xlsx`);}
@@ -867,6 +1228,10 @@ let _letterSavedThisSession = false;
  *   letter_data JSONB NOT NULL,
  *   file_name TEXT NOT NULL,
  *   created_by_email TEXT,
+ *   approval_status TEXT DEFAULT 'Draft',
+ *   reviewed_by TEXT,
+ *   reviewed_at TIMESTAMPTZ,
+ *   review_notes TEXT,
  *   created_at TIMESTAMPTZ DEFAULT NOW()
  * );
  *
@@ -880,21 +1245,100 @@ let _letterSavedThisSession = false;
  *   ON engagement_letters FOR INSERT
  *   WITH CHECK (auth.uid() = user_id);
  *
+ * CREATE POLICY "Users can update own letters"
+ *   ON engagement_letters FOR UPDATE
+ *   USING (auth.uid() = user_id);
+ *
  * CREATE POLICY "Users can delete own letters"
  *   ON engagement_letters FOR DELETE
  *   USING (auth.uid() = user_id);
  *
  * CREATE INDEX idx_engagement_letters_client ON engagement_letters(client_id);
  * CREATE INDEX idx_engagement_letters_user ON engagement_letters(user_id);
+ *
+ * =============================================
+ * MIGRATION — ASSIGN TO + SHARED VISIBILITY
+ * =============================================
+ * Run this SQL to add the assigned_to column and enable shared visibility:
+ *
+ * ALTER TABLE clients ADD COLUMN IF NOT EXISTS assigned_to TEXT;
+ *
+ * -- To enable cross-user visibility for assigned matters,
+ * -- update the RLS SELECT policy on clients:
+ *
+ * DROP POLICY IF EXISTS "Users can view own clients" ON clients;
+ * CREATE POLICY "Users can view own or assigned clients"
+ *   ON clients FOR SELECT
+ *   USING (
+ *     auth.uid() = user_id
+ *     OR assigned_to IN (
+ *       SELECT raw_user_meta_data->>'full_name'
+ *       FROM auth.users WHERE id = auth.uid()
+ *     )
+ *   );
+ *
+ * DROP POLICY IF EXISTS "Users can update own clients" ON clients;
+ * CREATE POLICY "Users can update own or assigned clients"
+ *   ON clients FOR UPDATE
+ *   USING (
+ *     auth.uid() = user_id
+ *     OR assigned_to IN (
+ *       SELECT raw_user_meta_data->>'full_name'
+ *       FROM auth.users WHERE id = auth.uid()
+ *     )
+ *   );
+ *
+ * -- Also update engagement_letters RLS so assigned users can view/update letters:
+ *
+ * DROP POLICY IF EXISTS "Users can view own letters" ON engagement_letters;
+ * CREATE POLICY "Users can view own or assigned letters"
+ *   ON engagement_letters FOR SELECT
+ *   USING (
+ *     auth.uid() = user_id
+ *     OR EXISTS (
+ *       SELECT 1 FROM clients
+ *       WHERE clients.id = engagement_letters.client_id
+ *       AND clients.assigned_to IN (
+ *         SELECT raw_user_meta_data->>'full_name'
+ *         FROM auth.users WHERE id = auth.uid()
+ *       )
+ *     )
+ *   );
+ *
+ * DROP POLICY IF EXISTS "Users can update own letters" ON engagement_letters;
+ * CREATE POLICY "Users can update own or assigned letters"
+ *   ON engagement_letters FOR UPDATE
+ *   USING (
+ *     auth.uid() = user_id
+ *     OR EXISTS (
+ *       SELECT 1 FROM clients
+ *       WHERE clients.id = engagement_letters.client_id
+ *       AND clients.assigned_to IN (
+ *         SELECT raw_user_meta_data->>'full_name'
+ *         FROM auth.users WHERE id = auth.uid()
+ *       )
+ *     )
+ *   );
+ *
+ * =============================================
+ * MIGRATION — APPROVAL WORKFLOW (if table already exists)
+ * =============================================
+ * If you already created the engagement_letters table, run these to add approval columns:
+ *
+ * ALTER TABLE engagement_letters ADD COLUMN IF NOT EXISTS approval_status TEXT DEFAULT 'Draft';
+ * ALTER TABLE engagement_letters ADD COLUMN IF NOT EXISTS reviewed_by TEXT;
+ * ALTER TABLE engagement_letters ADD COLUMN IF NOT EXISTS reviewed_at TIMESTAMPTZ;
+ * ALTER TABLE engagement_letters ADD COLUMN IF NOT EXISTS review_notes TEXT;
+ *
  * =============================================
  */
 
 // Save the current letter to Supabase (called on download/Slack send)
 let _lastSavedLetterId = null;
 
-async function saveLetterToDb() {
+async function saveLetterToDb(approvalStatus) {
   if (!_letterReviewMeta || !_letterReviewSections || !_letterClientId) return null;
-  if (_letterSavedThisSession) return _lastSavedLetterId;
+  if (_letterSavedThisSession && !approvalStatus) return _lastSavedLetterId;
 
   try {
     const headerData = {
@@ -923,18 +1367,23 @@ async function saveLetterToDb() {
     const meta = _letterReviewMeta;
     const fileName = `Engagement_Letter_${meta.name.replace(/[^a-zA-Z0-9]/g, '_')}_v${nextVersion}.docx`;
 
-    const { data: inserted, error } = await db.from('engagement_letters').insert([{
+    const insertData = {
       client_id: _letterClientId,
       user_id: currentUser.id,
       version: nextVersion,
       letter_data: { meta, header: headerData, sections: editedSections },
       file_name: fileName,
       created_by_email: currentUser.email,
-    }]).select('id').single();
+    };
+    if (approvalStatus) insertData.approval_status = approvalStatus;
+
+    const { data: inserted, error } = await db.from('engagement_letters')
+      .insert([insertData]).select('id').single();
 
     if (error) throw error;
     _letterSavedThisSession = true;
     _lastSavedLetterId = inserted ? inserted.id : null;
+    _letterApprovalId = _lastSavedLetterId;
     return _lastSavedLetterId;
   } catch (e) {
     // Fail silently — table may not exist yet
@@ -1007,11 +1456,15 @@ function openLetterReview(data, clientId) {
   showLetterModal(meta, sections, clientId);
 }
 
-function showLetterModal(meta, sections, clientId, headerOverrides, savedVersionLabel) {
+function showLetterModal(meta, sections, clientId, headerOverrides, savedVersionLabel, approvalData) {
   _letterReviewMeta = meta;
   _letterReviewSections = sections;
   _letterClientId = clientId || null;
   _letterSavedThisSession = !!savedVersionLabel;
+
+  // Set approval state
+  _letterApprovalStatus = (approvalData && approvalData.status) || null;
+  _letterApprovalId = (approvalData && approvalData.letterId) || _lastSavedLetterId || null;
 
   const h = headerOverrides || {};
   const hDate = h.date || meta.engDate;
@@ -1028,6 +1481,9 @@ function showLetterModal(meta, sections, clientId, headerOverrides, savedVersion
   if (savedVersionLabel) {
     html += `<div class="doc-saved-banner"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ${esc(savedVersionLabel)} &mdash; edit and re-download, or close to discard changes.</div>`;
   }
+
+  // Approval workflow bar
+  html += `<div id="approvalBarContainer"></div>`;
 
   // Header fields (date, recipient, re line, greeting)
   html += `<div class="letter-section"><div class="letter-section-header"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> Letter Header</div>`;
@@ -1052,6 +1508,14 @@ function showLetterModal(meta, sections, clientId, headerOverrides, savedVersion
 
   container.innerHTML = html;
 
+  // Render the approval bar
+  if (_letterApprovalStatus) {
+    updateApprovalBar(
+      approvalData ? approvalData.reviewNotes : null,
+      approvalData ? approvalData.reviewedBy : null
+    );
+  }
+
   document.getElementById('letterModal').classList.add('visible');
   document.body.style.overflow = 'hidden';
   updateSlackUI();
@@ -1065,6 +1529,8 @@ function closeLetterModal() {
   _letterClientId = null;
   _letterSavedThisSession = false;
   _lastSavedLetterId = null;
+  _letterApprovalStatus = null;
+  _letterApprovalId = null;
 }
 
 document.addEventListener('keydown', function(e) {
@@ -1119,7 +1585,7 @@ async function viewLetterHistory(clientId) {
         <div class="doc-version-info">
           <div class="doc-version-badge">v${letter.version}</div>
           <div>
-            <div class="doc-version-name">${esc(letter.file_name)}</div>
+            <div class="doc-version-name">${esc(letter.file_name)}${letter.approval_status ? ` <span class="approval-pill ${({'Draft':'approval-draft','Pending Review':'approval-pending','Approved':'approval-approved','Changes Requested':'approval-changes'})[letter.approval_status] || 'approval-draft'}">${esc(letter.approval_status)}</span>` : ''}</div>
             <div class="doc-version-detail">${esc(date)} \u00b7 ${esc(letter.created_by_email || 'Unknown')}</div>
           </div>
         </div>
@@ -1156,7 +1622,14 @@ async function openSavedLetter(letterId) {
     const versionDate = new Date(data.created_at).toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' });
     const versionLabel = `Saved version ${data.version} from ${versionDate}`;
 
-    showLetterModal(ld.meta, ld.sections, data.client_id, ld.header, versionLabel);
+    const approvalData = {
+      status: data.approval_status || 'Draft',
+      letterId: data.id,
+      reviewedBy: data.reviewed_by || null,
+      reviewNotes: data.review_notes || null,
+    };
+
+    showLetterModal(ld.meta, ld.sections, data.client_id, ld.header, versionLabel, approvalData);
   } catch (e) {
     showStatus('Error opening letter: ' + e.message, 'error');
   }
