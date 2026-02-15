@@ -144,6 +144,14 @@
   .letter-modal-footer{padding:16px 28px;border-top:1px solid var(--border);background:var(--light-gray);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
   .letter-modal-footer .hint{font-size:12px;color:var(--warm-gray);}
 
+  .header-config-btn{display:flex;align-items:center;gap:6px;background:var(--cream);border:1px dashed var(--sage);border-radius:20px;padding:6px 14px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:var(--sage-dark);cursor:pointer;transition:all 0.2s;text-transform:uppercase;letter-spacing:0.5px;}
+  .header-config-btn:hover{background:var(--sage-pale);border-style:solid;}
+  .header-config-btn.active{border-style:solid;background:var(--sage-pale);}
+  .header-config-btn img{height:20px;width:auto;border-radius:3px;}
+  .btn-slack{background:#4A154B;color:#fff;border:none;}
+  .btn-slack:hover:not(:disabled){background:#611f69;transform:translateY(-1px);box-shadow:0 4px 16px rgba(74,21,75,0.3);}
+  .btn-slack:disabled{background:#4A154B;}
+
   @media(max-width:640px){
     .form-grid{grid-template-columns:1fr;}.header{padding:16px 20px;flex-direction:column;gap:12px;}
     .tab-bar{padding:0 16px;}.tab-btn{padding:12px 16px;font-size:13px;}
@@ -175,7 +183,7 @@
     </div>
     <div class="auth-form active" id="loginForm">
       <div class="form-group"><label>Email</label><input type="email" id="loginEmail" placeholder="your@margolispllc.com"></div>
-      <div class="form-group" style="margin-top:16px"><label>Password</label><input type="password" id="loginPassword" placeholder="••••••••"></div>
+      <div class="form-group" style="margin-top:16px"><label>Password</label><input type="password" id="loginPassword" placeholder="••••••••" onkeydown="if(event.key==='Enter')handleLogin()"></div>
       <button class="btn btn-primary btn-full" onclick="handleLogin()" id="loginBtn" style="margin-top:24px">Sign In</button>
       <p class="help-text" style="text-align:center;margin-top:16px"><button onclick="switchAuthTab('reset')" style="background:none;border:none;color:var(--sage-dark);text-decoration:underline;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px">Forgot password?</button></p>
       <p class="help-text" style="text-align:center;margin-top:8px">First time? Click "Sign Up" above.</p>
@@ -183,19 +191,19 @@
     <div class="auth-form" id="signupForm">
       <div class="form-group"><label>Full Name</label><input type="text" id="signupName" placeholder="John Doe"></div>
       <div class="form-group" style="margin-top:16px"><label>Email</label><input type="email" id="signupEmail" placeholder="yourname@margolispllc.com"><p class="help-text">Must be a @margolispllc.com email</p></div>
-      <div class="form-group" style="margin-top:16px"><label>Password</label><input type="password" id="signupPassword" placeholder="••••••••"><p class="help-text">At least 6 characters</p></div>
+      <div class="form-group" style="margin-top:16px"><label>Password</label><input type="password" id="signupPassword" placeholder="••••••••" onkeydown="if(event.key==='Enter')handleSignup()"><p class="help-text">At least 6 characters</p></div>
       <button class="btn btn-primary btn-full" onclick="handleSignup()" id="signupBtn" style="margin-top:24px">Create Account</button>
     </div>
     <div class="auth-form" id="resetForm">
       <p style="color:var(--warm-gray);margin-bottom:24px;text-align:center;font-size:14px">Enter your email and we'll send a reset link.</p>
-      <div class="form-group"><label>Email</label><input type="email" id="resetEmail" placeholder="your@margolispllc.com"></div>
+      <div class="form-group"><label>Email</label><input type="email" id="resetEmail" placeholder="your@margolispllc.com" onkeydown="if(event.key==='Enter')handlePasswordReset()"></div>
       <button class="btn btn-primary btn-full" onclick="handlePasswordReset()" id="resetBtn" style="margin-top:24px">Send Reset Link</button>
       <p class="help-text" style="text-align:center;margin-top:16px"><button onclick="switchAuthTab('login')" style="background:none;border:none;color:var(--sage-dark);text-decoration:underline;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px">Back to Sign In</button></p>
     </div>
     <div class="auth-form" id="updatePasswordForm">
       <p style="color:var(--warm-gray);margin-bottom:24px;text-align:center;font-size:14px">Enter your new password below.</p>
       <div class="form-group"><label>New Password</label><input type="password" id="newPassword" placeholder="••••••••"><p class="help-text">At least 6 characters</p></div>
-      <div class="form-group" style="margin-top:16px"><label>Confirm Password</label><input type="password" id="confirmPassword" placeholder="••••••••"></div>
+      <div class="form-group" style="margin-top:16px"><label>Confirm Password</label><input type="password" id="confirmPassword" placeholder="••••••••" onkeydown="if(event.key==='Enter')handleUpdatePassword()"></div>
       <button class="btn btn-primary btn-full" onclick="handleUpdatePassword()" id="updatePasswordBtn" style="margin-top:24px">Update Password</button>
     </div>
   </div>
@@ -219,12 +227,15 @@
   </div>
   <div class="header-right">
     <div class="header-badge">Secure</div>
+    <button class="header-config-btn" id="logoUploadBtn" onclick="document.getElementById('logoFileInput').click()" title="Upload firm logo for engagement letter header"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg> <span id="logoUploadLabel">Logo</span></button>
+    <input type="file" id="logoFileInput" accept="image/png,image/jpeg" style="display:none" onchange="handleLogoUpload(event)">
+    <button class="header-config-btn" id="slackConfigBtn" onclick="configureSlackWebhook()" title="Configure Slack integration via Zapier"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 10c-.83 0-1.5-.67-1.5-1.5v-5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5z"/><path d="M20.5 10H19V8.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/><path d="M9.5 14c.83 0 1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5S8 21.33 8 20.5v-5c0-.83.67-1.5 1.5-1.5z"/><path d="M3.5 14H5v1.5c0 .83-.67 1.5-1.5 1.5S2 16.33 2 15.5 2.67 14 3.5 14z"/><path d="M14 14.5c0-.83.67-1.5 1.5-1.5h5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5h-5c-.83 0-1.5-.67-1.5-1.5z"/><path d="M14 20.5c0 .83-.67 1.5-1.5 1.5s-1.5-.67-1.5-1.5.67-1.5 1.5-1.5h1.5v1.5z"/><path d="M10 9.5C10 10.33 9.33 11 8.5 11h-5C2.67 11 2 10.33 2 9.5S2.67 8 3.5 8h5c.83 0 1.5.67 1.5 1.5z"/><path d="M10 3.5C10 2.67 10.67 2 11.5 2S13 2.67 13 3.5 12.33 5 11.5 5H10V3.5z"/></svg> <span id="slackConfigLabel">Slack</span></button>
     <div class="user-menu"><span id="userEmail"></span><button onclick="handleLogout()">Sign Out</button></div>
   </div>
 </div>
 <div class="tab-bar">
-  <button class="tab-btn active" onclick="switchTab('intake')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg> New Intake</button>
-  <button class="tab-btn" onclick="switchTab('dashboard')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg> Client Tracker <span class="count" id="trackerCount">0</span></button>
+  <button class="tab-btn active" onclick="switchTab('intake',this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg> New Intake</button>
+  <button class="tab-btn" onclick="switchTab('dashboard',this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg> Client Tracker <span class="count" id="trackerCount">0</span></button>
 </div>
 
 <div class="tab-content active" id="tab-intake">
@@ -322,6 +333,7 @@
       <h2><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Review Engagement Letter</h2>
       <div class="modal-actions">
         <button class="btn btn-secondary btn-sm" onclick="closeLetterModal()">Cancel</button>
+        <button class="btn btn-slack btn-sm" id="slackSendBtn" onclick="sendToSlack()" style="display:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 10c-.83 0-1.5-.67-1.5-1.5v-5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5z"/><path d="M20.5 10H19V8.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/><path d="M9.5 14c.83 0 1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5S8 21.33 8 20.5v-5c0-.83.67-1.5 1.5-1.5z"/><path d="M3.5 14H5v1.5c0 .83-.67 1.5-1.5 1.5S2 16.33 2 15.5 2.67 14 3.5 14z"/><path d="M14 14.5c0-.83.67-1.5 1.5-1.5h5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5h-5c-.83 0-1.5-.67-1.5-1.5z"/><path d="M15.5 19H14v1.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5-.67-1.5-1.5-1.5z"/><path d="M10 9.5C10 10.33 9.33 11 8.5 11h-5C2.67 11 2 10.33 2 9.5S2.67 8 3.5 8h5c.83 0 1.5.67 1.5 1.5z"/><path d="M8.5 5H10V3.5C10 2.67 9.33 2 8.5 2S7 2.67 7 3.5 7.67 5 8.5 5z"/></svg> Send to Slack</button>
         <button class="btn btn-primary btn-sm" onclick="downloadFromReview()" id="modalDownloadBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download .docx</button>
       </div>
     </div>
@@ -330,7 +342,10 @@
     </div>
     <div class="letter-modal-footer">
       <span class="hint">Edit any section above, then click Download to generate your .docx file.</span>
-      <button class="btn btn-primary btn-sm" onclick="downloadFromReview()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download .docx</button>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-slack btn-sm slack-send-btn" onclick="sendToSlack()" style="display:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 10c-.83 0-1.5-.67-1.5-1.5v-5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5z"/><path d="M20.5 10H19V8.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/><path d="M9.5 14c.83 0 1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5S8 21.33 8 20.5v-5c0-.83.67-1.5 1.5-1.5z"/><path d="M3.5 14H5v1.5c0 .83-.67 1.5-1.5 1.5S2 16.33 2 15.5 2.67 14 3.5 14z"/><path d="M14 14.5c0-.83.67-1.5 1.5-1.5h5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5h-5c-.83 0-1.5-.67-1.5-1.5z"/><path d="M15.5 19H14v1.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5-.67-1.5-1.5-1.5z"/><path d="M10 9.5C10 10.33 9.33 11 8.5 11h-5C2.67 11 2 10.33 2 9.5S2.67 8 3.5 8h5c.83 0 1.5.67 1.5 1.5z"/><path d="M8.5 5H10V3.5C10 2.67 9.33 2 8.5 2S7 2.67 7 3.5 7.67 5 8.5 5z"/></svg> Send to Slack</button>
+        <button class="btn btn-primary btn-sm" onclick="downloadFromReview()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download .docx</button>
+      </div>
     </div>
   </div>
 </div>
@@ -343,13 +358,22 @@ const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
 let currentUser=null;
 
+db.auth.onAuthStateChange((event,session)=>{
+  if(event==='SIGNED_OUT'||event==='TOKEN_REFRESHED'&&!session){
+    currentUser=null;
+    document.getElementById('authContainer').style.display='flex';
+    document.getElementById('appContainer').classList.remove('visible');
+    showStatus('Session expired \u2014 please sign in again.','error');
+  }
+});
+
 function switchAuthTab(t){document.querySelectorAll('.auth-tab').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.auth-form').forEach(x=>x.classList.remove('active'));if(t==='login'){document.querySelectorAll('.auth-tab')[0].classList.add('active');document.getElementById('loginForm').classList.add('active');}else if(t==='signup'){document.querySelectorAll('.auth-tab')[1].classList.add('active');document.getElementById('signupForm').classList.add('active');}else if(t==='reset'){document.getElementById('resetForm').classList.add('active');}else if(t==='update-password'){document.getElementById('updatePasswordForm').classList.add('active');}}
 
 async function handleLogin(){const e=document.getElementById('loginEmail').value.trim().toLowerCase(),p=document.getElementById('loginPassword').value;if(!e||!p){showStatus('Please enter email and password','error');return;}if(!e.endsWith('@margolispllc.com')){showStatus('Access restricted to @margolispllc.com','error');return;}const b=document.getElementById('loginBtn');b.disabled=true;b.innerHTML='<div class="loading-spinner"></div> Signing In...';try{const{data,error}=await db.auth.signInWithPassword({email:e,password:p});if(error)throw error;currentUser=data.user;if(!currentUser.email.endsWith('@margolispllc.com')){await db.auth.signOut();throw new Error('Access restricted');}showApp();showStatus('\u2713 Welcome back!','success');}catch(x){showStatus('Login failed: '+x.message,'error');b.disabled=false;b.innerHTML='Sign In';}}
 
-async function handleSignup(){const n=document.getElementById('signupName').value.trim(),e=document.getElementById('signupEmail').value.trim().toLowerCase(),p=document.getElementById('signupPassword').value;if(!n||!e||!p){showStatus('Please fill in all fields','error');return;}if(!e.endsWith('@margolispllc.com')){showStatus('Access restricted to @margolispllc.com','error');return;}if(p.length<6){showStatus('Password must be at least 6 characters','error');return;}const b=document.getElementById('signupBtn');b.disabled=true;b.innerHTML='<div class="loading-spinner"></div> Creating...';try{const{data,error}=await db.auth.signUp({email:e,password:p,options:{data:{full_name:n}}});if(error)throw error;if(data.user){if(data.user.identities&&data.user.identities.length===0){showStatus('Email already registered.','error');switchAuthTab('login');}else{currentUser=data.user;showApp();showStatus('\u2713 Account created!','success');}}}catch(x){showStatus('Signup failed: '+x.message,'error');}finally{b.disabled=false;b.innerHTML='Create Account';}}
+async function handleSignup(){const n=document.getElementById('signupName').value.trim(),e=document.getElementById('signupEmail').value.trim().toLowerCase(),p=document.getElementById('signupPassword').value;if(!n||!e||!p){showStatus('Please fill in all fields','error');return;}if(!e.endsWith('@margolispllc.com')){showStatus('Access restricted to @margolispllc.com','error');return;}if(p.length<6){showStatus('Password must be at least 6 characters','error');return;}const b=document.getElementById('signupBtn');b.disabled=true;b.innerHTML='<div class="loading-spinner"></div> Creating...';try{const{data,error}=await db.auth.signUp({email:e,password:p,options:{data:{full_name:n}}});if(error)throw error;if(data.user){if(data.user.identities&&data.user.identities.length===0){showStatus('Email already registered. Try signing in or resetting your password.','error');switchAuthTab('login');}else if(data.session){currentUser=data.user;showApp();showStatus('\u2713 Account created!','success');}else{showStatus('\u2713 Account created! Check your email for a confirmation link, then sign in.','success');switchAuthTab('login');}}}catch(x){showStatus('Signup failed: '+x.message,'error');}finally{b.disabled=false;b.innerHTML='Create Account';}}
 
-async function handlePasswordReset(){const e=document.getElementById('resetEmail').value.trim();if(!e){showStatus('Enter your email','error');return;}const b=document.getElementById('resetBtn');b.disabled=true;b.innerHTML='<div class="loading-spinner"></div> Sending...';try{const{error}=await db.auth.resetPasswordForEmail(e,{redirectTo:window.location.origin+window.location.pathname});if(error)throw error;showStatus('\u2713 Reset link sent!','success');setTimeout(()=>switchAuthTab('login'),3000);}catch(x){showStatus('Error: '+x.message,'error');}finally{b.disabled=false;b.innerHTML='Send Reset Link';}}
+async function handlePasswordReset(){const e=document.getElementById('resetEmail').value.trim().toLowerCase();if(!e){showStatus('Enter your email','error');return;}if(!e.endsWith('@margolispllc.com')){showStatus('Access restricted to @margolispllc.com','error');return;}const b=document.getElementById('resetBtn');b.disabled=true;b.innerHTML='<div class="loading-spinner"></div> Sending...';try{const{error}=await db.auth.resetPasswordForEmail(e,{redirectTo:window.location.origin+window.location.pathname});if(error)throw error;showStatus('\u2713 Reset link sent!','success');setTimeout(()=>switchAuthTab('login'),3000);}catch(x){showStatus('Error: '+x.message,'error');}finally{b.disabled=false;b.innerHTML='Send Reset Link';}}
 
 async function handleUpdatePassword(){const n=document.getElementById('newPassword').value,c=document.getElementById('confirmPassword').value;if(!n||!c){showStatus('Fill in both fields','error');return;}if(n.length<6){showStatus('Min 6 characters','error');return;}if(n!==c){showStatus('Passwords do not match','error');return;}const b=document.getElementById('updatePasswordBtn');b.disabled=true;b.innerHTML='<div class="loading-spinner"></div> Updating...';try{const{error}=await db.auth.updateUser({password:n});if(error)throw error;showStatus('\u2713 Password updated!','success');showApp();}catch(x){showStatus('Error: '+x.message,'error');b.disabled=false;b.innerHTML='Update Password';}}
 
@@ -357,19 +381,340 @@ async function handleLogout(){try{await db.auth.signOut();currentUser=null;docum
 
 function showApp(){document.getElementById('authContainer').style.display='none';document.getElementById('appContainer').classList.add('visible');if(!currentUser.email.endsWith('@margolispllc.com')){handleLogout();return;}document.getElementById('userEmail').textContent=currentUser.email;updateTrackerCount();renderDashboard();}
 
-async function checkAuth(){const{data:{session}}=await db.auth.getSession();const hp=new URLSearchParams(window.location.hash.substring(1));if(hp.get('type')==='recovery'){if(session&&session.user){if(!session.user.email.endsWith('@margolispllc.com')){await db.auth.signOut();return;}currentUser=session.user;}switchAuthTab('update-password');return;}if(session){if(!session.user.email.endsWith('@margolispllc.com')){await db.auth.signOut();return;}currentUser=session.user;showApp();}}
+async function checkAuth(){const{data:{session}}=await db.auth.getSession();const hp=new URLSearchParams(window.location.hash.substring(1));if(hp.get('type')==='recovery'){if(session&&session.user){if(!session.user.email.endsWith('@margolispllc.com')){await db.auth.signOut();return;}currentUser=session.user;}switchAuthTab('update-password');return;}if(session){if(!session.user.email.endsWith('@margolispllc.com')){await db.auth.signOut();return;}currentUser=session.user;showApp();}restoreLogoPreview();restoreSlackUI();}
+
+// --- Firm Logo for Engagement Letter Header ---
+function handleLogoUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (!file.type.match(/^image\/(png|jpeg)$/)) {
+    showStatus('Please upload a PNG or JPG image.', 'error');
+    return;
+  }
+  if (file.size > 2 * 1024 * 1024) {
+    showStatus('Logo must be under 2 MB.', 'error');
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const dataUrl = e.target.result;
+    try {
+      localStorage.setItem('firmLogoDataUrl', dataUrl);
+    } catch (err) {
+      showStatus('Logo too large to save. Try a smaller image.', 'error');
+      return;
+    }
+    updateLogoButton(dataUrl);
+    showStatus('\u2713 Logo saved! It will appear in all future engagement letters.', 'success');
+  };
+  reader.onerror = function() {
+    showStatus('Failed to read image file.', 'error');
+  };
+  reader.readAsDataURL(file);
+}
+
+function restoreLogoPreview() {
+  const saved = localStorage.getItem('firmLogoDataUrl');
+  if (saved) updateLogoButton(saved);
+}
+
+function updateLogoButton(dataUrl) {
+  const btn = document.getElementById('logoUploadBtn');
+  const label = document.getElementById('logoUploadLabel');
+  btn.classList.add('active');
+  label.innerHTML = '';
+  const img = document.createElement('img');
+  img.src = dataUrl;
+  img.alt = 'Firm logo';
+  label.appendChild(img);
+  // Add a small remove "x" next to the preview
+  const rm = document.createElement('span');
+  rm.textContent = '\u00d7';
+  rm.style.cssText = 'margin-left:4px;cursor:pointer;font-size:14px;font-weight:700;color:var(--warm-gray);';
+  rm.title = 'Remove logo';
+  rm.onclick = function(e) { e.stopPropagation(); removeLogo(); };
+  label.appendChild(rm);
+}
+
+function removeLogo() {
+  localStorage.removeItem('firmLogoDataUrl');
+  const btn = document.getElementById('logoUploadBtn');
+  const label = document.getElementById('logoUploadLabel');
+  btn.classList.remove('active');
+  label.textContent = 'Logo';
+  document.getElementById('logoFileInput').value = '';
+  showStatus('Logo removed.', 'success');
+}
+
+function getFirmLogoBuffer() {
+  const dataUrl = localStorage.getItem('firmLogoDataUrl');
+  if (!dataUrl) return null;
+  try {
+    const base64 = dataUrl.split(',')[1];
+    if (!base64) return null;
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return { buffer: bytes };
+  } catch (e) {
+    // Corrupted localStorage data — clear it and continue without logo
+    localStorage.removeItem('firmLogoDataUrl');
+    return null;
+  }
+}
+// --- End Logo ---
+
+// --- Slack / Zapier Integration ---
+function configureSlackWebhook() {
+  const current = localStorage.getItem('zapierWebhookUrl') || '';
+  const url = prompt(
+    'Enter your Zapier webhook URL for Slack integration.\n\n' +
+    'To set this up:\n' +
+    '1. Create a Zap with "Webhooks by Zapier" as the trigger (Catch Hook)\n' +
+    '2. Add a Slack action (Send Channel Message or Upload File)\n' +
+    '3. Paste the webhook URL below\n\n' +
+    'Leave blank and click OK to remove.',
+    current
+  );
+  if (url === null) return; // cancelled
+  if (url.trim() === '') {
+    localStorage.removeItem('zapierWebhookUrl');
+    updateSlackUI();
+    showStatus('Slack integration removed.', 'success');
+    return;
+  }
+  if (!url.startsWith('https://hooks.zapier.com/')) {
+    showStatus('Invalid URL. Must start with https://hooks.zapier.com/', 'error');
+    return;
+  }
+  localStorage.setItem('zapierWebhookUrl', url.trim());
+  updateSlackUI();
+  showStatus('\u2713 Slack integration configured!', 'success');
+}
+
+function updateSlackUI() {
+  const hasWebhook = !!localStorage.getItem('zapierWebhookUrl');
+  const configBtn = document.getElementById('slackConfigBtn');
+  const label = document.getElementById('slackConfigLabel');
+  if (hasWebhook) {
+    configBtn.classList.add('active');
+    label.textContent = 'Slack \u2713';
+  } else {
+    configBtn.classList.remove('active');
+    label.textContent = 'Slack';
+  }
+  // Show/hide all Send to Slack buttons
+  document.getElementById('slackSendBtn').style.display = hasWebhook ? '' : 'none';
+  document.querySelectorAll('.slack-send-btn').forEach(b => b.style.display = hasWebhook ? '' : 'none');
+}
+
+function restoreSlackUI() {
+  updateSlackUI();
+}
+
+async function buildDocxBlob() {
+  if (!_letterReviewMeta || !_letterReviewSections) return null;
+
+  const meta = _letterReviewMeta;
+  const revDate = document.getElementById('rev_date').value;
+  const revRecipient = document.getElementById('rev_recipient').value;
+  const revAttention = document.getElementById('rev_attention') ? document.getElementById('rev_attention').value : '';
+  const revEmail = document.getElementById('rev_email').value;
+  const revRe = document.getElementById('rev_re').value;
+  const revGreeting = document.getElementById('rev_greeting').value;
+
+  const editedSections = {};
+  _letterReviewSections.forEach(s => {
+    editedSections[s.id] = document.getElementById('rev_'+s.id).value;
+  });
+
+  const { Document, Packer, Paragraph, TextRun, ImageRun, AlignmentType, Header, BorderStyle, UnderlineType, Table, TableRow, TableCell, WidthType, VerticalAlign, BorderStyle: TBorder } = window.docx;
+
+  const f = 'Times New Roman', sz = 22;
+  const tr = (text, opts={}) => new TextRun({ font:f, size:sz, ...opts, text });
+  const bold = text => tr(text, { bold:true });
+  const ul = text => tr(text, { underline:{type:UnderlineType.SINGLE} });
+  const bu = text => tr(text, { bold:true, underline:{type:UnderlineType.SINGLE} });
+  const bi = text => tr(text, { bold:true, italics:true, underline:{type:UnderlineType.SINGLE} });
+  const sp = { after: 200 };
+
+  function pp(runs, opts={}) {
+    const children = Array.isArray(runs) ? runs : [tr(runs)];
+    return new Paragraph({ spacing:sp, alignment:opts.align||AlignmentType.JUSTIFIED, children });
+  }
+  function blank() { return new Paragraph({ spacing:sp, children:[] }); }
+  function textToParas(text, opts={}) {
+    return text.split('\n').filter(l=>l.trim()!=='').map(line => pp(line, opts));
+  }
+  function sectParas(num, titleLabel, text) {
+    const lines = text.split('\n').filter(l=>l.trim()!=='');
+    const result = [];
+    if (lines.length > 0) {
+      result.push(pp([tr(`${num}. `), ul(titleLabel+':'), tr(' '+lines[0])]));
+      for (let i=1; i<lines.length; i++) result.push(pp(lines[i]));
+    }
+    return result;
+  }
+
+  const body = [];
+  body.push(pp(revDate, {align:AlignmentType.LEFT}));
+  body.push(blank());
+  body.push(pp([bi('VIA ELECTRONIC MAIL ONLY')]));
+  body.push(pp(revRecipient, {align:AlignmentType.LEFT}));
+  if (revAttention) body.push(pp(`ATTENTION: ${revAttention}`, {align:AlignmentType.LEFT}));
+  if (revEmail) body.push(pp(revEmail, {align:AlignmentType.LEFT}));
+  body.push(blank());
+  body.push(pp([bold(`Re: ${revRe}`)]));
+  body.push(blank());
+  body.push(pp(revGreeting));
+  textToParas(editedSections.intro).forEach(p => body.push(p));
+  body.push(blank());
+
+  const sectionDefs = [
+    {num:1, key:'s1', title:'Attorney in Charge'},{num:2, key:'s2', title:'Client'},
+    {num:3, key:'s3', title:'Scope'},{num:4, key:'s4', title:'What we need from you'},
+    {num:5, key:'s5', title:'Advice about Possible Outcomes'},{num:6, key:'s6', title:'Legal Services Fees'},
+    {num:7, key:'s7', title:'Costs'},{num:8, key:'s8', title:'Payment'},
+    {num:9, key:'s9', title:'Conflicts of Interest and Waiver'},
+    {num:10, key:'s10', title:'Specialist/Local Network and Fee Sharing'},
+    {num:11, key:'s11', title:'Use of Artificial Intelligence Tools'},
+    {num:12, key:'s12', title:'Termination of Engagement'},
+    {num:13, key:'s13', title:'Conclusion of Representation; Retention and Disposition of Documents'},
+    {num:14, key:'s14', title:'Post-Engagement Matters'},
+    {num:15, key:'s15', title:'Choice of Law & Venue'},
+  ];
+  sectionDefs.forEach(sd => {
+    sectParas(sd.num, sd.title, editedSections[sd.key]).forEach(p => body.push(p));
+  });
+
+  body.push(blank());
+  textToParas(editedSections.closing).forEach(p => body.push(p));
+  body.push(blank()); body.push(blank());
+  body.push(pp('Sincerely,', {align:AlignmentType.LEFT}));
+  body.push(blank());
+  body.push(pp([bold('MARGOLIS PLLC')], {align:AlignmentType.LEFT}));
+  body.push(blank());
+  body.push(pp([bi(`/s/ ${meta.sigFull}`)], {align:AlignmentType.LEFT}));
+  body.push(blank());
+  body.push(pp(`By: ${meta.sigShort}, Esq.`, {align:AlignmentType.LEFT}));
+  body.push(pp('For the Firm', {align:AlignmentType.LEFT}));
+  body.push(blank()); body.push(blank());
+  body.push(pp([bold('ACKNOWLEDGED AND AGREED:')], {align:AlignmentType.LEFT}));
+  body.push(blank());
+  body.push(pp(revRecipient, {align:AlignmentType.LEFT}));
+  body.push(blank());
+  body.push(pp('By: _____________________________', {align:AlignmentType.LEFT}));
+  body.push(pp('Name: __________________________', {align:AlignmentType.LEFT}));
+  body.push(pp('Date: ___________________________', {align:AlignmentType.LEFT}));
+
+  body.push(new Paragraph({ pageBreakBefore:true, spacing:sp, alignment:AlignmentType.CENTER, children:[bu('EXHIBIT A')] }));
+  body.push(blank());
+  body.push(new Paragraph({ spacing:sp, alignment:AlignmentType.CENTER, children:[bu('SCOPE OF SERVICES')] }));
+  body.push(blank());
+  textToParas(editedSections.exhibit).forEach(p => body.push(p));
+
+  const noBorders = { top:{style:TBorder.NONE,size:0}, bottom:{style:TBorder.NONE,size:0}, left:{style:TBorder.NONE,size:0}, right:{style:TBorder.NONE,size:0}, insideHorizontal:{style:TBorder.NONE,size:0}, insideVertical:{style:TBorder.NONE,size:0} };
+  const firmLogo = getFirmLogoBuffer();
+  const attorneyLines = [
+    new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:40}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'MATT A. MARGOLIS, ESQ.'})] }),
+    new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:40}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'PARTNER'})] }),
+    new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:80}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'MATTHEW@MARGOLISPLLC.COM'})] }),
+    new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:40}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'KARINA MARGOLIS, ESQ.'})] }),
+    new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:40}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'PARTNER'})] }),
+    new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:80}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'KARINA@MARGOLISPLLC.COM'})] }),
+    new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:40}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'JEN HEALY, ESQ.'})] }),
+    new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:40}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'PARTNER'})] }),
+    new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:80}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'JEN@MARGOLISPLLC.COM'})] }),
+    new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:40}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'HUNTER SUTHERLAND, ESQ.'})] }),
+    new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:40}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'ASSOCIATE'})] }),
+    new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:0}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'HUNTER@MARGOLISPLLC.COM'})] }),
+  ];
+
+  let headerChildren;
+  if (firmLogo) {
+    const logoCell = new TableCell({ borders:noBorders, verticalAlign:VerticalAlign.TOP, width:{size:3400,type:WidthType.DXA}, children:[new Paragraph({children:[new ImageRun({data:firmLogo.buffer,transformation:{width:180,height:180}})]})] });
+    const infoCell = new TableCell({ borders:noBorders, verticalAlign:VerticalAlign.TOP, width:{size:5960,type:WidthType.DXA}, children:attorneyLines });
+    const headerTable = new Table({ rows:[new TableRow({children:[logoCell,infoCell]})], width:{size:9360,type:WidthType.DXA}, borders:noBorders });
+    headerChildren = [headerTable, new Paragraph({spacing:{before:200},border:{bottom:{style:BorderStyle.SINGLE,size:6,color:'8FAF8F',space:1}},children:[]})];
+  } else {
+    headerChildren = [...attorneyLines, new Paragraph({spacing:{before:200},border:{bottom:{style:BorderStyle.SINGLE,size:6,color:'8FAF8F',space:1}},children:[]})];
+  }
+
+  const doc = new Document({
+    styles:{default:{document:{run:{font:'Times New Roman',size:22}}}},
+    sections:[{ properties:{ page:{size:{width:12240,height:15840},margin:{top:firmLogo?2800:1800,right:1440,bottom:1440,left:1440}}, titlePage:true }, headers:{ first:new Header({children:headerChildren}), default:new Header({children:[]}) }, children:body }]
+  });
+
+  return await Packer.toBlob(doc);
+}
+
+async function sendToSlack() {
+  const webhookUrl = localStorage.getItem('zapierWebhookUrl');
+  if (!webhookUrl) {
+    showStatus('Slack not configured. Click the Slack button in the header to set up.', 'error');
+    return;
+  }
+  if (!_letterReviewMeta || !_letterReviewSections) return;
+
+  const meta = _letterReviewMeta;
+  const slackBtns = document.querySelectorAll('.btn-slack');
+  const savedLabels = [];
+  slackBtns.forEach(b => { savedLabels.push(b.innerHTML); b.disabled = true; b.innerHTML = '<div class="loading-spinner"></div> Sending...'; });
+
+  try {
+    const blob = await buildDocxBlob();
+    if (!blob) throw new Error('Failed to generate document');
+
+    // Convert blob to base64
+    const arrayBuffer = await blob.arrayBuffer();
+    const bytes = new Uint8Array(arrayBuffer);
+    let binary = '';
+    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+    const fileBase64 = btoa(binary);
+
+    const fileName = `Engagement_Letter_${meta.name.replace(/[^a-zA-Z0-9]/g, '_')}.docx`;
+    const revDate = document.getElementById('rev_date').value;
+
+    const payload = {
+      client_name: meta.name,
+      contact_name: meta.contact,
+      matter_type: meta.matter,
+      attorney: meta.atty,
+      engagement_date: revDate,
+      file_name: fileName,
+      file_base64: fileBase64,
+      sent_by: currentUser ? currentUser.email : 'unknown',
+      message: `New engagement letter generated for *${meta.name}* \u2014 ${meta.matter}\nAttorney: ${meta.atty} | Date: ${revDate}`
+    };
+
+    const resp = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (!resp.ok) throw new Error(`Zapier returned ${resp.status}`);
+
+    showStatus(`\u2713 Engagement letter sent to Slack for ${meta.name}.`, 'success');
+  } catch (err) {
+    showStatus('Slack error: ' + err.message, 'error');
+  } finally {
+    slackBtns.forEach((b, i) => { b.disabled = false; b.innerHTML = savedLabels[i]; });
+  }
+}
+// --- End Slack ---
 
 async function getClients(){try{const{data,error}=await db.from('clients').select('*').order('created_at',{ascending:false});if(error)throw error;return data||[];}catch(e){showStatus('Error: '+e.message,'error');return[];}}
 
 async function addClient(d){try{const{data,error}=await db.from('clients').insert([{user_id:currentUser.id,client_type:d.clientType,entity_name:d.entityName,contact_name:d.contactName,contact_title:d.contactTitle,client_email:d.clientEmail,client_phone:d.clientPhone,client_address:d.clientAddress,matter_type:d.matterType,attorney:d.attorney,matter_description:d.matterDescription,adverse_party:d.adverseParty,fee_type:d.feeType,hourly_rate:d.hourlyRate,paralegal_rate:d.paralegalRate,flat_fee_amount:d.flatFeeAmount,retainer_amount:d.retainerAmount,engagement_date:d.engagementDate,conflicts:d.conflicts,specialist_involved:d.specialistInvolved,specialist_name:d.specialistName,fee_sharing_details:d.feeSharingDetails,referral_source:d.referralSource,priority:d.priority,internal_notes:d.internalNotes,status:'Prospective'}]).select().single();if(error)throw error;updateTrackerCount();return data;}catch(e){showStatus('Error: '+e.message,'error');return null;}}
 
-async function updateClientStatus(id,s){try{const u={status:s};if(s==='Letter Sent')u.letter_sent=new Date().toLocaleDateString();if(s==='Executed')u.letter_executed=new Date().toLocaleDateString();const{error}=await db.from('clients').update(u).eq('id',id);if(error)throw error;renderDashboard();}catch(e){showStatus('Error: '+e.message,'error');}}
+async function updateClientStatus(id,s){try{const u={status:s};const today=new Date().toISOString().slice(0,10);if(s==='Letter Sent')u.letter_sent=today;if(s==='Executed')u.letter_executed=today;const{error}=await db.from('clients').update(u).eq('id',id);if(error)throw error;renderDashboard();}catch(e){showStatus('Error: '+e.message,'error');}}
 
 async function deleteClient(id){if(!confirm('Delete this client?'))return;try{const{error}=await db.from('clients').delete().eq('id',id);if(error)throw error;renderDashboard();showStatus('Removed.','success');}catch(e){showStatus('Error: '+e.message,'error');}}
 
-async function clearAllData(){if(!confirm('Permanently delete ALL data?'))return;try{const{error}=await db.from('clients').delete().neq('id','00000000-0000-0000-0000-000000000000');if(error)throw error;renderDashboard();showStatus('Cleared.','success');}catch(e){showStatus('Error: '+e.message,'error');}}
+async function clearAllData(){if(prompt('This will permanently delete ALL client records. Type DELETE to confirm')!=='DELETE')return;try{const{error}=await db.from('clients').delete().neq('id','00000000-0000-0000-0000-000000000000');if(error)throw error;renderDashboard();showStatus('Cleared.','success');}catch(e){showStatus('Error: '+e.message,'error');}}
 
-function switchTab(t){document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));document.getElementById('tab-'+t).classList.add('active');event.currentTarget.classList.add('active');if(t==='dashboard')renderDashboard();}
+function switchTab(t,btn){document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));document.getElementById('tab-'+t).classList.add('active');if(btn)btn.classList.add('active');if(t==='dashboard')renderDashboard();}
 
 async function updateTrackerCount(){const c=await getClients();document.getElementById('trackerCount').textContent=c.length;}
 
@@ -379,7 +724,9 @@ feeRadios.forEach(r=>{r.addEventListener('change',()=>{feeLabels.forEach(l=>l.cl
 document.getElementById('specialistInvolved').addEventListener('change',e=>{document.getElementById('specialistFields').classList.toggle('visible',e.target.value==='Yes');});
 document.getElementById('engagementDate').valueAsDate=new Date();
 
-function showStatus(m,t='success'){const b=document.getElementById('statusBar');document.getElementById('statusText').textContent=m;b.className='status-bar visible '+t;setTimeout(()=>b.classList.remove('visible'),4000);}
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+
+function showStatus(m,t='success'){const b=document.getElementById('statusBar');document.getElementById('statusText').textContent=m;b.className='status-bar visible '+t;const ms=t==='error'?6000:m.length>60?5000:4000;setTimeout(()=>b.classList.remove('visible'),ms);}
 
 function getFormData(){return{clientType:document.getElementById('clientType').value,entityName:document.getElementById('entityName').value,contactName:document.getElementById('contactName').value,contactTitle:document.getElementById('contactTitle').value,clientEmail:document.getElementById('clientEmail').value,clientPhone:document.getElementById('clientPhone').value,clientAddress:document.getElementById('clientAddress').value,matterType:document.getElementById('matterType').value,attorney:document.getElementById('attorney').value,matterDescription:document.getElementById('matterDescription').value,adverseParty:document.getElementById('adverseParty').value,feeType:document.querySelector('input[name="feeType"]:checked').value,hourlyRate:document.getElementById('hourlyRate').value,paralegalRate:document.getElementById('paralegalRate').value,flatFeeAmount:document.getElementById('flatFeeAmount').value,monthlyFee:document.getElementById('monthlyFee').value,retainerAmount:document.getElementById('retainerAmount').value,engagementDate:document.getElementById('engagementDate').value,conflicts:document.getElementById('conflicts').value,specialistInvolved:document.getElementById('specialistInvolved').value,specialistName:document.getElementById('specialistName').value,feeSharingDetails:document.getElementById('feeSharingDetails').value,referralSource:document.getElementById('referralSource').value,priority:document.getElementById('priority').value,internalNotes:document.getElementById('internalNotes').value};}
 
@@ -390,7 +737,7 @@ function resetForm(){document.getElementById('intakeForm').reset();document.quer
 function formatDate(s){if(!s)return'';const d=new Date(s+'T00:00:00');return d.toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});}
 function clientDisplayName(d){return d.entity_name||d.contact_name||d.entityName||d.contactName||'Unknown';}
 
-async function renderDashboard(){const clients=await getClients();updateTrackerCount();const t=clients.length,p=clients.filter(c=>c.status==='Prospective').length,s=clients.filter(c=>c.status==='Letter Sent').length,e=clients.filter(c=>c.status==='Executed').length;document.getElementById('statsRow').innerHTML=`<div class="stat-card"><div class="stat-num">${t}</div><div class="stat-label">Total</div></div><div class="stat-card"><div class="stat-num">${p}</div><div class="stat-label">Prospective</div></div><div class="stat-card"><div class="stat-num">${s}</div><div class="stat-label">Letter Sent</div></div><div class="stat-card"><div class="stat-num">${e}</div><div class="stat-label">Executed</div></div>`;if(!clients.length){document.getElementById('trackerTableContainer').innerHTML='<div class="empty-state"><p>No clients yet.</p></div>';return;}const sc=s=>({Prospective:'status-prospective','Letter Sent':'status-sent',Executed:'status-executed',Declined:'status-declined'}[s]||'');const rows=clients.map(c=>`<tr><td style="font-weight:600">${clientDisplayName(c)}</td><td>${c.matter_type||''}</td><td>${c.attorney?c.attorney.split(',')[0]:''}</td><td>${c.fee_type||''}</td><td>${c.engagement_date?formatDate(c.engagement_date):''}</td><td><span class="status-pill ${sc(c.status)}">${c.status}</span></td><td><div class="row-actions"><select onchange="updateClientStatus('${c.id}',this.value)"><option value="Prospective" ${c.status==='Prospective'?'selected':''}>Prospective</option><option value="Letter Sent" ${c.status==='Letter Sent'?'selected':''}>Letter Sent</option><option value="Executed" ${c.status==='Executed'?'selected':''}>Executed</option><option value="Declined" ${c.status==='Declined'?'selected':''}>Declined</option></select><button onclick="regenLetter('${c.id}')">🔄</button><button class="del" onclick="deleteClient('${c.id}')">✕</button></div></td></tr>`).join('');document.getElementById('trackerTableContainer').innerHTML=`<table class="tracker-table"><thead><tr><th>Client</th><th>Matter</th><th>Attorney</th><th>Fee</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead><tbody>${rows}</tbody></table>`;}
+async function renderDashboard(){const clients=await getClients();updateTrackerCount();const t=clients.length,p=clients.filter(c=>c.status==='Prospective').length,s=clients.filter(c=>c.status==='Letter Sent').length,e=clients.filter(c=>c.status==='Executed').length;document.getElementById('statsRow').innerHTML=`<div class="stat-card"><div class="stat-num">${t}</div><div class="stat-label">Total</div></div><div class="stat-card"><div class="stat-num">${p}</div><div class="stat-label">Prospective</div></div><div class="stat-card"><div class="stat-num">${s}</div><div class="stat-label">Letter Sent</div></div><div class="stat-card"><div class="stat-num">${e}</div><div class="stat-label">Executed</div></div>`;if(!clients.length){document.getElementById('trackerTableContainer').innerHTML='<div class="empty-state"><p>No clients yet.</p></div>';return;}const sc=s=>({Prospective:'status-prospective','Letter Sent':'status-sent',Executed:'status-executed',Declined:'status-declined'}[s]||'');const rows=clients.map(c=>`<tr><td style="font-weight:600">${esc(clientDisplayName(c))}</td><td>${esc(c.matter_type||'')}</td><td>${esc(c.attorney?c.attorney.split(',')[0]:'')}</td><td>${esc(c.fee_type||'')}</td><td>${c.engagement_date?esc(formatDate(c.engagement_date)):''}</td><td><span class="status-pill ${sc(c.status)}">${esc(c.status)}</span></td><td><div class="row-actions"><select onchange="updateClientStatus('${esc(c.id)}',this.value)"><option value="Prospective" ${c.status==='Prospective'?'selected':''}>Prospective</option><option value="Letter Sent" ${c.status==='Letter Sent'?'selected':''}>Letter Sent</option><option value="Executed" ${c.status==='Executed'?'selected':''}>Executed</option><option value="Declined" ${c.status==='Declined'?'selected':''}>Declined</option></select><button onclick="regenLetter('${esc(c.id)}')">🔄</button><button class="del" onclick="deleteClient('${esc(c.id)}')">✕</button></div></td></tr>`).join('');document.getElementById('trackerTableContainer').innerHTML=`<table class="tracker-table"><thead><tr><th>Client</th><th>Matter</th><th>Attorney</th><th>Fee</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead><tbody>${rows}</tbody></table>`;}
 
 const XH=['Date','Client','Entity','Type','Contact','Email','Phone','Matter','Description','Attorney','Fee Type','Rate','Retainer','Adverse','Conflicts','Specialist','Referral','Priority','Status','Letter Sent','Executed','Notes'];
 function ctr(c){const r=c.fee_type==='Hourly'?`${c.hourly_rate}/hr`:c.fee_type==='Flat Fee'?`Flat: ${c.flat_fee_amount}`:c.fee_type==='Subscription'?`Sub: ${c.retainer_amount}/mo`:`${c.hourly_rate}/hr + Flat: ${c.flat_fee_amount}`;return[c.engagement_date?formatDate(c.engagement_date):'',clientDisplayName(c),c.entity_name,c.client_type,c.contact_name,c.client_email,c.client_phone,c.matter_type,c.matter_description,c.attorney,c.fee_type,r,c.retainer_amount,c.adverse_party,c.conflicts,c.specialist_involved==='Yes'?c.specialist_name:'N/A',c.referral_source,c.priority,c.status||'Prospective',c.letter_sent||'',c.letter_executed||'',c.internal_notes];}
@@ -475,21 +822,21 @@ function openLetterReview(data) {
 
   // Header fields (date, recipient, re line, greeting)
   html += `<div class="letter-section"><div class="letter-section-header"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> Letter Header</div>`;
-  html += `<div class="letter-section-row"><div class="letter-section-field"><label>Date</label><input type="text" id="rev_date" value="${meta.engDate}"></div><div class="letter-section-field"><label>Recipient</label><input type="text" id="rev_recipient" value="${meta.clientLabel}"></div></div>`;
+  html += `<div class="letter-section-row"><div class="letter-section-field"><label>Date</label><input type="text" id="rev_date" value="${esc(meta.engDate)}"></div><div class="letter-section-field"><label>Recipient</label><input type="text" id="rev_recipient" value="${esc(meta.clientLabel)}"></div></div>`;
   if (meta.isEntity && meta.contact) {
-    html += `<div class="letter-section-row"><div class="letter-section-field"><label>Attention</label><input type="text" id="rev_attention" value="${meta.contact}${meta.title?', '+meta.title:''}"></div><div class="letter-section-field"><label>Email</label><input type="text" id="rev_email" value="${meta.email}"></div></div>`;
+    html += `<div class="letter-section-row"><div class="letter-section-field"><label>Attention</label><input type="text" id="rev_attention" value="${esc(meta.contact)}${meta.title?', '+esc(meta.title):''}"></div><div class="letter-section-field"><label>Email</label><input type="text" id="rev_email" value="${esc(meta.email)}"></div></div>`;
   } else {
-    html += `<div class="letter-section-row"><div class="letter-section-field"><label>Email</label><input type="text" id="rev_email" value="${meta.email}"></div><div class="letter-section-field"><label>Attorney</label><input type="text" id="rev_atty" value="${meta.sigFull}"></div></div>`;
+    html += `<div class="letter-section-row"><div class="letter-section-field"><label>Email</label><input type="text" id="rev_email" value="${esc(meta.email)}"></div><div class="letter-section-field"><label>Attorney</label><input type="text" id="rev_atty" value="${esc(meta.sigFull)}"></div></div>`;
   }
-  html += `<div class="letter-section-row"><div class="letter-section-field" style="grid-column:1/-1;border-right:none;"><label>Re: Line</label><input type="text" id="rev_re" value="Engagement Letter \u2014 ${meta.matter} \u2014 ${meta.clientLabel}" style="width:100%"></div></div>`;
-  html += `<div class="letter-section-row"><div class="letter-section-field" style="grid-column:1/-1;border-right:none;"><label>Greeting</label><input type="text" id="rev_greeting" value="Dear ${meta.contact}:" style="width:100%"></div></div>`;
+  html += `<div class="letter-section-row"><div class="letter-section-field" style="grid-column:1/-1;border-right:none;"><label>Re: Line</label><input type="text" id="rev_re" value="Engagement Letter \u2014 ${esc(meta.matter)} \u2014 ${esc(meta.clientLabel)}" style="width:100%"></div></div>`;
+  html += `<div class="letter-section-row"><div class="letter-section-field" style="grid-column:1/-1;border-right:none;"><label>Greeting</label><input type="text" id="rev_greeting" value="Dear ${esc(meta.contact)}:" style="width:100%"></div></div>`;
   html += '</div>';
 
   // Editable sections
   sections.forEach(s => {
     const tall = s.text.length > 400 ? ' tall' : '';
-    html += `<div class="letter-section"><div class="letter-section-header"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> ${s.label}</div>`;
-    html += `<textarea id="rev_${s.id}" class="${tall}">${s.text}</textarea></div>`;
+    html += `<div class="letter-section"><div class="letter-section-header"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> ${esc(s.label)}</div>`;
+    html += `<textarea id="rev_${s.id}" class="${tall}">${esc(s.text)}</textarea></div>`;
   });
 
   container.innerHTML = html;
@@ -503,6 +850,7 @@ function openLetterReview(data) {
 
   document.getElementById('letterModal').classList.add('visible');
   document.body.style.overflow = 'hidden';
+  updateSlackUI();
 }
 
 function closeLetterModal() {
@@ -512,171 +860,24 @@ function closeLetterModal() {
   _letterReviewSections = null;
 }
 
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape' && document.getElementById('letterModal').classList.contains('visible')) {
+    closeLetterModal();
+  }
+});
+
 async function downloadFromReview() {
   if (!_letterReviewMeta || !_letterReviewSections) return;
 
+  const dlBtns = document.querySelectorAll('[onclick="downloadFromReview()"]');
+  const savedLabels = [];
+  dlBtns.forEach(b => { savedLabels.push(b.innerHTML); b.disabled = true; b.innerHTML = '<div class="loading-spinner"></div> Generating...'; });
+
+  try {
   const meta = _letterReviewMeta;
-  // Read edited values from the modal
-  const revDate = document.getElementById('rev_date').value;
-  const revRecipient = document.getElementById('rev_recipient').value;
-  const revAttention = document.getElementById('rev_attention') ? document.getElementById('rev_attention').value : '';
-  const revEmail = document.getElementById('rev_email').value;
-  const revRe = document.getElementById('rev_re').value;
-  const revGreeting = document.getElementById('rev_greeting').value;
+  const blob = await buildDocxBlob();
+  if (!blob) throw new Error('Failed to generate document');
 
-  const editedSections = {};
-  _letterReviewSections.forEach(s => {
-    editedSections[s.id] = document.getElementById('rev_'+s.id).value;
-  });
-
-  const { Document, Packer, Paragraph, TextRun, AlignmentType, Header, BorderStyle, UnderlineType } = window.docx;
-
-  const f = 'Times New Roman', sz = 22;
-  const tr = (text, opts={}) => new TextRun({ font:f, size:sz, ...opts, text });
-  const bold = text => tr(text, { bold:true });
-  const ul = text => tr(text, { underline:{type:UnderlineType.SINGLE} });
-  const bu = text => tr(text, { bold:true, underline:{type:UnderlineType.SINGLE} });
-  const bi = text => tr(text, { bold:true, italics:true, underline:{type:UnderlineType.SINGLE} });
-  const sp = { after: 200 };
-
-  function pp(runs, opts={}) {
-    const children = Array.isArray(runs) ? runs : [tr(runs)];
-    return new Paragraph({ spacing:sp, alignment:opts.align||AlignmentType.JUSTIFIED, children });
-  }
-  function blank() { return new Paragraph({ spacing:sp, children:[] }); }
-
-  // Helper: convert textarea text (with \n) into multiple paragraphs
-  function textToParas(text, opts={}) {
-    return text.split('\n').filter(l=>l.trim()!=='').map(line => pp(line, opts));
-  }
-
-  // Helper: numbered section with editable text
-  function sectParas(num, titleLabel, text) {
-    const lines = text.split('\n').filter(l=>l.trim()!=='');
-    const result = [];
-    if (lines.length > 0) {
-      result.push(pp([tr(`${num}. `), ul(titleLabel+':'), tr(' '+lines[0])]));
-      for (let i=1; i<lines.length; i++) result.push(pp(lines[i]));
-    }
-    return result;
-  }
-
-  const body = [];
-
-  // Date
-  body.push(pp(revDate, {align:AlignmentType.LEFT}));
-  body.push(blank());
-
-  // VIA ELECTRONIC MAIL ONLY
-  body.push(pp([bi('VIA ELECTRONIC MAIL ONLY')]));
-
-  // Address block
-  body.push(pp(revRecipient, {align:AlignmentType.LEFT}));
-  if (revAttention) body.push(pp(`ATTENTION: ${revAttention}`, {align:AlignmentType.LEFT}));
-  if (revEmail) body.push(pp(revEmail, {align:AlignmentType.LEFT}));
-  body.push(blank());
-
-  // Re line
-  body.push(pp([bold(`Re: ${revRe}`)]));
-  body.push(blank());
-
-  // Greeting
-  body.push(pp(revGreeting));
-
-  // Intro
-  textToParas(editedSections.intro).forEach(p => body.push(p));
-  body.push(blank());
-
-  // Numbered sections 1-15
-  const sectionDefs = [
-    {num:1, key:'s1', title:'Attorney in Charge'},
-    {num:2, key:'s2', title:'Client'},
-    {num:3, key:'s3', title:'Scope'},
-    {num:4, key:'s4', title:'What we need from you'},
-    {num:5, key:'s5', title:'Advice about Possible Outcomes'},
-    {num:6, key:'s6', title:'Legal Services Fees'},
-    {num:7, key:'s7', title:'Costs'},
-    {num:8, key:'s8', title:'Payment'},
-    {num:9, key:'s9', title:'Conflicts of Interest and Waiver'},
-    {num:10, key:'s10', title:'Specialist/Local Network and Fee Sharing'},
-    {num:11, key:'s11', title:'Use of Artificial Intelligence Tools'},
-    {num:12, key:'s12', title:'Termination of Engagement'},
-    {num:13, key:'s13', title:'Conclusion of Representation; Retention and Disposition of Documents'},
-    {num:14, key:'s14', title:'Post-Engagement Matters'},
-    {num:15, key:'s15', title:'Choice of Law & Venue'},
-  ];
-  sectionDefs.forEach(sd => {
-    sectParas(sd.num, sd.title, editedSections[sd.key]).forEach(p => body.push(p));
-  });
-
-  body.push(blank());
-
-  // Closing
-  textToParas(editedSections.closing).forEach(p => body.push(p));
-  body.push(blank());
-  body.push(blank());
-
-  // Signature
-  body.push(pp('Sincerely,', {align:AlignmentType.LEFT}));
-  body.push(blank());
-  body.push(pp([bold('MARGOLIS PLLC')], {align:AlignmentType.LEFT}));
-  body.push(blank());
-  body.push(pp([bi(`/s/ ${meta.sigFull}`)], {align:AlignmentType.LEFT}));
-  body.push(blank());
-  body.push(pp(`By: ${meta.sigShort}, Esq.`, {align:AlignmentType.LEFT}));
-  body.push(pp('For the Firm', {align:AlignmentType.LEFT}));
-  body.push(blank());
-  body.push(blank());
-
-  // ACKNOWLEDGED AND AGREED
-  body.push(pp([bold('ACKNOWLEDGED AND AGREED:')], {align:AlignmentType.LEFT}));
-  body.push(blank());
-  body.push(pp(revRecipient, {align:AlignmentType.LEFT}));
-  body.push(blank());
-  body.push(pp('By: _____________________________', {align:AlignmentType.LEFT}));
-  body.push(pp('Name: __________________________', {align:AlignmentType.LEFT}));
-  body.push(pp('Date: ___________________________', {align:AlignmentType.LEFT}));
-
-  // EXHIBIT A — new page
-  body.push(new Paragraph({ pageBreakBefore:true, spacing:sp, alignment:AlignmentType.CENTER, children:[bu('EXHIBIT A')] }));
-  body.push(blank());
-  body.push(new Paragraph({ spacing:sp, alignment:AlignmentType.CENTER, children:[bu('SCOPE OF SERVICES')] }));
-  body.push(blank());
-  textToParas(editedSections.exhibit).forEach(p => body.push(p));
-
-  // Header — first page only
-  const headerChildren = [
-    new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:40}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'MATT A. MARGOLIS, ESQ.'})] }),
-    new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:40}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'PARTNER'})] }),
-    new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:80}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'MATTHEW@MARGOLISPLLC.COM'})] }),
-    new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:40}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'KARINA MARGOLIS, ESQ.'})] }),
-    new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:40}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'PARTNER'})] }),
-    new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:80}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'KARINA@MARGOLISPLLC.COM'})] }),
-    new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:40}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'JEN HEALY, ESQ.'})] }),
-    new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:40}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'PARTNER'})] }),
-    new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:80}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'JEN@MARGOLISPLLC.COM'})] }),
-    new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:40}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'HUNTER SUTHERLAND, ESQ.'})] }),
-    new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:40}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'ASSOCIATE'})] }),
-    new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:200}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'HUNTER@MARGOLISPLLC.COM'})] }),
-    new Paragraph({ border:{bottom:{style:BorderStyle.SINGLE,size:6,color:'8FAF8F',space:1}}, children:[] }),
-  ];
-
-  const doc = new Document({
-    styles:{default:{document:{run:{font:'Times New Roman',size:22}}}},
-    sections:[{
-      properties:{
-        page:{size:{width:12240,height:15840},margin:{top:1800,right:1440,bottom:1440,left:1440}},
-        titlePage: true
-      },
-      headers:{
-        first: new Header({ children: headerChildren }),
-        default: new Header({ children: [] })
-      },
-      children: body
-    }]
-  });
-
-  const blob = await Packer.toBlob(doc);
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -686,7 +887,15 @@ async function downloadFromReview() {
 
   closeLetterModal();
   showStatus(`\u2713 Engagement letter downloaded for ${meta.name}.`,'success');
+
+  } catch(err) {
+    showStatus('Error generating letter: ' + err.message, 'error');
+  } finally {
+    dlBtns.forEach((b,i) => { b.disabled = false; b.innerHTML = savedLabels[i]; });
+  }
 }
+
+
 
 async function generateAll(){if(!validateForm())return;const d=getFormData();const btn=document.getElementById('generateBtn');btn.disabled=true;btn.innerHTML='<div class="loading-spinner"></div> Generating...';try{const saved=await addClient(d);if(saved){exportSingleClientExcel(saved);openLetterReview(d);showStatus(`\u2713 ${clientDisplayName(d)} added \u2013 review your letter.`,'success');resetForm();}}catch(e){showStatus('Error: '+e.message,'error');}finally{btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg> Generate Letter + Add to Tracker';}}
 
