@@ -519,6 +519,7 @@ let currentUser=null;
 let _dashFilter='all';
 let _letterApprovalStatus=null;
 let _letterApprovalId=null;
+let _letterAssignedReviewer=null;
 
 db.auth.onAuthStateChange((event,session)=>{
   if(event==='SIGNED_OUT'||event==='TOKEN_REFRESHED'&&!session){
@@ -1172,6 +1173,15 @@ function matchUserToAttorney(email) {
 async function submitForReview() {
   if (!_letterClientId) { showStatus('No client linked to this letter.', 'error'); return; }
 
+  // Require reviewer selection
+  const reviewerSelect = document.getElementById('reviewerSelect');
+  const assignedReviewer = reviewerSelect ? reviewerSelect.value : '';
+  if (!assignedReviewer) {
+    showStatus('Please select a reviewer before submitting.', 'error');
+    if (reviewerSelect) reviewerSelect.focus();
+    return;
+  }
+
   // Save letter first if not saved
   let letterId = _lastSavedLetterId;
   if (!letterId) {
@@ -1180,16 +1190,26 @@ async function submitForReview() {
     // Update existing letter's approval status
     try {
       const { error } = await db.from('engagement_letters')
-        .update({ approval_status: 'Pending Review', reviewed_by: null, reviewed_at: null, review_notes: null })
+        .update({ approval_status: 'Pending Review', assigned_reviewer: assignedReviewer, reviewed_by: null, reviewed_at: null, review_notes: null })
         .eq('id', letterId);
       if (error) throw error;
     } catch (e) { showStatus('Error: ' + e.message, 'error'); return; }
   }
 
+  // Also store assigned_reviewer if letter was just created
+  if (letterId && assignedReviewer) {
+    try {
+      await db.from('engagement_letters')
+        .update({ assigned_reviewer: assignedReviewer })
+        .eq('id', letterId);
+    } catch (e) { /* best effort */ }
+  }
+
   _letterApprovalStatus = 'Pending Review';
   _letterApprovalId = letterId;
+  _letterAssignedReviewer = assignedReviewer;
   updateApprovalBar();
-  showStatus('\u2713 Letter submitted for review.', 'success');
+  showStatus(`\u2713 Letter submitted for review by ${assignedReviewer}.`, 'success');
 
   // Send Slack notification if configured
   if (isSlackEnabled() && _letterReviewMeta) {
@@ -1207,6 +1227,9 @@ async function submitForReview() {
         ]},
         { type: 'section', fields: [
           { type: 'mrkdwn', text: `*Attorney:*\n${escSlack(meta.atty)}` },
+          { type: 'mrkdwn', text: `*Assigned Reviewer:*\n${escSlack(assignedReviewer)}` }
+        ]},
+        { type: 'section', fields: [
           { type: 'mrkdwn', text: `*Submitted by:*\n${escSlack(sentBy)}` }
         ]},
         { type: 'actions', elements: [
@@ -1222,7 +1245,12 @@ async function submitForReview() {
 }
 
 async function approveLetter() {
-  if (!_letterApprovalId) { showStatus('No letter to approve.', 'error'); return; }
+  // Try to save first if no letter ID exists
+  if (!_letterApprovalId && _letterClientId) {
+    const savedId = await saveLetterToDb('Pending Review');
+    if (savedId) _letterApprovalId = savedId;
+  }
+  if (!_letterApprovalId) { showStatus('Letter must be saved before it can be approved. Try saving as draft first.', 'error'); return; }
 
   // Prevent self-approval: check if current user created this letter
   try {
@@ -1268,7 +1296,11 @@ async function requestChanges() {
   const notes = prompt('What changes are needed?');
   if (notes === null) return;
   if (!notes.trim()) { showStatus('Please provide notes about the requested changes.', 'error'); return; }
-  if (!_letterApprovalId) { showStatus('No letter selected.', 'error'); return; }
+  if (!_letterApprovalId && _letterClientId) {
+    const savedId = await saveLetterToDb('Pending Review');
+    if (savedId) _letterApprovalId = savedId;
+  }
+  if (!_letterApprovalId) { showStatus('Letter must be saved first. Try saving as draft.', 'error'); return; }
 
   // Prevent self-review
   try {
@@ -1322,6 +1354,18 @@ async function saveDraft() {
   }
 }
 
+function getReviewerOptions() {
+  const attorneys = [
+    'Matt A. Margolis, Esq.',
+    'Karina Margolis, Esq.',
+    'Jen Healy, Esq.',
+    'Hunter Sutherland, Esq.'
+  ];
+  // Exclude current user
+  const currentAtty = currentUser ? matchUserToAttorney(currentUser.email) : '';
+  return attorneys.filter(a => a !== currentAtty);
+}
+
 function updateApprovalBar(reviewNotes, reviewedBy) {
   const bar = document.getElementById('approvalBarContainer');
   if (!bar) return;
@@ -1339,10 +1383,11 @@ function updateApprovalBar(reviewNotes, reviewedBy) {
 
   if (status === 'Draft') {
     html += `Status: Draft`;
-    html += `<small>Save and submit for review when ready.</small>`;
+    html += `<small>Select a reviewer and submit when ready.</small>`;
   } else if (status === 'Pending Review') {
     html += `Status: Pending Review`;
-    html += `<small>Awaiting approval from a reviewing attorney.</small>`;
+    const reviewer = _letterAssignedReviewer;
+    html += `<small>Assigned to ${reviewer ? esc(reviewer) : 'a reviewing attorney'}.</small>`;
   } else if (status === 'Approved') {
     html += `Status: Approved`;
     if (reviewedBy) html += `<small>Approved by ${esc(reviewedBy)}</small>`;
@@ -1353,7 +1398,17 @@ function updateApprovalBar(reviewNotes, reviewedBy) {
 
   html += `</div><div class="approval-actions">`;
 
+  // Reviewer dropdown for Draft and Changes Requested
   if (status === 'Draft' || status === 'Changes Requested') {
+    const options = getReviewerOptions();
+    const selected = _letterAssignedReviewer || '';
+    html += `<select id="reviewerSelect" class="reviewer-select" style="padding:6px 10px;border-radius:6px;border:1px solid var(--border);font-size:12px;font-family:inherit;">`;
+    html += `<option value="">Select reviewer...</option>`;
+    options.forEach(name => {
+      const shortName = name.split(',')[0].split(' ').pop();
+      html += `<option value="${esc(name)}" ${name === selected ? 'selected' : ''}>${esc(shortName)}</option>`;
+    });
+    html += `</select>`;
     html += `<button class="btn btn-sm btn-submit-review" onclick="submitForReview()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg> Submit for Review</button>`;
   }
   if (status === 'Pending Review') {
@@ -1486,6 +1541,25 @@ let _letterSavedThisSession = false;
  * ALTER TABLE engagement_letters ADD COLUMN IF NOT EXISTS reviewed_by TEXT;
  * ALTER TABLE engagement_letters ADD COLUMN IF NOT EXISTS reviewed_at TIMESTAMPTZ;
  * ALTER TABLE engagement_letters ADD COLUMN IF NOT EXISTS review_notes TEXT;
+ * ALTER TABLE engagement_letters ADD COLUMN IF NOT EXISTS assigned_reviewer TEXT;
+ *
+ * =============================================
+ * MIGRATION — REVIEWER ACCESS (RLS)
+ * =============================================
+ * Reviewers need to view and update letters from other users.
+ * Run this to allow all authenticated firm users to view and review letters:
+ *
+ * DROP POLICY IF EXISTS "Users can view own letters" ON engagement_letters;
+ * DROP POLICY IF EXISTS "Users can view own or assigned letters" ON engagement_letters;
+ * CREATE POLICY "Firm users can view all letters"
+ *   ON engagement_letters FOR SELECT
+ *   USING (auth.role() = 'authenticated');
+ *
+ * DROP POLICY IF EXISTS "Users can update own letters" ON engagement_letters;
+ * DROP POLICY IF EXISTS "Users can update own or assigned letters" ON engagement_letters;
+ * CREATE POLICY "Firm users can update all letters"
+ *   ON engagement_letters FOR UPDATE
+ *   USING (auth.role() = 'authenticated');
  *
  * =============================================
  */
@@ -1625,6 +1699,7 @@ function showLetterModal(meta, sections, clientId, headerOverrides, savedVersion
   // Set approval state
   _letterApprovalStatus = (approvalData && approvalData.status) || null;
   _letterApprovalId = (approvalData && approvalData.letterId) || _lastSavedLetterId || null;
+  _letterAssignedReviewer = (approvalData && approvalData.assignedReviewer) || null;
 
   const h = headerOverrides || {};
   const hDate = h.date || meta.engDate;
@@ -1707,6 +1782,7 @@ function closeLetterModal() {
   _lastSavedLetterId = null;
   _letterApprovalStatus = null;
   _letterApprovalId = null;
+  _letterAssignedReviewer = null;
 }
 
 document.addEventListener('keydown', function(e) {
@@ -1803,6 +1879,7 @@ async function openSavedLetter(letterId) {
       letterId: data.id,
       reviewedBy: data.reviewed_by || null,
       reviewNotes: data.review_notes || null,
+      assignedReviewer: data.assigned_reviewer || null,
     };
 
     showLetterModal(ld.meta, ld.sections, data.client_id, ld.header, versionLabel, approvalData);
