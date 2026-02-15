@@ -714,7 +714,7 @@ async function sendToSlack() {
       } catch (e) { /* table may not exist */ }
     }
     const baseUrl = window.location.origin + window.location.pathname;
-    const letterLink = letterId ? `${baseUrl}?letter=${letterId}` : null;
+    const letterLink = letterId ? `${baseUrl}?letter=${letterId}` : baseUrl;
 
     const isSlackDirect = webhookUrl.startsWith('https://hooks.slack.com/');
 
