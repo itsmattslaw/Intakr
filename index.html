@@ -711,28 +711,30 @@ async function sendToSlack() {
       ].join('\n')
     };
 
-    // Try standard CORS fetch first
+    // Use text/plain to avoid CORS preflight (application/json triggers an
+    // OPTIONS preflight that Zapier webhooks don't reliably handle).
+    // Zapier auto-detects JSON in the body regardless of Content-Type.
+    const jsonBody = JSON.stringify(payload);
     let sent = false;
     try {
       const resp = await fetch(webhookUrl, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        headers: { 'Content-Type': 'text/plain' },
+        body: jsonBody
       });
       sent = resp.ok || resp.status === 0;
       if (!resp.ok && resp.status !== 0) {
         throw new Error(`Zapier returned ${resp.status}`);
       }
     } catch (corsErr) {
-      // CORS preflight can fail on some browsers/configs — fall back to no-cors
-      // In no-cors mode, Content-Type must be a simple type (text/plain)
-      // Zapier auto-detects JSON in the body regardless of Content-Type
+      // Last resort: no-cors mode (can't verify response, but request is dispatched)
       await fetch(webhookUrl, {
         method: 'POST',
         mode: 'no-cors',
-        body: JSON.stringify(payload)
+        headers: { 'Content-Type': 'text/plain' },
+        body: jsonBody
       });
-      sent = true; // Can't verify, but the request was dispatched
+      sent = true;
     }
 
     // Save letter to document storage (fire-and-forget)
