@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src https://jflxkrlxlvhrntodywth.supabase.co; img-src 'self' data: blob:;">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src https://jflxkrlxlvhrntodywth.supabase.co https://cdn.jsdelivr.net; img-src 'self' data: blob:;">
 <title>Intakr – Client Intake System</title>
 <script src="https://unpkg.com/docx@7.8.2/build/index.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.95.3"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -958,13 +958,29 @@ function escSlack(s){return String(s||'').replace(/[&<>*_~`|]/g,c=>({'&':'&amp;'
 
 // Send Slack notification via Supabase Edge Function (webhook URL stays server-side)
 async function notifySlack(payload) {
-  const session = (await db.auth.getSession()).data.session;
+  let session = (await db.auth.getSession()).data.session;
   if (!session) return;
+
+  // Refresh session if access token expires within 2 minutes (avoids stale-token 401s)
+  const nowSec = Math.floor(Date.now() / 1000);
+  if (session.expires_at && (session.expires_at - nowSec) < 120) {
+    const { data, error: refreshErr } = await db.auth.refreshSession();
+    if (refreshErr || !data.session) {
+      throw new Error('Session expired — please sign in again.');
+    }
+    session = data.session;
+  }
+
   const { data, error } = await db.functions.invoke('slack-notify', {
-    body: payload
+    body: payload,
+    headers: { Authorization: `Bearer ${session.access_token}` }
   });
   if (error) {
-    throw new Error(error.message || 'Slack notify failed');
+    const msg = error.message || 'Slack notify failed';
+    if (msg.includes('401') || msg.includes('Unauthorized') || msg.includes('Missing authorization')) {
+      throw new Error('Authentication error — try signing out and back in.');
+    }
+    throw new Error(msg);
   }
 }
 
