@@ -134,6 +134,12 @@
   .letter-section textarea:focus{background:var(--cream);}
   .letter-section textarea.tall{min-height:140px;}
   .letter-section textarea.short{min-height:40px;}
+  .editor-toolbar{display:flex;gap:2px;padding:6px 16px;border-bottom:1px solid var(--border);background:var(--light-gray);}
+  .editor-toolbar button{width:28px;height:28px;border:1px solid var(--border);border-radius:4px;background:var(--white);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;color:var(--charcoal);font-family:serif;line-height:1;}
+  .editor-toolbar button:hover{background:var(--sage-pale);border-color:var(--sage);}
+  .rich-editor{width:100%;border:none;padding:14px 16px;font-family:'DM Sans',sans-serif;font-size:13.5px;line-height:1.7;color:var(--charcoal);min-height:60px;background:var(--white);outline:none;overflow-y:auto;white-space:pre-wrap;box-sizing:border-box;}
+  .rich-editor:focus{background:var(--cream);}
+  .rich-editor.tall{min-height:140px;}
   .letter-section-row{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--border);}
   .letter-section-row:last-child{border-bottom:none;}
   .letter-section-field{padding:10px 16px;display:flex;flex-direction:column;gap:4px;}
@@ -560,7 +566,7 @@ async function buildDocxBlob() {
 
   const editedSections = {};
   _letterReviewSections.forEach(s => {
-    editedSections[s.id] = document.getElementById('rev_'+s.id).value;
+    editedSections[s.id] = document.getElementById('rev_'+s.id).innerHTML;
   });
 
   const { Document, Packer, Paragraph, TextRun, ImageRun, AlignmentType, Header, BorderStyle, UnderlineType } = window.docx;
@@ -578,21 +584,55 @@ async function buildDocxBlob() {
     return new Paragraph({ spacing:sp, alignment:opts.align||AlignmentType.JUSTIFIED, children });
   }
   function blank() { return new Paragraph({ spacing:sp, children:[] }); }
-  function textToParas(text, opts={}) {
-    return text.split('\n').filter(l=>l.trim()!=='').map(line => pp(line, opts));
+  // Parse HTML from rich editor into arrays of TextRuns (one array per paragraph)
+  function parseHtmlToRunArrays(html) {
+    const container = document.createElement('div');
+    container.innerHTML = html;
+    const paragraphs = [];
+    let currentRuns = [];
+    function flush() {
+      if (currentRuns.length > 0) { paragraphs.push(currentRuns); currentRuns = []; }
+    }
+    function walk(node, fmt) {
+      if (node.nodeType === Node.TEXT_NODE) {
+        const t = node.textContent;
+        if (t) {
+          const o = {};
+          if (fmt.b) o.bold = true;
+          if (fmt.i) o.italics = true;
+          if (fmt.u) o.underline = {type:UnderlineType.SINGLE};
+          currentRuns.push(tr(t, o));
+        }
+      } else if (node.nodeType === Node.ELEMENT_NODE) {
+        const tag = node.tagName.toLowerCase();
+        const nf = {...fmt};
+        if (tag==='b'||tag==='strong') nf.b = true;
+        if (tag==='i'||tag==='em') nf.i = true;
+        if (tag==='u') nf.u = true;
+        if (tag==='div'||tag==='p') { flush(); for (const c of node.childNodes) walk(c, nf); flush(); }
+        else if (tag==='br') { flush(); }
+        else { for (const c of node.childNodes) walk(c, nf); }
+      }
+    }
+    for (const c of container.childNodes) walk(c, {b:false,i:false,u:false});
+    flush();
+    return paragraphs;
   }
-  function sectParas(num, titleLabel, text) {
-    const lines = text.split('\n').filter(l=>l.trim()!=='');
+  function htmlToParas(html, opts={}) {
+    return parseHtmlToRunArrays(html).filter(r=>r.length>0).map(runs => pp(runs, opts));
+  }
+  function sectParasHtml(num, titleLabel, html) {
+    const ra = parseHtmlToRunArrays(html);
     const result = [];
-    if (lines.length > 0) {
-      result.push(pp([tr(`${num}. `), ul(titleLabel+':'), tr(' '+lines[0])]));
-      for (let i=1; i<lines.length; i++) result.push(pp(lines[i]));
+    if (ra.length > 0 && ra[0].length > 0) {
+      result.push(pp([tr(`${num}. `), ul(titleLabel+':'), tr(' '), ...ra[0]]));
+      for (let i=1; i<ra.length; i++) { if (ra[i].length>0) result.push(pp(ra[i])); }
     }
     return result;
   }
 
   const body = [];
-  body.push(pp(revDate, {align:AlignmentType.LEFT}));
+  body.push(pp(revDate, {align:AlignmentType.CENTER}));
   body.push(blank());
   body.push(pp([bi('VIA ELECTRONIC MAIL ONLY')]));
   body.push(pp(revRecipient, {align:AlignmentType.LEFT}));
@@ -602,8 +642,7 @@ async function buildDocxBlob() {
   body.push(pp([bold(`Re: ${revRe}`)]));
   body.push(blank());
   body.push(pp(revGreeting));
-  textToParas(editedSections.intro).forEach(p => body.push(p));
-  body.push(blank());
+  htmlToParas(editedSections.intro).forEach(p => body.push(p));
 
   const sectionDefs = [
     {num:1, key:'s1', title:'Attorney in Charge'},{num:2, key:'s2', title:'Client'},
@@ -619,20 +658,20 @@ async function buildDocxBlob() {
     {num:15, key:'s15', title:'Choice of Law & Venue'},
   ];
   sectionDefs.forEach(sd => {
-    sectParas(sd.num, sd.title, editedSections[sd.key]).forEach(p => body.push(p));
+    sectParasHtml(sd.num, sd.title, editedSections[sd.key]).forEach(p => body.push(p));
   });
 
   body.push(blank());
-  textToParas(editedSections.closing).forEach(p => body.push(p));
+  htmlToParas(editedSections.closing).forEach(p => body.push(p));
   body.push(blank()); body.push(blank());
-  body.push(pp('Sincerely,', {align:AlignmentType.LEFT}));
+  body.push(pp('Sincerely,', {align:AlignmentType.RIGHT}));
   body.push(blank());
-  body.push(pp([bold('MARGOLIS PLLC')], {align:AlignmentType.LEFT}));
+  body.push(pp([bold('MARGOLIS PLLC')], {align:AlignmentType.RIGHT}));
   body.push(blank());
-  body.push(pp([bi(`/s/ ${meta.sigFull}`)], {align:AlignmentType.LEFT}));
+  body.push(pp([bi(`/s/ ${meta.sigFull}`)], {align:AlignmentType.RIGHT}));
   body.push(blank());
-  body.push(pp(`By: ${meta.sigShort}, Esq.`, {align:AlignmentType.LEFT}));
-  body.push(pp('For the Firm', {align:AlignmentType.LEFT}));
+  body.push(pp(`By: ${meta.sigShort}, Esq.`, {align:AlignmentType.RIGHT}));
+  body.push(pp('For the Firm', {align:AlignmentType.RIGHT}));
   body.push(blank()); body.push(blank());
   body.push(pp([bold('ACKNOWLEDGED AND AGREED:')], {align:AlignmentType.LEFT}));
   body.push(blank());
@@ -646,7 +685,7 @@ async function buildDocxBlob() {
   body.push(blank());
   body.push(new Paragraph({ spacing:sp, alignment:AlignmentType.CENTER, children:[bu('SCOPE OF SERVICES')] }));
   body.push(blank());
-  textToParas(editedSections.exhibit).forEach(p => body.push(p));
+  htmlToParas(editedSections.exhibit).forEach(p => body.push(p));
 
   const firmLogo = getFirmLogoData();
 
@@ -781,6 +820,10 @@ document.getElementById('specialistInvolved').addEventListener('change',e=>{docu
 document.getElementById('engagementDate').valueAsDate=new Date();
 
 function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+function textToEditorHtml(text){
+  if(/<\/?(?:b|i|u|strong|em|div|br|p|span)\b/i.test(text)) return text;
+  return esc(text).replace(/\n/g,'<br>');
+}
 
 function showStatus(m,t='success'){const b=document.getElementById('statusBar');document.getElementById('statusText').textContent=m;b.className='status-bar visible '+t;const ms=t==='error'?6000:m.length>60?5000:4000;setTimeout(()=>b.classList.remove('visible'),ms);}
 
@@ -867,7 +910,7 @@ async function saveLetterToDb() {
     const editedSections = _letterReviewSections.map(s => ({
       id: s.id,
       label: s.label,
-      text: document.getElementById('rev_' + s.id)?.value || s.text,
+      text: document.getElementById('rev_' + s.id)?.innerHTML || s.text,
     }));
 
     // Determine next version number for this client
@@ -999,21 +1042,16 @@ function showLetterModal(meta, sections, clientId, headerOverrides, savedVersion
   html += `<div class="letter-section-row"><div class="letter-section-field" style="grid-column:1/-1;border-right:none;"><label>Greeting</label><input type="text" id="rev_greeting" value="${esc(hGreeting)}" style="width:100%"></div></div>`;
   html += '</div>';
 
-  // Editable sections
+  // Editable sections with rich text toolbar
   sections.forEach(s => {
     const tall = s.text.length > 400 ? ' tall' : '';
+    const editorHtml = textToEditorHtml(s.text);
     html += `<div class="letter-section"><div class="letter-section-header"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> ${esc(s.label)}</div>`;
-    html += `<textarea id="rev_${s.id}" class="${tall}">${esc(s.text)}</textarea></div>`;
+    html += `<div class="editor-toolbar"><button type="button" onmousedown="event.preventDefault()" onclick="document.execCommand('bold')" title="Bold (Ctrl+B)"><b>B</b></button><button type="button" onmousedown="event.preventDefault()" onclick="document.execCommand('italic')" title="Italic (Ctrl+I)"><i>I</i></button><button type="button" onmousedown="event.preventDefault()" onclick="document.execCommand('underline')" title="Underline (Ctrl+U)"><u>U</u></button></div>`;
+    html += `<div contenteditable="true" id="rev_${s.id}" class="rich-editor${tall}">${editorHtml}</div></div>`;
   });
 
   container.innerHTML = html;
-
-  // Auto-resize textareas
-  container.querySelectorAll('textarea').forEach(ta => {
-    ta.style.height = 'auto';
-    ta.style.height = ta.scrollHeight + 'px';
-    ta.addEventListener('input', function(){ this.style.height='auto'; this.style.height=this.scrollHeight+'px'; });
-  });
 
   document.getElementById('letterModal').classList.add('visible');
   document.body.style.overflow = 'hidden';
