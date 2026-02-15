@@ -341,7 +341,7 @@
     <div class="form-card">
       <div class="form-section-header"><div class="section-number">2</div><h3>Matter Details</h3></div>
       <div class="form-body"><div class="form-grid">
-        <div class="form-group"><label>Matter Type <span class="required">*</span></label><select id="matterType" required><option value="">Select…</option><option value="Corporate/Business Formation">Corporate / Business Formation</option><option value="Commercial Litigation">Commercial Litigation</option><option value="Real Estate">Real Estate</option><option value="Employment">Employment</option><option value="Intellectual Property">Intellectual Property</option><option value="Contract Drafting/Review">Contract Drafting / Review</option><option value="Regulatory/Compliance">Regulatory / Compliance</option><option value="M&A/Transactions">M&A / Transactions</option><option value="Other">Other</option></select></div>
+        <div class="form-group"><label>Matter Type <span class="required">*</span></label><select id="matterType" required><option value="">Select…</option><option value="Corporate/Business Formation">Corporate / Business Formation</option><option value="Commercial Litigation">Commercial Litigation</option><option value="Real Estate">Real Estate</option><option value="Employment">Employment</option><option value="Intellectual Property">Intellectual Property</option><option value="Contract Drafting/Review">Contract Drafting / Review</option><option value="Regulatory/Compliance">Regulatory / Compliance</option><option value="M&A/Transactions">M&A / Transactions</option><option value="Fractional General Counsel">Fractional General Counsel</option><option value="Fractional Corporate Counsel">Fractional Corporate Counsel</option><option value="Other">Other</option></select></div>
         <div class="form-group"><label>Attorney in Charge <span class="required">*</span></label><select id="attorney" required><option value="">Select…</option><option value="Matt A. Margolis, Esq.">Matt A. Margolis, Esq.</option><option value="Karina Margolis, Esq.">Karina Margolis, Esq.</option><option value="Jen Healy, Esq.">Jen Healy, Esq.</option><option value="Hunter Sutherland, Esq.">Hunter Sutherland, Esq.</option></select></div>
         <div class="form-group"><label>Assign To <span class="hint">(optional)</span></label><select id="assignTo"><option value="">Not assigned</option><option value="Matt A. Margolis, Esq.">Matt A. Margolis, Esq.</option><option value="Karina Margolis, Esq.">Karina Margolis, Esq.</option><option value="Jen Healy, Esq.">Jen Healy, Esq.</option><option value="Hunter Sutherland, Esq.">Hunter Sutherland, Esq.</option></select></div>
         <div class="form-group full-width"><label>Matter Description <span class="required">*</span></label><textarea id="matterDescription" placeholder="Brief description of the matter…" required></textarea></div>
@@ -749,13 +749,14 @@ async function buildDocxBlob() {
   const ul = text => tr(text, { underline:{type:UnderlineType.SINGLE} });
   const bu = text => tr(text, { bold:true, underline:{type:UnderlineType.SINGLE} });
   const bi = text => tr(text, { bold:true, italics:true, underline:{type:UnderlineType.SINGLE} });
-  const sp = { after: 200 };
+  const sp = { after: 200, line: 240 };
+  const spTight = { after: 0, line: 240 };
 
   function pp(runs, opts={}) {
     const children = Array.isArray(runs) ? runs : [tr(runs)];
-    return new Paragraph({ spacing:sp, alignment:opts.align||AlignmentType.JUSTIFIED, children });
+    return new Paragraph({ spacing:opts.spacing||sp, alignment:opts.align||AlignmentType.JUSTIFIED, children });
   }
-  function blank() { return new Paragraph({ spacing:sp, children:[] }); }
+  function blank() { return new Paragraph({ spacing:{ after: 0, line: 240 }, children:[] }); }
   // Parse HTML from rich editor into arrays of TextRuns (one array per paragraph)
   function parseHtmlToRunArrays(html) {
     const container = document.createElement('div');
@@ -804,16 +805,16 @@ async function buildDocxBlob() {
   }
 
   const body = [];
-  body.push(pp(revDate, {align:AlignmentType.CENTER}));
+  body.push(pp(revDate, {align:AlignmentType.LEFT}));
   body.push(blank());
-  body.push(pp([bi('VIA ELECTRONIC MAIL ONLY')]));
-  body.push(pp(revRecipient, {align:AlignmentType.LEFT}));
-  if (revAttention) body.push(pp(`ATTENTION: ${revAttention}`, {align:AlignmentType.LEFT}));
-  if (revEmail) body.push(pp(revEmail, {align:AlignmentType.LEFT}));
+  body.push(pp([bi('VIA ELECTRONIC MAIL ONLY')], {align:AlignmentType.LEFT}));
+  body.push(pp(revRecipient, {align:AlignmentType.LEFT, spacing:spTight}));
+  if (revAttention) body.push(pp(`ATTENTION: ${revAttention}`, {align:AlignmentType.LEFT, spacing:spTight}));
+  if (revEmail) body.push(pp(revEmail, {align:AlignmentType.LEFT, spacing:spTight}));
   body.push(blank());
-  body.push(pp([bold(`Re: ${revRe}`)]));
+  body.push(pp([bold(`Re: ${revRe}`)], {align:AlignmentType.LEFT}));
   body.push(blank());
-  body.push(pp(revGreeting));
+  body.push(pp(revGreeting, {align:AlignmentType.LEFT}));
   htmlToParas(editedSections.intro).forEach(p => body.push(p));
 
   const sectionDefs = [
@@ -836,21 +837,21 @@ async function buildDocxBlob() {
   htmlToParas(editedSections.closing).forEach(p => body.push(p));
   body.push(blank());
   body.push(pp('Sincerely,', {align:AlignmentType.LEFT}));
-  body.push(blank());
+  body.push(blank()); body.push(blank()); body.push(blank());
   body.push(pp([bold('MARGOLIS PLLC')], {align:AlignmentType.LEFT}));
   body.push(blank());
   body.push(pp([bi(`/s/ ${meta.sigFull}`)], {align:AlignmentType.LEFT}));
   body.push(blank());
-  body.push(pp(`By: ${meta.sigShort}, Esq.`, {align:AlignmentType.LEFT}));
+  body.push(pp(`By: ${meta.sigShort}, Esq.`, {align:AlignmentType.LEFT, spacing:spTight}));
   body.push(pp('For the Firm', {align:AlignmentType.LEFT}));
   body.push(blank()); body.push(blank());
   body.push(pp([bold('ACKNOWLEDGED AND AGREED:')], {align:AlignmentType.LEFT}));
   body.push(blank());
   body.push(pp(revRecipient, {align:AlignmentType.LEFT}));
   body.push(blank());
-  body.push(pp('By: _____________________________', {align:AlignmentType.LEFT}));
-  body.push(pp('Name: __________________________', {align:AlignmentType.LEFT}));
-  body.push(pp('Date: ___________________________', {align:AlignmentType.LEFT}));
+  body.push(pp('By: _____________________________', {align:AlignmentType.LEFT, spacing:spTight}));
+  body.push(pp('Name: __________________________', {align:AlignmentType.LEFT, spacing:spTight}));
+  body.push(pp('Date: ___________________________', {align:AlignmentType.LEFT, spacing:spTight}));
 
   body.push(new Paragraph({ pageBreakBefore:true, spacing:sp, alignment:AlignmentType.CENTER, children:[bu('EXHIBIT A')] }));
   body.push(blank());
