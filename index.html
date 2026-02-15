@@ -960,18 +960,11 @@ function escSlack(s){return String(s||'').replace(/[&<>*_~`|]/g,c=>({'&':'&amp;'
 async function notifySlack(payload) {
   const session = (await db.auth.getSession()).data.session;
   if (!session) return;
-  const res = await fetch(`${SUPABASE_URL}/functions/v1/slack-notify`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${session.access_token}`,
-      'apikey': SUPABASE_ANON_KEY
-    },
-    body: JSON.stringify(payload)
+  const { data, error } = await db.functions.invoke('slack-notify', {
+    body: payload
   });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.error || `Slack notify failed (${res.status})`);
+  if (error) {
+    throw new Error(error.message || 'Slack notify failed');
   }
 }
 
