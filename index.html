@@ -1165,8 +1165,8 @@ function matchUserToAttorney(email) {
   if (!email) return '';
   // Match on the local part (before @) to avoid false positives
   const local = email.toLowerCase().split('@')[0];
-  if (local === 'matt' || local === 'mmargolis') return 'Matt A. Margolis, Esq.';
-  if (local === 'karina' || local === 'kmargolis') return 'Karina Margolis, Esq.';
+  if (local === 'matthew' || local === 'matt') return 'Matt A. Margolis, Esq.';
+  if (local === 'karina') return 'Karina Margolis, Esq.';
   if (local === 'jen' || local === 'jhealy') return 'Jen Healy, Esq.';
   if (local === 'hunter' || local === 'hsutherland') return 'Hunter Sutherland, Esq.';
   return '';
