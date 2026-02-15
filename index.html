@@ -1105,7 +1105,9 @@ function exportSingleClientExcel(data) {
 }
 
 async function generateEngagementLetter(data) {
-  const { Document, Packer, Paragraph, TextRun, AlignmentType, Header, BorderStyle } = window.docx;
+const docxLib = window.docx || window.Docx || window.DOCX;
+  console.log('docx global:', docxLib, Object.keys(docxLib || {}));
+  const { Document, Packer, Paragraph, TextRun, AlignmentType, Header, BorderStyle } = docxLib;
   const name = clientDisplayName(data);
   const dateFormatted = formatDate(data.engagement_date || data.engagementDate);
   const sigName = (data.attorney || '').includes('Matt') ? 'Matt Margolis' : 'Karina Margolis';
