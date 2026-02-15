@@ -10,129 +10,120 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --sage: #8FAF8F; --sage-light: #B5CDB5; --sage-pale: #E8F0E8; --sage-dark: #6B8F6B;
-    --charcoal: #2C2C2C; --warm-gray: #6B6B6B; --light-gray: #F5F5F3;
-    --cream: #FAFAF8; --white: #FFFFFF; --border: #E0E0DC;
-    --error: #C0392B; --amber: #E6A817; --amber-pale: #FFF8E1;
+    --sage:#8FAF8F;--sage-light:#B5CDB5;--sage-pale:#E8F0E8;--sage-dark:#6B8F6B;
+    --charcoal:#2C2C2C;--warm-gray:#6B6B6B;--light-gray:#F5F5F3;
+    --cream:#FAFAF8;--white:#FFFFFF;--border:#E0E0DC;
+    --error:#C0392B;--amber:#E6A817;--amber-pale:#FFF8E1;
   }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--charcoal); line-height: 1.6; min-height: 100vh; }
-  .app-container { display: none; }
-  .app-container.visible { display: block; }
-  .header { background: var(--white); border-bottom: 1px solid var(--border); padding: 24px 40px; display: flex; align-items: center; justify-content: space-between; }
-  .header-left { display: flex; align-items: center; gap: 20px; }
-  .header-logo { height: 48px; width: 48px; }
-  .header-divider { width: 1px; height: 36px; background: var(--border); }
-  .header-text h1 { font-family: 'DM Sans', sans-serif; font-size: 26px; font-weight: 700; color: var(--charcoal); letter-spacing: -0.5px; }
-  .header-text p { font-size: 11px; color: var(--warm-gray); text-transform: uppercase; letter-spacing: 1.8px; font-weight: 600; margin-top: -2px; }
-  .header-right { display: flex; align-items: center; gap: 12px; }
-  .header-badge { background: var(--sage-pale); color: var(--sage-dark); font-size: 11px; font-weight: 600; padding: 6px 14px; border-radius: 20px; letter-spacing: 0.5px; text-transform: uppercase; }
-  .user-menu { display: flex; align-items: center; gap: 8px; padding: 6px 12px; background: var(--sage-pale); border-radius: 20px; font-size: 12px; color: var(--sage-dark); font-weight: 500; }
-  .user-menu button { background: none; border: none; color: var(--sage-dark); cursor: pointer; font-size: 11px; text-decoration: underline; padding: 0; font-family: 'DM Sans', sans-serif; }
-  .auth-container { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
-  .auth-box { background: var(--white); border-radius: 16px; max-width: 440px; width: 100%; padding: 48px; box-shadow: 0 20px 60px rgba(0,0,0,0.1); border: 1px solid var(--border); }
-  .auth-logo { text-align: center; margin-bottom: 32px; }
-  .auth-logo svg { width: 72px; height: 72px; margin-bottom: 20px; }
-  .auth-logo h1 { font-family: 'DM Sans', sans-serif; font-size: 32px; font-weight: 700; margin-bottom: 6px; letter-spacing: -0.5px; }
-  .auth-logo p { color: var(--warm-gray); font-size: 13px; text-transform: uppercase; letter-spacing: 1.8px; font-weight: 600; }
-  .auth-tabs { display: flex; gap: 8px; margin-bottom: 28px; border-bottom: 1px solid var(--border); }
-  .auth-tab { flex: 1; background: none; border: none; padding: 12px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; color: var(--warm-gray); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; }
-  .auth-tab.active { color: var(--sage-dark); border-bottom-color: var(--sage); font-weight: 600; }
-  .auth-form { display: none; }
-  .auth-form.active { display: block; }
-  .tab-bar { background: var(--white); border-bottom: 1px solid var(--border); display: flex; padding: 0 40px; gap: 0; }
-  .tab-btn { font-family: 'DM Sans', sans-serif; background: none; border: none; padding: 14px 24px; font-size: 14px; font-weight: 500; color: var(--warm-gray); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; display: flex; align-items: center; gap: 8px; }
-  .tab-btn:hover { color: var(--charcoal); }
-  .tab-btn.active { color: var(--sage-dark); border-bottom-color: var(--sage); font-weight: 600; }
-  .tab-btn .count { background: var(--sage-pale); color: var(--sage-dark); font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 10px; min-width: 22px; text-align: center; }
-  .tab-content { display: none; }
-  .tab-content.active { display: block; }
-  .main { max-width: 820px; margin: 0 auto; padding: 40px 24px 80px; }
-  .intro { text-align: center; margin-bottom: 40px; }
-  .intro h2 { font-family: 'DM Sans', sans-serif; font-size: 32px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.5px; }
-  .intro p { color: var(--warm-gray); font-size: 15px; max-width: 520px; margin: 0 auto; }
-  .form-card { background: var(--white); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 24px; }
-  .form-section-header { background: var(--sage-pale); padding: 16px 28px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
-  .section-number { width: 28px; height: 28px; background: var(--sage); color: var(--white); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
-  .form-section-header h3 { font-family: 'DM Sans', sans-serif; font-size: 18px; font-weight: 600; }
-  .form-body { padding: 28px; }
-  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-  .form-grid .full-width { grid-column: 1 / -1; }
-  .form-group { display: flex; flex-direction: column; gap: 6px; }
-  .form-group label { font-size: 13px; font-weight: 600; letter-spacing: 0.2px; }
-  .form-group label .required { color: var(--error); margin-left: 2px; }
-  .form-group label .hint { font-weight: 400; color: var(--warm-gray); font-size: 12px; margin-left: 4px; }
-  input, select, textarea { font-family: 'DM Sans', sans-serif; font-size: 14px; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; background: var(--cream); color: var(--charcoal); transition: all 0.2s ease; outline: none; }
-  input:focus, select:focus, textarea:focus { border-color: var(--sage); background: var(--white); box-shadow: 0 0 0 3px rgba(143,175,143,0.15); }
-  textarea { resize: vertical; min-height: 80px; }
-  select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236B6B6B' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
-  .fee-toggle { display: flex; gap: 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
-  .fee-toggle label { flex: 1; text-align: center; padding: 10px 16px; font-size: 13px; font-weight: 500; cursor: pointer; background: var(--cream); color: var(--warm-gray); border-right: 1px solid var(--border); transition: all 0.2s; }
-  .fee-toggle label:last-child { border-right: none; }
-  .fee-toggle input { display: none; }
-  .fee-toggle input:checked + label, .fee-toggle label.active { background: var(--sage); color: var(--white); font-weight: 600; }
-  .conditional-field { display: none; animation: slideDown 0.3s ease; }
-  .conditional-field.visible { display: flex; }
-  @keyframes slideDown { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
-  .specialist-fields { display: none; margin-top:16px; padding-top:16px; border-top:1px solid var(--border); }
-  .specialist-fields.visible { display: block; }
-  .actions { display: flex; gap: 16px; margin-top: 32px; justify-content: center; flex-wrap: wrap; }
-  .btn { font-family: 'DM Sans', sans-serif; padding: 14px 32px; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.25s ease; display: flex; align-items: center; gap: 8px; letter-spacing: 0.3px; }
-  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-  .btn-primary { background: var(--sage); color: var(--white); }
-  .btn-primary:hover:not(:disabled) { background: var(--sage-dark); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(107,143,107,0.3); }
-  .btn-secondary { background: var(--white); color: var(--charcoal); border: 1px solid var(--border); }
-  .btn-secondary:hover:not(:disabled) { background: var(--light-gray); transform: translateY(-1px); }
-  .btn-danger { background: var(--white); color: var(--error); border: 1px solid #ECC; }
-  .btn-danger:hover:not(:disabled) { background: #FFF5F5; }
-  .btn-sm { padding: 8px 16px; font-size: 12px; border-radius: 6px; }
-  .btn svg { width: 16px; height: 16px; }
-  .btn-full { width: 100%; justify-content: center; }
-  .dashboard { max-width: 1100px; margin: 0 auto; padding: 40px 24px 80px; }
-  .dash-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; flex-wrap: wrap; gap: 16px; }
-  .dash-header h2 { font-family: 'DM Sans', sans-serif; font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
-  .dash-actions { display: flex; gap: 10px; flex-wrap: wrap; }
-  .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 28px; }
-  .stat-card { background: var(--white); border: 1px solid var(--border); border-radius: 10px; padding: 20px; text-align: center; }
-  .stat-card .stat-num { font-family: 'DM Sans', sans-serif; font-size: 36px; font-weight: 700; color: var(--sage-dark); line-height: 1; }
-  .stat-card .stat-label { font-size: 12px; color: var(--warm-gray); text-transform: uppercase; letter-spacing: 1px; margin-top: 6px; font-weight: 500; }
-  .tracker-table-wrap { background: var(--white); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
-  .tracker-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  .tracker-table thead { background: var(--sage-pale); }
-  .tracker-table th { padding: 12px 16px; text-align: left; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--sage-dark); border-bottom: 1px solid var(--border); white-space: nowrap; }
-  .tracker-table td { padding: 12px 16px; border-bottom: 1px solid var(--border); vertical-align: middle; }
-  .tracker-table tr:last-child td { border-bottom: none; }
-  .tracker-table tr:hover td { background: var(--sage-pale); }
-  .status-pill { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.3px; text-transform: uppercase; white-space: nowrap; }
-  .status-prospective { background: var(--amber-pale); color: #9A7B00; }
-  .status-sent { background: #E3F2FD; color: #1565C0; }
-  .status-executed { background: var(--sage-pale); color: var(--sage-dark); }
-  .status-declined { background: #FBEAEA; color: var(--error); }
-  .empty-state { text-align: center; padding: 60px 24px; color: var(--warm-gray); }
-  .empty-state svg { width: 48px; height: 48px; margin-bottom: 16px; opacity: 0.4; }
-  .empty-state p { font-size: 15px; }
-  .row-actions { display: flex; gap: 6px; }
-  .row-actions select { padding: 5px 8px; font-size: 11px; border-radius: 6px; background: var(--cream); min-width: 110px; }
-  .row-actions button { background: none; border: 1px solid var(--border); border-radius: 6px; padding: 5px 8px; cursor: pointer; color: var(--warm-gray); font-size: 11px; transition: all 0.2s; }
-  .row-actions button:hover { color: var(--charcoal); background: var(--light-gray); }
-  .row-actions button.del:hover { color: var(--error); background: #FFF5F5; border-color: #ECC; }
-  .status-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--charcoal); color: var(--white); padding: 14px 24px; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 13px; font-weight: 500; transform: translateY(100%); transition: transform 0.3s ease; z-index: 100; }
-  .status-bar.visible { transform: translateY(0); }
-  .status-bar.success { background: var(--sage-dark); }
-  .status-bar.error { background: var(--error); }
-  .loading-spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .help-text { font-size: 12px; color: var(--warm-gray); margin-top: 8px; }
-  @media (max-width: 640px) {
-    .form-grid { grid-template-columns: 1fr; }
-    .header { padding: 16px 20px; flex-direction: column; gap: 12px; }
-    .tab-bar { padding: 0 16px; }
-    .tab-btn { padding: 12px 16px; font-size: 13px; }
-    .actions { flex-direction: column; }
-    .btn { justify-content: center; }
-    .dashboard { padding: 24px 16px; }
-    .tracker-table-wrap { overflow-x: auto; }
-    .auth-box { padding: 32px 24px; }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--charcoal);line-height:1.6;min-height:100vh;}
+  .app-container{display:none;}.app-container.visible{display:block;}
+  .header{background:var(--white);border-bottom:1px solid var(--border);padding:24px 40px;display:flex;align-items:center;justify-content:space-between;}
+  .header-left{display:flex;align-items:center;gap:20px;}
+  .header-logo{height:48px;width:48px;}
+  .header-divider{width:1px;height:36px;background:var(--border);}
+  .header-text h1{font-size:26px;font-weight:700;letter-spacing:-0.5px;}
+  .header-text p{font-size:11px;color:var(--warm-gray);text-transform:uppercase;letter-spacing:1.8px;font-weight:600;margin-top:-2px;}
+  .header-right{display:flex;align-items:center;gap:12px;}
+  .header-badge{background:var(--sage-pale);color:var(--sage-dark);font-size:11px;font-weight:600;padding:6px 14px;border-radius:20px;letter-spacing:0.5px;text-transform:uppercase;}
+  .user-menu{display:flex;align-items:center;gap:8px;padding:6px 12px;background:var(--sage-pale);border-radius:20px;font-size:12px;color:var(--sage-dark);font-weight:500;}
+  .user-menu button{background:none;border:none;color:var(--sage-dark);cursor:pointer;font-size:11px;text-decoration:underline;padding:0;font-family:'DM Sans',sans-serif;}
+  .auth-container{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+  .auth-box{background:var(--white);border-radius:16px;max-width:440px;width:100%;padding:48px;box-shadow:0 20px 60px rgba(0,0,0,0.1);border:1px solid var(--border);}
+  .auth-logo{text-align:center;margin-bottom:32px;}
+  .auth-logo svg{width:72px;height:72px;margin-bottom:20px;}
+  .auth-logo h1{font-size:32px;font-weight:700;margin-bottom:6px;letter-spacing:-0.5px;}
+  .auth-logo p{color:var(--warm-gray);font-size:13px;text-transform:uppercase;letter-spacing:1.8px;font-weight:600;}
+  .auth-tabs{display:flex;gap:8px;margin-bottom:28px;border-bottom:1px solid var(--border);}
+  .auth-tab{flex:1;background:none;border:none;padding:12px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;color:var(--warm-gray);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;}
+  .auth-tab.active{color:var(--sage-dark);border-bottom-color:var(--sage);font-weight:600;}
+  .auth-form{display:none;}.auth-form.active{display:block;}
+  .tab-bar{background:var(--white);border-bottom:1px solid var(--border);display:flex;padding:0 40px;}
+  .tab-btn{font-family:'DM Sans',sans-serif;background:none;border:none;padding:14px 24px;font-size:14px;font-weight:500;color:var(--warm-gray);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;display:flex;align-items:center;gap:8px;}
+  .tab-btn:hover{color:var(--charcoal);}
+  .tab-btn.active{color:var(--sage-dark);border-bottom-color:var(--sage);font-weight:600;}
+  .tab-btn .count{background:var(--sage-pale);color:var(--sage-dark);font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;min-width:22px;text-align:center;}
+  .tab-content{display:none;}.tab-content.active{display:block;}
+  .main{max-width:820px;margin:0 auto;padding:40px 24px 80px;}
+  .intro{text-align:center;margin-bottom:40px;}
+  .intro h2{font-size:32px;font-weight:700;margin-bottom:8px;letter-spacing:-0.5px;}
+  .intro p{color:var(--warm-gray);font-size:15px;max-width:520px;margin:0 auto;}
+  .form-card{background:var(--white);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:24px;}
+  .form-section-header{background:var(--sage-pale);padding:16px 28px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;}
+  .section-number{width:28px;height:28px;background:var(--sage);color:var(--white);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;}
+  .form-section-header h3{font-size:18px;font-weight:600;}
+  .form-body{padding:28px;}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+  .form-grid .full-width{grid-column:1/-1;}
+  .form-group{display:flex;flex-direction:column;gap:6px;}
+  .form-group label{font-size:13px;font-weight:600;letter-spacing:0.2px;}
+  .form-group label .required{color:var(--error);margin-left:2px;}
+  .form-group label .hint{font-weight:400;color:var(--warm-gray);font-size:12px;margin-left:4px;}
+  input,select,textarea{font-family:'DM Sans',sans-serif;font-size:14px;padding:10px 14px;border:1px solid var(--border);border-radius:8px;background:var(--cream);color:var(--charcoal);transition:all 0.2s ease;outline:none;}
+  input:focus,select:focus,textarea:focus{border-color:var(--sage);background:var(--white);box-shadow:0 0 0 3px rgba(143,175,143,0.15);}
+  textarea{resize:vertical;min-height:80px;}
+  select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236B6B6B' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;}
+  .fee-toggle{display:flex;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+  .fee-toggle label{flex:1;text-align:center;padding:10px 12px;font-size:12px;font-weight:500;cursor:pointer;background:var(--cream);color:var(--warm-gray);border-right:1px solid var(--border);transition:all 0.2s;}
+  .fee-toggle label:last-child{border-right:none;}
+  .fee-toggle input{display:none;}
+  .fee-toggle input:checked+label,.fee-toggle label.active{background:var(--sage);color:var(--white);font-weight:600;}
+  .conditional-field{display:none;animation:slideDown 0.3s ease;}
+  .conditional-field.visible{display:flex;}
+  @keyframes slideDown{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);}}
+  .specialist-fields{display:none;margin-top:16px;padding-top:16px;border-top:1px solid var(--border);}
+  .specialist-fields.visible{display:block;}
+  .actions{display:flex;gap:16px;margin-top:32px;justify-content:center;flex-wrap:wrap;}
+  .btn{font-family:'DM Sans',sans-serif;padding:14px 32px;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;transition:all 0.25s ease;display:flex;align-items:center;gap:8px;letter-spacing:0.3px;}
+  .btn:disabled{opacity:0.5;cursor:not-allowed;}
+  .btn-primary{background:var(--sage);color:var(--white);}
+  .btn-primary:hover:not(:disabled){background:var(--sage-dark);transform:translateY(-1px);box-shadow:0 4px 16px rgba(107,143,107,0.3);}
+  .btn-secondary{background:var(--white);color:var(--charcoal);border:1px solid var(--border);}
+  .btn-secondary:hover:not(:disabled){background:var(--light-gray);transform:translateY(-1px);}
+  .btn-danger{background:var(--white);color:var(--error);border:1px solid #ECC;}
+  .btn-danger:hover:not(:disabled){background:#FFF5F5;}
+  .btn-sm{padding:8px 16px;font-size:12px;border-radius:6px;}
+  .btn svg{width:16px;height:16px;}
+  .btn-full{width:100%;justify-content:center;}
+  .dashboard{max-width:1100px;margin:0 auto;padding:40px 24px 80px;}
+  .dash-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;flex-wrap:wrap;gap:16px;}
+  .dash-header h2{font-size:28px;font-weight:700;letter-spacing:-0.5px;}
+  .dash-actions{display:flex;gap:10px;flex-wrap:wrap;}
+  .stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:28px;}
+  .stat-card{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:20px;text-align:center;}
+  .stat-card .stat-num{font-size:36px;font-weight:700;color:var(--sage-dark);line-height:1;}
+  .stat-card .stat-label{font-size:12px;color:var(--warm-gray);text-transform:uppercase;letter-spacing:1px;margin-top:6px;font-weight:500;}
+  .tracker-table-wrap{background:var(--white);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+  .tracker-table{width:100%;border-collapse:collapse;font-size:13px;}
+  .tracker-table thead{background:var(--sage-pale);}
+  .tracker-table th{padding:12px 16px;text-align:left;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:0.8px;color:var(--sage-dark);border-bottom:1px solid var(--border);white-space:nowrap;}
+  .tracker-table td{padding:12px 16px;border-bottom:1px solid var(--border);vertical-align:middle;}
+  .tracker-table tr:last-child td{border-bottom:none;}
+  .tracker-table tr:hover td{background:var(--sage-pale);}
+  .status-pill{display:inline-block;padding:4px 12px;border-radius:12px;font-size:11px;font-weight:600;letter-spacing:0.3px;text-transform:uppercase;white-space:nowrap;}
+  .status-prospective{background:var(--amber-pale);color:#9A7B00;}
+  .status-sent{background:#E3F2FD;color:#1565C0;}
+  .status-executed{background:var(--sage-pale);color:var(--sage-dark);}
+  .status-declined{background:#FBEAEA;color:var(--error);}
+  .empty-state{text-align:center;padding:60px 24px;color:var(--warm-gray);}
+  .empty-state p{font-size:15px;}
+  .row-actions{display:flex;gap:6px;}
+  .row-actions select{padding:5px 8px;font-size:11px;border-radius:6px;background:var(--cream);min-width:110px;}
+  .row-actions button{background:none;border:1px solid var(--border);border-radius:6px;padding:5px 8px;cursor:pointer;color:var(--warm-gray);font-size:11px;transition:all 0.2s;}
+  .row-actions button:hover{color:var(--charcoal);background:var(--light-gray);}
+  .row-actions button.del:hover{color:var(--error);background:#FFF5F5;border-color:#ECC;}
+  .status-bar{position:fixed;bottom:0;left:0;right:0;background:var(--charcoal);color:var(--white);padding:14px 24px;display:flex;align-items:center;justify-content:center;gap:10px;font-size:13px;font-weight:500;transform:translateY(100%);transition:transform 0.3s ease;z-index:100;}
+  .status-bar.visible{transform:translateY(0);}
+  .status-bar.success{background:var(--sage-dark);}
+  .status-bar.error{background:var(--error);}
+  .loading-spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin 0.8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .help-text{font-size:12px;color:var(--warm-gray);margin-top:8px;}
+  @media(max-width:640px){
+    .form-grid{grid-template-columns:1fr;}.header{padding:16px 20px;flex-direction:column;gap:12px;}
+    .tab-bar{padding:0 16px;}.tab-btn{padding:12px 16px;font-size:13px;}
+    .actions{flex-direction:column;}.btn{justify-content:center;}
+    .dashboard{padding:24px 16px;}.tracker-table-wrap{overflow-x:auto;}.auth-box{padding:32px 24px;}
   }
 </style>
 </head>
@@ -142,17 +133,16 @@
   <div class="auth-box">
     <div class="auth-logo">
       <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-        <defs><linearGradient id="authLogoGradient" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#8FAF8F;stop-opacity:1" /><stop offset="100%" style="stop-color:#6B8F6B;stop-opacity:1" /></linearGradient></defs>
-        <path d="M50 30 L130 30 L130 50 L150 70 L150 170 L50 170 Z" fill="url(#authLogoGradient)" opacity="0.15"/>
-        <path d="M130 30 L130 50 L150 70 Z" fill="url(#authLogoGradient)" opacity="0.25"/>
-        <path d="M50 30 L130 30 L130 50 L150 70 L150 170 L50 170 Z" fill="none" stroke="url(#authLogoGradient)" stroke-width="3" stroke-linejoin="round"/>
-        <path d="M130 30 L130 50 L150 70" fill="none" stroke="url(#authLogoGradient)" stroke-width="3" stroke-linejoin="round"/>
-        <path d="M75 90 L90 105 L125 70" fill="none" stroke="url(#authLogoGradient)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-        <line x1="70" y1="130" x2="130" y2="130" stroke="url(#authLogoGradient)" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
-        <line x1="70" y1="145" x2="115" y2="145" stroke="url(#authLogoGradient)" stroke-width="3" stroke-linecap="round" opacity="0.4"/>
+        <defs><linearGradient id="ag" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#8FAF8F" /><stop offset="100%" style="stop-color:#6B8F6B" /></linearGradient></defs>
+        <path d="M50 30 L130 30 L130 50 L150 70 L150 170 L50 170 Z" fill="url(#ag)" opacity="0.15"/>
+        <path d="M130 30 L130 50 L150 70 Z" fill="url(#ag)" opacity="0.25"/>
+        <path d="M50 30 L130 30 L130 50 L150 70 L150 170 L50 170 Z" fill="none" stroke="url(#ag)" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M130 30 L130 50 L150 70" fill="none" stroke="url(#ag)" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M75 90 L90 105 L125 70" fill="none" stroke="url(#ag)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+        <line x1="70" y1="130" x2="130" y2="130" stroke="url(#ag)" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
+        <line x1="70" y1="145" x2="115" y2="145" stroke="url(#ag)" stroke-width="3" stroke-linecap="round" opacity="0.4"/>
       </svg>
-      <h1>Intakr</h1>
-      <p>Client Intake System</p>
+      <h1>Intakr</h1><p>Client Intake System</p>
     </div>
     <div class="auth-tabs">
       <button class="auth-tab active" onclick="switchAuthTab('login')">Sign In</button>
@@ -160,28 +150,28 @@
     </div>
     <div class="auth-form active" id="loginForm">
       <div class="form-group"><label>Email</label><input type="email" id="loginEmail" placeholder="your@margolispllc.com"></div>
-      <div class="form-group" style="margin-top:16px;"><label>Password</label><input type="password" id="loginPassword" placeholder="••••••••"></div>
-      <button class="btn btn-primary btn-full" onclick="handleLogin()" id="loginBtn" style="margin-top:24px;">Sign In</button>
-      <p class="help-text" style="text-align:center;margin-top:16px;"><button onclick="switchAuthTab('reset')" style="background:none;border:none;color:var(--sage-dark);text-decoration:underline;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;">Forgot password?</button></p>
-      <p class="help-text" style="text-align:center;margin-top:8px;">First time? Click "Sign Up" above.</p>
+      <div class="form-group" style="margin-top:16px"><label>Password</label><input type="password" id="loginPassword" placeholder="••••••••"></div>
+      <button class="btn btn-primary btn-full" onclick="handleLogin()" id="loginBtn" style="margin-top:24px">Sign In</button>
+      <p class="help-text" style="text-align:center;margin-top:16px"><button onclick="switchAuthTab('reset')" style="background:none;border:none;color:var(--sage-dark);text-decoration:underline;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px">Forgot password?</button></p>
+      <p class="help-text" style="text-align:center;margin-top:8px">First time? Click "Sign Up" above.</p>
     </div>
     <div class="auth-form" id="signupForm">
       <div class="form-group"><label>Full Name</label><input type="text" id="signupName" placeholder="John Doe"></div>
-      <div class="form-group" style="margin-top:16px;"><label>Email</label><input type="email" id="signupEmail" placeholder="yourname@margolispllc.com"><p class="help-text">Must be a @margolispllc.com email address</p></div>
-      <div class="form-group" style="margin-top:16px;"><label>Password</label><input type="password" id="signupPassword" placeholder="••••••••"><p class="help-text">At least 6 characters</p></div>
-      <button class="btn btn-primary btn-full" onclick="handleSignup()" id="signupBtn" style="margin-top:24px;">Create Account</button>
+      <div class="form-group" style="margin-top:16px"><label>Email</label><input type="email" id="signupEmail" placeholder="yourname@margolispllc.com"><p class="help-text">Must be a @margolispllc.com email</p></div>
+      <div class="form-group" style="margin-top:16px"><label>Password</label><input type="password" id="signupPassword" placeholder="••••••••"><p class="help-text">At least 6 characters</p></div>
+      <button class="btn btn-primary btn-full" onclick="handleSignup()" id="signupBtn" style="margin-top:24px">Create Account</button>
     </div>
     <div class="auth-form" id="resetForm">
-      <p style="color:var(--warm-gray);margin-bottom:24px;text-align:center;font-size:14px;">Enter your email and we'll send a reset link.</p>
+      <p style="color:var(--warm-gray);margin-bottom:24px;text-align:center;font-size:14px">Enter your email and we'll send a reset link.</p>
       <div class="form-group"><label>Email</label><input type="email" id="resetEmail" placeholder="your@margolispllc.com"></div>
-      <button class="btn btn-primary btn-full" onclick="handlePasswordReset()" id="resetBtn" style="margin-top:24px;">Send Reset Link</button>
-      <p class="help-text" style="text-align:center;margin-top:16px;"><button onclick="switchAuthTab('login')" style="background:none;border:none;color:var(--sage-dark);text-decoration:underline;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;">Back to Sign In</button></p>
+      <button class="btn btn-primary btn-full" onclick="handlePasswordReset()" id="resetBtn" style="margin-top:24px">Send Reset Link</button>
+      <p class="help-text" style="text-align:center;margin-top:16px"><button onclick="switchAuthTab('login')" style="background:none;border:none;color:var(--sage-dark);text-decoration:underline;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px">Back to Sign In</button></p>
     </div>
     <div class="auth-form" id="updatePasswordForm">
-      <p style="color:var(--warm-gray);margin-bottom:24px;text-align:center;font-size:14px;">Enter your new password below.</p>
+      <p style="color:var(--warm-gray);margin-bottom:24px;text-align:center;font-size:14px">Enter your new password below.</p>
       <div class="form-group"><label>New Password</label><input type="password" id="newPassword" placeholder="••••••••"><p class="help-text">At least 6 characters</p></div>
-      <div class="form-group" style="margin-top:16px;"><label>Confirm Password</label><input type="password" id="confirmPassword" placeholder="••••••••"></div>
-      <button class="btn btn-primary btn-full" onclick="handleUpdatePassword()" id="updatePasswordBtn" style="margin-top:24px;">Update Password</button>
+      <div class="form-group" style="margin-top:16px"><label>Confirm Password</label><input type="password" id="confirmPassword" placeholder="••••••••"></div>
+      <button class="btn btn-primary btn-full" onclick="handleUpdatePassword()" id="updatePasswordBtn" style="margin-top:24px">Update Password</button>
     </div>
   </div>
 </div>
@@ -190,33 +180,26 @@
 <div class="header">
   <div class="header-left">
     <svg class="header-logo" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-      <defs><linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#8FAF8F;stop-opacity:1" /><stop offset="100%" style="stop-color:#6B8F6B;stop-opacity:1" /></linearGradient></defs>
-      <path d="M50 30 L130 30 L130 50 L150 70 L150 170 L50 170 Z" fill="url(#logoGradient)" opacity="0.15"/>
-      <path d="M130 30 L130 50 L150 70 Z" fill="url(#logoGradient)" opacity="0.25"/>
-      <path d="M50 30 L130 30 L130 50 L150 70 L150 170 L50 170 Z" fill="none" stroke="url(#logoGradient)" stroke-width="3" stroke-linejoin="round"/>
-      <path d="M130 30 L130 50 L150 70" fill="none" stroke="url(#logoGradient)" stroke-width="3" stroke-linejoin="round"/>
-      <path d="M75 90 L90 105 L125 70" fill="none" stroke="url(#logoGradient)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-      <line x1="70" y1="130" x2="130" y2="130" stroke="url(#logoGradient)" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
-      <line x1="70" y1="145" x2="115" y2="145" stroke="url(#logoGradient)" stroke-width="3" stroke-linecap="round" opacity="0.4"/>
+      <defs><linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#8FAF8F" /><stop offset="100%" style="stop-color:#6B8F6B" /></linearGradient></defs>
+      <path d="M50 30 L130 30 L130 50 L150 70 L150 170 L50 170 Z" fill="url(#lg)" opacity="0.15"/>
+      <path d="M130 30 L130 50 L150 70 Z" fill="url(#lg)" opacity="0.25"/>
+      <path d="M50 30 L130 30 L130 50 L150 70 L150 170 L50 170 Z" fill="none" stroke="url(#lg)" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M130 30 L130 50 L150 70" fill="none" stroke="url(#lg)" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M75 90 L90 105 L125 70" fill="none" stroke="url(#lg)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+      <line x1="70" y1="130" x2="130" y2="130" stroke="url(#lg)" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
+      <line x1="70" y1="145" x2="115" y2="145" stroke="url(#lg)" stroke-width="3" stroke-linecap="round" opacity="0.4"/>
     </svg>
     <div class="header-divider"></div>
     <div class="header-text"><h1>Intakr</h1><p>By Margolis PLLC</p></div>
   </div>
   <div class="header-right">
     <div class="header-badge">Secure</div>
-    <div class="user-menu"><span id="userEmail">user@example.com</span><button onclick="handleLogout()">Sign Out</button></div>
+    <div class="user-menu"><span id="userEmail"></span><button onclick="handleLogout()">Sign Out</button></div>
   </div>
 </div>
-
 <div class="tab-bar">
-  <button class="tab-btn active" onclick="switchTab('intake')">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
-    New Intake
-  </button>
-  <button class="tab-btn" onclick="switchTab('dashboard')">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
-    Client Tracker <span class="count" id="trackerCount">0</span>
-  </button>
+  <button class="tab-btn active" onclick="switchTab('intake')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg> New Intake</button>
+  <button class="tab-btn" onclick="switchTab('dashboard')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg> Client Tracker <span class="count" id="trackerCount">0</span></button>
 </div>
 
 <div class="tab-content active" id="tab-intake">
@@ -239,7 +222,7 @@
       <div class="form-section-header"><div class="section-number">2</div><h3>Matter Details</h3></div>
       <div class="form-body"><div class="form-grid">
         <div class="form-group"><label>Matter Type <span class="required">*</span></label><select id="matterType" required><option value="">Select…</option><option value="Corporate/Business Formation">Corporate / Business Formation</option><option value="Commercial Litigation">Commercial Litigation</option><option value="Real Estate">Real Estate</option><option value="Employment">Employment</option><option value="Intellectual Property">Intellectual Property</option><option value="Contract Drafting/Review">Contract Drafting / Review</option><option value="Regulatory/Compliance">Regulatory / Compliance</option><option value="M&A/Transactions">M&A / Transactions</option><option value="Other">Other</option></select></div>
-        <div class="form-group"><label>Attorney in Charge <span class="required">*</span></label><select id="attorney" required><option value="">Select…</option><option value="Matt A. Margolis, Esq.">Matt A. Margolis, Esq.</option><option value="Karina S. Margolis, Esq.">Karina S. Margolis, Esq.</option></select></div>
+        <div class="form-group"><label>Attorney in Charge <span class="required">*</span></label><select id="attorney" required><option value="">Select…</option><option value="Matt A. Margolis, Esq.">Matt A. Margolis, Esq.</option><option value="Karina Margolis, Esq.">Karina Margolis, Esq.</option><option value="Jen Healy, Esq.">Jen Healy, Esq.</option><option value="Hunter Sutherland, Esq.">Hunter Sutherland, Esq.</option></select></div>
         <div class="form-group full-width"><label>Matter Description <span class="required">*</span></label><textarea id="matterDescription" placeholder="Brief description of the matter…" required></textarea></div>
         <div class="form-group full-width"><label>Adverse / Opposing Party <span class="hint">(if any)</span></label><input type="text" id="adverseParty" placeholder="Name of opposing party or N/A"></div>
       </div></div>
@@ -249,14 +232,16 @@
       <div class="form-body"><div class="form-grid">
         <div class="form-group full-width"><label>Fee Type <span class="required">*</span></label>
           <div class="fee-toggle">
-            <input type="radio" name="feeType" id="feeHourly" value="Hourly" checked><label for="feeHourly" class="active">Hourly Rate</label>
+            <input type="radio" name="feeType" id="feeHourly" value="Hourly" checked><label for="feeHourly" class="active">Hourly</label>
             <input type="radio" name="feeType" id="feeFlat" value="Flat Fee"><label for="feeFlat">Flat Fee</label>
             <input type="radio" name="feeType" id="feeHybrid" value="Hybrid"><label for="feeHybrid">Hybrid</label>
+            <input type="radio" name="feeType" id="feeSub" value="Subscription"><label for="feeSub">Subscription</label>
           </div>
         </div>
-        <div class="form-group conditional-field visible" id="hourlyRateGroup"><label>Attorney Hourly Rate</label><input type="text" id="hourlyRate" value="$500.00" placeholder="$500.00"></div>
-        <div class="form-group conditional-field visible" id="paralegalRateGroup"><label>Paralegal Hourly Rate</label><input type="text" id="paralegalRate" value="$225.00" placeholder="$225.00"></div>
+        <div class="form-group conditional-field visible" id="hourlyRateGroup"><label>Attorney Hourly Rate</label><input type="text" id="hourlyRate" value="$500.00"></div>
+        <div class="form-group conditional-field visible" id="paralegalRateGroup"><label>Paralegal Hourly Rate</label><input type="text" id="paralegalRate" value="$225.00"></div>
         <div class="form-group conditional-field" id="flatFeeGroup"><label>Flat Fee Amount</label><input type="text" id="flatFeeAmount" placeholder="e.g., $5,000.00"></div>
+        <div class="form-group conditional-field" id="monthlyFeeGroup"><label>Monthly Subscription Fee</label><input type="text" id="monthlyFee" placeholder="e.g., $2,500.00/month"></div>
         <div class="form-group"><label>Retainer Amount</label><input type="text" id="retainerAmount" placeholder="e.g., $5,000.00"></div>
         <div class="form-group"><label>Engagement Date <span class="required">*</span></label><input type="date" id="engagementDate" required></div>
       </div></div>
@@ -264,11 +249,11 @@
     <div class="form-card">
       <div class="form-section-header"><div class="section-number">4</div><h3>Conflicts & Referral</h3></div>
       <div class="form-body"><div class="form-grid">
-        <div class="form-group full-width"><label>Known Conflicts</label><textarea id="conflicts" placeholder="Describe any known or potential conflicts of interest, or type 'None'"></textarea></div>
-        <div class="form-group full-width"><label>Will a specialist or co-counsel be involved?</label><select id="specialistInvolved"><option value="No">No</option><option value="Yes">Yes</option></select></div>
+        <div class="form-group full-width"><label>Known Conflicts</label><textarea id="conflicts" placeholder="Describe any known or potential conflicts, or type 'None'"></textarea></div>
+        <div class="form-group full-width"><label>Specialist or co-counsel involved?</label><select id="specialistInvolved"><option value="No">No</option><option value="Yes">Yes</option></select></div>
       </div>
       <div class="specialist-fields" id="specialistFields"><div class="form-grid">
-        <div class="form-group"><label>Specialist / Co-Counsel Name</label><input type="text" id="specialistName" placeholder="Name"></div>
+        <div class="form-group"><label>Specialist Name</label><input type="text" id="specialistName" placeholder="Name"></div>
         <div class="form-group"><label>Fee-Sharing Arrangement</label><input type="text" id="feeSharingDetails" placeholder="Describe arrangement"></div>
       </div></div>
       </div>
@@ -278,7 +263,7 @@
       <div class="form-body"><div class="form-grid">
         <div class="form-group"><label>Referral Source</label><input type="text" id="referralSource" placeholder="How did they find us?"></div>
         <div class="form-group"><label>Priority</label><select id="priority"><option value="Normal">Normal</option><option value="High">High</option><option value="Urgent">Urgent</option></select></div>
-        <div class="form-group full-width"><label>Internal Notes</label><textarea id="internalNotes" placeholder="Any additional notes for the file…"></textarea></div>
+        <div class="form-group full-width"><label>Internal Notes</label><textarea id="internalNotes" placeholder="Any additional notes…"></textarea></div>
       </div></div>
     </div>
     <div class="actions">
@@ -292,12 +277,11 @@
 
 <div class="tab-content" id="tab-dashboard">
 <div class="dashboard">
-  <div class="dash-header">
-    <h2>Client Tracker</h2>
+  <div class="dash-header"><h2>Client Tracker</h2>
     <div class="dash-actions">
-      <button class="btn btn-secondary btn-sm" onclick="renderDashboard()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg> Refresh</button>
-      <button class="btn btn-primary btn-sm" onclick="exportMasterExcel()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export Master Excel</button>
-      <button class="btn btn-danger btn-sm" onclick="clearAllData()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Clear All Data</button>
+      <button class="btn btn-secondary btn-sm" onclick="renderDashboard()">Refresh</button>
+      <button class="btn btn-primary btn-sm" onclick="exportMasterExcel()">Export Excel</button>
+      <button class="btn btn-danger btn-sm" onclick="clearAllData()">Clear All</button>
     </div>
   </div>
   <div class="stats-row" id="statsRow"></div>
@@ -309,362 +293,235 @@
 <div class="status-bar" id="statusBar"><span id="statusText"></span></div>
 
 <script>
-const SUPABASE_URL = 'https://jflxkrlxlvhrntodywth.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpmbHhrcmx4bHZocm50b2R5d3RoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEwODkxNDAsImV4cCI6MjA4NjY2NTE0MH0.jbeY9K4N6UOhbR8m9F0AOiUZJW7_p1ESY-7cssu5P2Y';
-const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-let currentUser = null;
+const SUPABASE_URL='https://jflxkrlxlvhrntodywth.supabase.co';
+const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpmbHhrcmx4bHZocm50b2R5d3RoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEwODkxNDAsImV4cCI6MjA4NjY2NTE0MH0.jbeY9K4N6UOhbR8m9F0AOiUZJW7_p1ESY-7cssu5P2Y';
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+let currentUser=null;
 
-function switchAuthTab(tab) {
-  document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
-  if (tab === 'login') { document.querySelectorAll('.auth-tab')[0].classList.add('active'); document.getElementById('loginForm').classList.add('active'); }
-  else if (tab === 'signup') { document.querySelectorAll('.auth-tab')[1].classList.add('active'); document.getElementById('signupForm').classList.add('active'); }
-  else if (tab === 'reset') { document.getElementById('resetForm').classList.add('active'); }
-  else if (tab === 'update-password') { document.getElementById('updatePasswordForm').classList.add('active'); }
-}
+function switchAuthTab(t){document.querySelectorAll('.auth-tab').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.auth-form').forEach(x=>x.classList.remove('active'));if(t==='login'){document.querySelectorAll('.auth-tab')[0].classList.add('active');document.getElementById('loginForm').classList.add('active');}else if(t==='signup'){document.querySelectorAll('.auth-tab')[1].classList.add('active');document.getElementById('signupForm').classList.add('active');}else if(t==='reset'){document.getElementById('resetForm').classList.add('active');}else if(t==='update-password'){document.getElementById('updatePasswordForm').classList.add('active');}}
 
-async function handleLogin() {
-  const email = document.getElementById('loginEmail').value.trim().toLowerCase();
-  const password = document.getElementById('loginPassword').value;
-  if (!email || !password) { showStatus('Please enter email and password', 'error'); return; }
-  if (!email.endsWith('@margolispllc.com')) { showStatus('Access restricted: Only @margolispllc.com emails allowed', 'error'); return; }
-  const btn = document.getElementById('loginBtn'); btn.disabled = true; btn.innerHTML = '<div class="loading-spinner"></div> Signing In...';
-  try {
-    const { data, error } = await db.auth.signInWithPassword({ email, password });
-    if (error) throw error; currentUser = data.user;
-    if (!currentUser.email.endsWith('@margolispllc.com')) { await db.auth.signOut(); throw new Error('Access restricted'); }
-    showApp(); showStatus('✓ Welcome back!', 'success');
-  } catch (e) { showStatus('Login failed: ' + e.message, 'error'); btn.disabled = false; btn.innerHTML = 'Sign In'; }
-}
+async function handleLogin(){const e=document.getElementById('loginEmail').value.trim().toLowerCase(),p=document.getElementById('loginPassword').value;if(!e||!p){showStatus('Please enter email and password','error');return;}if(!e.endsWith('@margolispllc.com')){showStatus('Access restricted to @margolispllc.com','error');return;}const b=document.getElementById('loginBtn');b.disabled=true;b.innerHTML='<div class="loading-spinner"></div> Signing In...';try{const{data,error}=await db.auth.signInWithPassword({email:e,password:p});if(error)throw error;currentUser=data.user;if(!currentUser.email.endsWith('@margolispllc.com')){await db.auth.signOut();throw new Error('Access restricted');}showApp();showStatus('\u2713 Welcome back!','success');}catch(x){showStatus('Login failed: '+x.message,'error');b.disabled=false;b.innerHTML='Sign In';}}
 
-async function handleSignup() {
-  const name = document.getElementById('signupName').value.trim();
-  const email = document.getElementById('signupEmail').value.trim().toLowerCase();
-  const password = document.getElementById('signupPassword').value;
-  if (!name || !email || !password) { showStatus('Please fill in all fields', 'error'); return; }
-  if (!email.endsWith('@margolispllc.com')) { showStatus('Access restricted: Only @margolispllc.com emails allowed', 'error'); return; }
-  if (password.length < 6) { showStatus('Password must be at least 6 characters', 'error'); return; }
-  const btn = document.getElementById('signupBtn'); btn.disabled = true; btn.innerHTML = '<div class="loading-spinner"></div> Creating Account...';
-  try {
-    const { data, error } = await db.auth.signUp({ email, password, options: { data: { full_name: name } } });
-    if (error) throw error;
-    if (data.user) {
-      if (data.user.identities && data.user.identities.length === 0) { showStatus('Email already registered. Please sign in.', 'error'); switchAuthTab('login'); document.getElementById('loginEmail').value = email; }
-      else { currentUser = data.user; showApp(); showStatus('✓ Account created!', 'success'); }
-    }
-  } catch (e) { showStatus('Signup failed: ' + e.message, 'error'); } finally { btn.disabled = false; btn.innerHTML = 'Create Account'; }
-}
+async function handleSignup(){const n=document.getElementById('signupName').value.trim(),e=document.getElementById('signupEmail').value.trim().toLowerCase(),p=document.getElementById('signupPassword').value;if(!n||!e||!p){showStatus('Please fill in all fields','error');return;}if(!e.endsWith('@margolispllc.com')){showStatus('Access restricted to @margolispllc.com','error');return;}if(p.length<6){showStatus('Password must be at least 6 characters','error');return;}const b=document.getElementById('signupBtn');b.disabled=true;b.innerHTML='<div class="loading-spinner"></div> Creating...';try{const{data,error}=await db.auth.signUp({email:e,password:p,options:{data:{full_name:n}}});if(error)throw error;if(data.user){if(data.user.identities&&data.user.identities.length===0){showStatus('Email already registered.','error');switchAuthTab('login');}else{currentUser=data.user;showApp();showStatus('\u2713 Account created!','success');}}}catch(x){showStatus('Signup failed: '+x.message,'error');}finally{b.disabled=false;b.innerHTML='Create Account';}}
 
-async function handlePasswordReset() {
-  const email = document.getElementById('resetEmail').value.trim();
-  if (!email) { showStatus('Please enter your email', 'error'); return; }
-  const btn = document.getElementById('resetBtn'); btn.disabled = true; btn.innerHTML = '<div class="loading-spinner"></div> Sending...';
-  try { const { error } = await db.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname }); if (error) throw error; showStatus('✓ Reset link sent!', 'success'); setTimeout(() => switchAuthTab('login'), 3000); }
-  catch (e) { showStatus('Error: ' + e.message, 'error'); } finally { btn.disabled = false; btn.innerHTML = 'Send Reset Link'; }
-}
+async function handlePasswordReset(){const e=document.getElementById('resetEmail').value.trim();if(!e){showStatus('Enter your email','error');return;}const b=document.getElementById('resetBtn');b.disabled=true;b.innerHTML='<div class="loading-spinner"></div> Sending...';try{const{error}=await db.auth.resetPasswordForEmail(e,{redirectTo:window.location.origin+window.location.pathname});if(error)throw error;showStatus('\u2713 Reset link sent!','success');setTimeout(()=>switchAuthTab('login'),3000);}catch(x){showStatus('Error: '+x.message,'error');}finally{b.disabled=false;b.innerHTML='Send Reset Link';}}
 
-async function handleUpdatePassword() {
-  const np = document.getElementById('newPassword').value, cp = document.getElementById('confirmPassword').value;
-  if (!np || !cp) { showStatus('Please fill in both fields', 'error'); return; }
-  if (np.length < 6) { showStatus('Password must be at least 6 characters', 'error'); return; }
-  if (np !== cp) { showStatus('Passwords do not match', 'error'); return; }
-  const btn = document.getElementById('updatePasswordBtn'); btn.disabled = true; btn.innerHTML = '<div class="loading-spinner"></div> Updating...';
-  try { const { error } = await db.auth.updateUser({ password: np }); if (error) throw error; showStatus('✓ Password updated!', 'success'); showApp(); }
-  catch (e) { showStatus('Error: ' + e.message, 'error'); btn.disabled = false; btn.innerHTML = 'Update Password'; }
-}
+async function handleUpdatePassword(){const n=document.getElementById('newPassword').value,c=document.getElementById('confirmPassword').value;if(!n||!c){showStatus('Fill in both fields','error');return;}if(n.length<6){showStatus('Min 6 characters','error');return;}if(n!==c){showStatus('Passwords do not match','error');return;}const b=document.getElementById('updatePasswordBtn');b.disabled=true;b.innerHTML='<div class="loading-spinner"></div> Updating...';try{const{error}=await db.auth.updateUser({password:n});if(error)throw error;showStatus('\u2713 Password updated!','success');showApp();}catch(x){showStatus('Error: '+x.message,'error');b.disabled=false;b.innerHTML='Update Password';}}
 
-async function handleLogout() {
-  try { await db.auth.signOut(); currentUser = null; document.getElementById('authContainer').style.display = 'flex'; document.getElementById('appContainer').classList.remove('visible'); showStatus('Signed out', 'success'); }
-  catch (e) { showStatus('Error: ' + e.message, 'error'); }
-}
+async function handleLogout(){try{await db.auth.signOut();currentUser=null;document.getElementById('authContainer').style.display='flex';document.getElementById('appContainer').classList.remove('visible');showStatus('Signed out','success');}catch(x){showStatus('Error: '+x.message,'error');}}
 
-function showApp() {
-  document.getElementById('authContainer').style.display = 'none'; document.getElementById('appContainer').classList.add('visible');
-  if (!currentUser.email.endsWith('@margolispllc.com')) { handleLogout(); showStatus('Access denied', 'error'); return; }
-  document.getElementById('userEmail').textContent = currentUser.email; updateTrackerCount(); renderDashboard();
-}
+function showApp(){document.getElementById('authContainer').style.display='none';document.getElementById('appContainer').classList.add('visible');if(!currentUser.email.endsWith('@margolispllc.com')){handleLogout();return;}document.getElementById('userEmail').textContent=currentUser.email;updateTrackerCount();renderDashboard();}
 
-async function checkAuth() {
-  const { data: { session } } = await db.auth.getSession();
-  const hp = new URLSearchParams(window.location.hash.substring(1));
-  if (hp.get('type') === 'recovery') { if (session && session.user) { if (!session.user.email.endsWith('@margolispllc.com')) { await db.auth.signOut(); return; } currentUser = session.user; } switchAuthTab('update-password'); return; }
-  if (session) { if (!session.user.email.endsWith('@margolispllc.com')) { await db.auth.signOut(); return; } currentUser = session.user; showApp(); }
-}
+async function checkAuth(){const{data:{session}}=await db.auth.getSession();const hp=new URLSearchParams(window.location.hash.substring(1));if(hp.get('type')==='recovery'){if(session&&session.user){if(!session.user.email.endsWith('@margolispllc.com')){await db.auth.signOut();return;}currentUser=session.user;}switchAuthTab('update-password');return;}if(session){if(!session.user.email.endsWith('@margolispllc.com')){await db.auth.signOut();return;}currentUser=session.user;showApp();}}
 
-async function getClients() {
-  try { const { data, error } = await db.from('clients').select('*').order('created_at', { ascending: false }); if (error) throw error; return data || []; }
-  catch (e) { showStatus('Error loading clients: ' + e.message, 'error'); return []; }
-}
+async function getClients(){try{const{data,error}=await db.from('clients').select('*').order('created_at',{ascending:false});if(error)throw error;return data||[];}catch(e){showStatus('Error: '+e.message,'error');return[];}}
 
-async function addClient(d) {
-  try {
-    const { data, error } = await db.from('clients').insert([{ user_id: currentUser.id, client_type: d.clientType, entity_name: d.entityName, contact_name: d.contactName, contact_title: d.contactTitle, client_email: d.clientEmail, client_phone: d.clientPhone, client_address: d.clientAddress, matter_type: d.matterType, attorney: d.attorney, matter_description: d.matterDescription, adverse_party: d.adverseParty, fee_type: d.feeType, hourly_rate: d.hourlyRate, paralegal_rate: d.paralegalRate, flat_fee_amount: d.flatFeeAmount, retainer_amount: d.retainerAmount, engagement_date: d.engagementDate, conflicts: d.conflicts, specialist_involved: d.specialistInvolved, specialist_name: d.specialistName, fee_sharing_details: d.feeSharingDetails, referral_source: d.referralSource, priority: d.priority, internal_notes: d.internalNotes, status: 'Prospective' }]).select().single();
-    if (error) throw error; updateTrackerCount(); return data;
-  } catch (e) { showStatus('Error saving: ' + e.message, 'error'); return null; }
-}
+async function addClient(d){try{const{data,error}=await db.from('clients').insert([{user_id:currentUser.id,client_type:d.clientType,entity_name:d.entityName,contact_name:d.contactName,contact_title:d.contactTitle,client_email:d.clientEmail,client_phone:d.clientPhone,client_address:d.clientAddress,matter_type:d.matterType,attorney:d.attorney,matter_description:d.matterDescription,adverse_party:d.adverseParty,fee_type:d.feeType,hourly_rate:d.hourlyRate,paralegal_rate:d.paralegalRate,flat_fee_amount:d.flatFeeAmount,retainer_amount:d.retainerAmount,engagement_date:d.engagementDate,conflicts:d.conflicts,specialist_involved:d.specialistInvolved,specialist_name:d.specialistName,fee_sharing_details:d.feeSharingDetails,referral_source:d.referralSource,priority:d.priority,internal_notes:d.internalNotes,status:'Prospective'}]).select().single();if(error)throw error;updateTrackerCount();return data;}catch(e){showStatus('Error: '+e.message,'error');return null;}}
 
-async function updateClientStatus(id, status) {
-  try { const u = { status }; if (status === 'Letter Sent') u.letter_sent = new Date().toLocaleDateString(); if (status === 'Executed') u.letter_executed = new Date().toLocaleDateString(); const { error } = await db.from('clients').update(u).eq('id', id); if (error) throw error; renderDashboard(); }
-  catch (e) { showStatus('Error: ' + e.message, 'error'); }
-}
+async function updateClientStatus(id,s){try{const u={status:s};if(s==='Letter Sent')u.letter_sent=new Date().toLocaleDateString();if(s==='Executed')u.letter_executed=new Date().toLocaleDateString();const{error}=await db.from('clients').update(u).eq('id',id);if(error)throw error;renderDashboard();}catch(e){showStatus('Error: '+e.message,'error');}}
 
-async function deleteClient(id) {
-  if (!confirm('Delete this client?')) return;
-  try { const { error } = await db.from('clients').delete().eq('id', id); if (error) throw error; renderDashboard(); showStatus('Client removed.', 'success'); }
-  catch (e) { showStatus('Error: ' + e.message, 'error'); }
-}
+async function deleteClient(id){if(!confirm('Delete this client?'))return;try{const{error}=await db.from('clients').delete().eq('id',id);if(error)throw error;renderDashboard();showStatus('Removed.','success');}catch(e){showStatus('Error: '+e.message,'error');}}
 
-async function clearAllData() {
-  if (!confirm('Permanently delete ALL client data?')) return;
-  try { const { error } = await db.from('clients').delete().neq('id', '00000000-0000-0000-0000-000000000000'); if (error) throw error; renderDashboard(); showStatus('All data cleared.', 'success'); }
-  catch (e) { showStatus('Error: ' + e.message, 'error'); }
-}
+async function clearAllData(){if(!confirm('Permanently delete ALL data?'))return;try{const{error}=await db.from('clients').delete().neq('id','00000000-0000-0000-0000-000000000000');if(error)throw error;renderDashboard();showStatus('Cleared.','success');}catch(e){showStatus('Error: '+e.message,'error');}}
 
-function switchTab(tab) {
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-  document.getElementById('tab-' + tab).classList.add('active');
-  event.currentTarget.classList.add('active');
-  if (tab === 'dashboard') renderDashboard();
-}
+function switchTab(t){document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));document.getElementById('tab-'+t).classList.add('active');event.currentTarget.classList.add('active');if(t==='dashboard')renderDashboard();}
 
-async function updateTrackerCount() { const c = await getClients(); document.getElementById('trackerCount').textContent = c.length; }
+async function updateTrackerCount(){const c=await getClients();document.getElementById('trackerCount').textContent=c.length;}
 
-const feeRadios = document.querySelectorAll('input[name="feeType"]');
-const feeLabels = document.querySelectorAll('.fee-toggle label');
-feeRadios.forEach(r => { r.addEventListener('change', () => { feeLabels.forEach(l => l.classList.remove('active')); r.nextElementSibling.classList.add('active'); const v = r.value; document.getElementById('hourlyRateGroup').classList.toggle('visible', v==='Hourly'||v==='Hybrid'); document.getElementById('paralegalRateGroup').classList.toggle('visible', v==='Hourly'||v==='Hybrid'); document.getElementById('flatFeeGroup').classList.toggle('visible', v==='Flat Fee'||v==='Hybrid'); }); });
-document.getElementById('specialistInvolved').addEventListener('change', e => { document.getElementById('specialistFields').classList.toggle('visible', e.target.value === 'Yes'); });
-document.getElementById('engagementDate').valueAsDate = new Date();
+const feeRadios=document.querySelectorAll('input[name="feeType"]');
+const feeLabels=document.querySelectorAll('.fee-toggle label');
+feeRadios.forEach(r=>{r.addEventListener('change',()=>{feeLabels.forEach(l=>l.classList.remove('active'));r.nextElementSibling.classList.add('active');const v=r.value;document.getElementById('hourlyRateGroup').classList.toggle('visible',v==='Hourly'||v==='Hybrid');document.getElementById('paralegalRateGroup').classList.toggle('visible',v==='Hourly'||v==='Hybrid');document.getElementById('flatFeeGroup').classList.toggle('visible',v==='Flat Fee'||v==='Hybrid');document.getElementById('monthlyFeeGroup').classList.toggle('visible',v==='Subscription');});});
+document.getElementById('specialistInvolved').addEventListener('change',e=>{document.getElementById('specialistFields').classList.toggle('visible',e.target.value==='Yes');});
+document.getElementById('engagementDate').valueAsDate=new Date();
 
-function showStatus(msg, type='success') { const bar = document.getElementById('statusBar'); document.getElementById('statusText').textContent = msg; bar.className = 'status-bar visible ' + type; setTimeout(() => bar.classList.remove('visible'), 4000); }
+function showStatus(m,t='success'){const b=document.getElementById('statusBar');document.getElementById('statusText').textContent=m;b.className='status-bar visible '+t;setTimeout(()=>b.classList.remove('visible'),4000);}
 
-function getFormData() {
-  return { clientType: document.getElementById('clientType').value, entityName: document.getElementById('entityName').value, contactName: document.getElementById('contactName').value, contactTitle: document.getElementById('contactTitle').value, clientEmail: document.getElementById('clientEmail').value, clientPhone: document.getElementById('clientPhone').value, clientAddress: document.getElementById('clientAddress').value, matterType: document.getElementById('matterType').value, attorney: document.getElementById('attorney').value, matterDescription: document.getElementById('matterDescription').value, adverseParty: document.getElementById('adverseParty').value, feeType: document.querySelector('input[name="feeType"]:checked').value, hourlyRate: document.getElementById('hourlyRate').value, paralegalRate: document.getElementById('paralegalRate').value, flatFeeAmount: document.getElementById('flatFeeAmount').value, retainerAmount: document.getElementById('retainerAmount').value, engagementDate: document.getElementById('engagementDate').value, conflicts: document.getElementById('conflicts').value, specialistInvolved: document.getElementById('specialistInvolved').value, specialistName: document.getElementById('specialistName').value, feeSharingDetails: document.getElementById('feeSharingDetails').value, referralSource: document.getElementById('referralSource').value, priority: document.getElementById('priority').value, internalNotes: document.getElementById('internalNotes').value };
-}
+function getFormData(){return{clientType:document.getElementById('clientType').value,entityName:document.getElementById('entityName').value,contactName:document.getElementById('contactName').value,contactTitle:document.getElementById('contactTitle').value,clientEmail:document.getElementById('clientEmail').value,clientPhone:document.getElementById('clientPhone').value,clientAddress:document.getElementById('clientAddress').value,matterType:document.getElementById('matterType').value,attorney:document.getElementById('attorney').value,matterDescription:document.getElementById('matterDescription').value,adverseParty:document.getElementById('adverseParty').value,feeType:document.querySelector('input[name="feeType"]:checked').value,hourlyRate:document.getElementById('hourlyRate').value,paralegalRate:document.getElementById('paralegalRate').value,flatFeeAmount:document.getElementById('flatFeeAmount').value,monthlyFee:document.getElementById('monthlyFee').value,retainerAmount:document.getElementById('retainerAmount').value,engagementDate:document.getElementById('engagementDate').value,conflicts:document.getElementById('conflicts').value,specialistInvolved:document.getElementById('specialistInvolved').value,specialistName:document.getElementById('specialistName').value,feeSharingDetails:document.getElementById('feeSharingDetails').value,referralSource:document.getElementById('referralSource').value,priority:document.getElementById('priority').value,internalNotes:document.getElementById('internalNotes').value};}
 
-function validateForm() { const r = document.querySelectorAll('#intakeForm [required]'); let v = true; r.forEach(el => { if (!el.value) { el.style.borderColor = '#C0392B'; v = false; } else { el.style.borderColor = ''; } }); if (!v) showStatus('Please fill in all required fields.', 'error'); return v; }
+function validateForm(){const r=document.querySelectorAll('#intakeForm [required]');let v=true;r.forEach(el=>{if(!el.value){el.style.borderColor='#C0392B';v=false;}else{el.style.borderColor='';}});if(!v)showStatus('Please fill in all required fields.','error');return v;}
 
-function resetForm() { document.getElementById('intakeForm').reset(); document.querySelectorAll('#intakeForm [required]').forEach(el => el.style.borderColor = ''); feeLabels.forEach(l => l.classList.remove('active')); document.querySelector('label[for="feeHourly"]').classList.add('active'); document.getElementById('hourlyRateGroup').classList.add('visible'); document.getElementById('paralegalRateGroup').classList.add('visible'); document.getElementById('flatFeeGroup').classList.remove('visible'); document.getElementById('specialistFields').classList.remove('visible'); document.getElementById('engagementDate').valueAsDate = new Date(); }
+function resetForm(){document.getElementById('intakeForm').reset();document.querySelectorAll('#intakeForm [required]').forEach(el=>el.style.borderColor='');feeLabels.forEach(l=>l.classList.remove('active'));document.querySelector('label[for="feeHourly"]').classList.add('active');document.getElementById('hourlyRateGroup').classList.add('visible');document.getElementById('paralegalRateGroup').classList.add('visible');document.getElementById('flatFeeGroup').classList.remove('visible');document.getElementById('monthlyFeeGroup').classList.remove('visible');document.getElementById('specialistFields').classList.remove('visible');document.getElementById('engagementDate').valueAsDate=new Date();}
 
-function formatDate(s) { if (!s) return ''; const d = new Date(s + 'T00:00:00'); return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }); }
-function clientDisplayName(d) { return d.entity_name || d.contact_name || d.entityName || d.contactName || 'Unknown'; }
+function formatDate(s){if(!s)return'';const d=new Date(s+'T00:00:00');return d.toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});}
+function clientDisplayName(d){return d.entity_name||d.contact_name||d.entityName||d.contactName||'Unknown';}
 
-async function renderDashboard() {
-  const clients = await getClients(); updateTrackerCount();
-  const t = clients.length, p = clients.filter(c => c.status==='Prospective').length, s = clients.filter(c => c.status==='Letter Sent').length, e = clients.filter(c => c.status==='Executed').length;
-  document.getElementById('statsRow').innerHTML = `<div class="stat-card"><div class="stat-num">${t}</div><div class="stat-label">Total</div></div><div class="stat-card"><div class="stat-num">${p}</div><div class="stat-label">Prospective</div></div><div class="stat-card"><div class="stat-num">${s}</div><div class="stat-label">Letter Sent</div></div><div class="stat-card"><div class="stat-num">${e}</div><div class="stat-label">Executed</div></div>`;
-  if (!clients.length) { document.getElementById('trackerTableContainer').innerHTML = '<div class="empty-state"><p>No clients yet. Use New Intake to add one.</p></div>'; return; }
-  const sc = s => ({ Prospective:'status-prospective','Letter Sent':'status-sent',Executed:'status-executed',Declined:'status-declined' }[s] || '');
-  const rows = clients.map(c => `<tr><td style="font-weight:600">${clientDisplayName(c)}</td><td>${c.matter_type||''}</td><td>${c.attorney?c.attorney.split(',')[0]:''}</td><td>${c.fee_type||''}</td><td>${c.engagement_date?formatDate(c.engagement_date):''}</td><td><span class="status-pill ${sc(c.status)}">${c.status}</span></td><td><div class="row-actions"><select onchange="updateClientStatus('${c.id}',this.value)"><option value="Prospective" ${c.status==='Prospective'?'selected':''}>Prospective</option><option value="Letter Sent" ${c.status==='Letter Sent'?'selected':''}>Letter Sent</option><option value="Executed" ${c.status==='Executed'?'selected':''}>Executed</option><option value="Declined" ${c.status==='Declined'?'selected':''}>Declined</option></select><button onclick="regenLetter('${c.id}')" title="Re-generate">🔄</button><button class="del" onclick="deleteClient('${c.id}')" title="Delete">✕</button></div></td></tr>`).join('');
-  document.getElementById('trackerTableContainer').innerHTML = `<table class="tracker-table"><thead><tr><th>Client</th><th>Matter</th><th>Attorney</th><th>Fee</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead><tbody>${rows}</tbody></table>`;
-}
+async function renderDashboard(){const clients=await getClients();updateTrackerCount();const t=clients.length,p=clients.filter(c=>c.status==='Prospective').length,s=clients.filter(c=>c.status==='Letter Sent').length,e=clients.filter(c=>c.status==='Executed').length;document.getElementById('statsRow').innerHTML=`<div class="stat-card"><div class="stat-num">${t}</div><div class="stat-label">Total</div></div><div class="stat-card"><div class="stat-num">${p}</div><div class="stat-label">Prospective</div></div><div class="stat-card"><div class="stat-num">${s}</div><div class="stat-label">Letter Sent</div></div><div class="stat-card"><div class="stat-num">${e}</div><div class="stat-label">Executed</div></div>`;if(!clients.length){document.getElementById('trackerTableContainer').innerHTML='<div class="empty-state"><p>No clients yet.</p></div>';return;}const sc=s=>({Prospective:'status-prospective','Letter Sent':'status-sent',Executed:'status-executed',Declined:'status-declined'}[s]||'');const rows=clients.map(c=>`<tr><td style="font-weight:600">${clientDisplayName(c)}</td><td>${c.matter_type||''}</td><td>${c.attorney?c.attorney.split(',')[0]:''}</td><td>${c.fee_type||''}</td><td>${c.engagement_date?formatDate(c.engagement_date):''}</td><td><span class="status-pill ${sc(c.status)}">${c.status}</span></td><td><div class="row-actions"><select onchange="updateClientStatus('${c.id}',this.value)"><option value="Prospective" ${c.status==='Prospective'?'selected':''}>Prospective</option><option value="Letter Sent" ${c.status==='Letter Sent'?'selected':''}>Letter Sent</option><option value="Executed" ${c.status==='Executed'?'selected':''}>Executed</option><option value="Declined" ${c.status==='Declined'?'selected':''}>Declined</option></select><button onclick="regenLetter('${c.id}')">🔄</button><button class="del" onclick="deleteClient('${c.id}')">✕</button></div></td></tr>`).join('');document.getElementById('trackerTableContainer').innerHTML=`<table class="tracker-table"><thead><tr><th>Client</th><th>Matter</th><th>Attorney</th><th>Fee</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead><tbody>${rows}</tbody></table>`;}
 
-const XH = ['Date Added','Client Name','Entity Name','Client Type','Contact','Email','Phone','Matter Type','Matter Description','Attorney','Fee Type','Rate/Amount','Retainer','Adverse Party','Conflicts','Specialist','Referral Source','Priority','Status','Letter Sent','Letter Executed','Notes'];
-function ctr(c) { const r = c.fee_type==='Hourly'?`${c.hourly_rate}/hr`:c.fee_type==='Flat Fee'?`Flat: ${c.flat_fee_amount}`:`${c.hourly_rate}/hr + Flat: ${c.flat_fee_amount}`; return [c.engagement_date?formatDate(c.engagement_date):'',clientDisplayName(c),c.entity_name,c.client_type,c.contact_name,c.client_email,c.client_phone,c.matter_type,c.matter_description,c.attorney,c.fee_type,r,c.retainer_amount,c.adverse_party,c.conflicts,c.specialist_involved==='Yes'?c.specialist_name:'N/A',c.referral_source,c.priority,c.status||'Prospective',c.letter_sent||'',c.letter_executed||'',c.internal_notes]; }
+const XH=['Date','Client','Entity','Type','Contact','Email','Phone','Matter','Description','Attorney','Fee Type','Rate','Retainer','Adverse','Conflicts','Specialist','Referral','Priority','Status','Letter Sent','Executed','Notes'];
+function ctr(c){const r=c.fee_type==='Hourly'?`${c.hourly_rate}/hr`:c.fee_type==='Flat Fee'?`Flat: ${c.flat_fee_amount}`:c.fee_type==='Subscription'?`Sub: ${c.retainer_amount}/mo`:`${c.hourly_rate}/hr + Flat: ${c.flat_fee_amount}`;return[c.engagement_date?formatDate(c.engagement_date):'',clientDisplayName(c),c.entity_name,c.client_type,c.contact_name,c.client_email,c.client_phone,c.matter_type,c.matter_description,c.attorney,c.fee_type,r,c.retainer_amount,c.adverse_party,c.conflicts,c.specialist_involved==='Yes'?c.specialist_name:'N/A',c.referral_source,c.priority,c.status||'Prospective',c.letter_sent||'',c.letter_executed||'',c.internal_notes];}
 
-async function exportMasterExcel() { const c = await getClients(); if (!c.length) { showStatus('No clients to export.','error'); return; } const wb = XLSX.utils.book_new(); const ws = XLSX.utils.aoa_to_sheet([XH,...c.map(ctr)]); XLSX.utils.book_append_sheet(wb,ws,'Master Tracker'); XLSX.writeFile(wb,`Intakr_Master_${new Date().toISOString().slice(0,10)}.xlsx`); showStatus(`✓ Exported ${c.length} client(s).`,'success'); }
-function exportSingleClientExcel(d) { const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([XH,ctr(d)]),'Client'); XLSX.writeFile(wb,`Intakr_${clientDisplayName(d).replace(/[^a-zA-Z0-9]/g,'_')}.xlsx`); }
+async function exportMasterExcel(){const c=await getClients();if(!c.length){showStatus('No data.','error');return;}const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([XH,...c.map(ctr)]),'Tracker');XLSX.writeFile(wb,`Intakr_Master_${new Date().toISOString().slice(0,10)}.xlsx`);showStatus(`\u2713 Exported ${c.length} client(s).`,'success');}
+function exportSingleClientExcel(d){const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([XH,ctr(d)]),'Client');XLSX.writeFile(wb,`Intakr_${clientDisplayName(d).replace(/[^a-zA-Z0-9]/g,'_')}.xlsx`);}
 
-// ============================================
-// ENGAGEMENT LETTER GENERATOR — FULL TEMPLATE
-// ============================================
+// =============================================
+// ENGAGEMENT LETTER — FULL TEMPLATE
+// =============================================
 async function generateEngagementLetter(data) {
-  const { Document, Packer, Paragraph, TextRun, AlignmentType, Header, BorderStyle, NumberFormat, HeadingLevel, TabStopType, TabStopPosition, UnderlineType } = window.docx;
+  const { Document, Packer, Paragraph, TextRun, AlignmentType, Header, BorderStyle, UnderlineType, PageBreak } = window.docx;
 
   const name = clientDisplayName(data);
-  const contactName = data.contact_name || data.contactName || '';
-  const contactTitle = data.contact_title || data.contactTitle || '';
-  const clientEmail = data.client_email || data.clientEmail || '';
-  const matterType = data.matter_type || data.matterType || '';
-  const attorney = data.attorney || '';
-  const engDate = formatDate(data.engagement_date || data.engagementDate || '');
-  const feeType = data.fee_type || data.feeType || 'Hourly';
-  const hourlyRate = data.hourly_rate || data.hourlyRate || '$500.00';
-  const paralegalRate = data.paralegal_rate || data.paralegalRate || '$225.00';
-  const flatFee = data.flat_fee_amount || data.flatFeeAmount || '';
-  const retainer = data.retainer_amount || data.retainerAmount || '';
-  const conflicts = data.conflicts || 'None';
-  const specialistInvolved = data.specialist_involved || data.specialistInvolved || 'No';
-  const specialistName = data.specialist_name || data.specialistName || '';
-  const feeSharingDetails = data.fee_sharing_details || data.feeSharingDetails || '';
-  const matterDesc = data.matter_description || data.matterDescription || '';
-  const sigName = attorney.includes('Matt') ? 'Matt A. Margolis' : 'Karina S. Margolis';
-  const sigFirst = attorney.includes('Matt') ? 'Matt Margolis' : 'Karina Margolis';
+  const contact = data.contact_name||data.contactName||'';
+  const title = data.contact_title||data.contactTitle||'';
+  const email = data.client_email||data.clientEmail||'';
+  const matter = data.matter_type||data.matterType||'';
+  const atty = data.attorney||'';
+  const engDate = formatDate(data.engagement_date||data.engagementDate||'');
+  const feeType = data.fee_type||data.feeType||'Hourly';
+  const hourly = data.hourly_rate||data.hourlyRate||'$500.00';
+  const para = data.paralegal_rate||data.paralegalRate||'$225.00';
+  const flat = data.flat_fee_amount||data.flatFeeAmount||'';
+  const monthly = data.monthly_fee||data.monthlyFee||data.retainer_amount||data.retainerAmount||'';
+  const matterDesc = data.matter_description||data.matterDescription||'';
+  const isEntity = (data.client_type||data.clientType)==='Business Entity';
+  const clientLabel = isEntity ? name : contact;
 
-  const isEntity = (data.client_type || data.clientType) === 'Business Entity';
-  const clientLabel = isEntity ? name : contactName;
+  // Determine signer
+  let sigFull = '', sigShort = '';
+  if (atty.includes('Matt')) { sigFull = 'Matt A. Margolis'; sigShort = 'Matt Margolis'; }
+  else if (atty.includes('Karina')) { sigFull = 'Karina Margolis'; sigShort = 'Karina Margolis'; }
+  else if (atty.includes('Jen')) { sigFull = 'Jen Healy'; sigShort = 'Jen Healy'; }
+  else if (atty.includes('Hunter')) { sigFull = 'Hunter Sutherland'; sigShort = 'Hunter Sutherland'; }
+  else { sigFull = 'Matt A. Margolis'; sigShort = 'Matt Margolis'; }
 
-  // Fee paragraph for Section 6
+  // Fee text for Section 6
   let feeText = '';
   if (feeType === 'Hourly') {
     feeText = `Fees will be based upon our standard hourly rates. Our standard hourly rates are: Partner: $700/hour; Of Counsel: $600/hour; Associate: $500/hour; Paralegal: $250/hour, unless otherwise agreed in writing. Our rates may change periodically with 30 days' advance notice. Where possible, we may use attorneys and paralegals with lower hourly rates, without compromising the quality of representation. Upon request, we will provide an estimate of time required and potential costs before commencing legal work. Any estimate or range is not binding, is subject to periodic revision, and should not be construed as a promise or guarantee your matter can be concluded within the estimate or range of fees or costs.`;
   } else if (feeType === 'Flat Fee') {
-    feeText = `Fees for this matter will be a pre-negotiated flat fee of ${flatFee} between the Client and the Firm ("Flat Fee"). The Flat Fee covers the scope of representation described above and does not include costs as described below.`;
+    feeText = `Fees for this matter will be a pre-negotiated flat fee of ${flat} between the Client and the Firm ("Flat Fee"). The Flat Fee covers the scope of representation described above and does not include costs as described below.`;
+  } else if (feeType === 'Subscription') {
+    feeText = `If you elect for a subscription, which is a non-refundable retainer, fees will be ${monthly}. Our standard hourly rates are: Partner: $700/hour; Of Counsel: $600/hour; Associate: $500/hour; Paralegal: $250/hour, unless otherwise agreed in writing. Our rates may change periodically with 30 days' advance notice. Upon request, we will provide an estimate of time required and potential costs before commencing legal work outside the subscription. Any estimate or range, unless a Flat Fee or subscription arrangement, is not binding, is subject to periodic revision, and should not be construed as a promise or guarantee your matter can be concluded within the estimate or range of fees or costs.`;
   } else {
-    feeText = `Fees will be based upon a combination of our standard hourly rates and a pre-negotiated flat fee. Our standard hourly rates are: Partner: $700/hour; Of Counsel: $600/hour; Associate: $500/hour; Paralegal: $250/hour, unless otherwise agreed in writing. Additionally, a flat fee of ${flatFee} has been agreed upon for certain defined portions of this engagement. Our rates may change periodically with 30 days' advance notice.`;
+    feeText = `Fees will be based upon a combination of our standard hourly rates and a pre-negotiated flat fee. Our standard hourly rates are: Partner: $700/hour; Of Counsel: $600/hour; Associate: $500/hour; Paralegal: $250/hour, unless otherwise agreed in writing. Additionally, a flat fee of ${flat} has been agreed upon for certain defined portions of this engagement. Our rates may change periodically with 30 days' advance notice.`;
   }
 
-  const bs = { font: 'Times New Roman', size: 22 }; // 11pt
+  const f = 'Times New Roman', sz = 22;
+  const r = (text, opts={}) => new TextRun({ font:f, size:sz, ...opts, text });
+  const b = text => r(text, { bold:true });
+  const u = text => r(text, { underline:{type:UnderlineType.SINGLE} });
+  const bu = text => r(text, { bold:true, underline:{type:UnderlineType.SINGLE} });
+  const bi = text => r(text, { bold:true, italics:true, underline:{type:UnderlineType.SINGLE} });
   const sp = { after: 200 };
 
-  function p(text, opts = {}) {
-    const runs = Array.isArray(text) ? text : [new TextRun({ ...bs, ...opts, text })];
-    return new Paragraph({ spacing: sp, alignment: opts.align || AlignmentType.JUSTIFIED, children: runs, ...(opts.indent ? { indent: opts.indent } : {}), ...(opts.numbering ? { numbering: opts.numbering } : {}) });
+  function pp(runs, opts={}) {
+    const children = Array.isArray(runs) ? runs : [r(runs)];
+    return new Paragraph({ spacing:sp, alignment:opts.align||AlignmentType.JUSTIFIED, children, ...(opts.indent?{indent:opts.indent}:{}) });
   }
-  function bold(text) { return new TextRun({ ...bs, bold: true, text }); }
-  function underlineBold(text) { return new TextRun({ ...bs, bold: true, italics: true, underline: { type: UnderlineType.SINGLE }, text }); }
-  function reg(text) { return new TextRun({ ...bs, text }); }
-  function underlineReg(text) { return new TextRun({ ...bs, underline: { type: UnderlineType.SINGLE }, text }); }
-  function blank() { return new Paragraph({ spacing: sp, children: [] }); }
+  function blank() { return new Paragraph({ spacing:sp, children:[] }); }
 
-  function numberedSection(num, titleText, bodyText) {
-    const children = [];
-    children.push(new Paragraph({
-      spacing: sp, alignment: AlignmentType.JUSTIFIED,
-      indent: { left: 720, hanging: 360 },
-      children: [
-        new TextRun({ ...bs, text: `${num}.\t` }),
-        underlineReg(titleText + ':'),
-        reg(' ' + bodyText)
-      ]
-    }));
-    return children;
+  function sect(num, titleText, bodyText) {
+    return pp([r(`${num}. `), u(titleText+':'), r(' '+bodyText)]);
   }
 
-  const sections = [];
+  const body = [];
 
   // Date
-  sections.push(p(engDate, { align: AlignmentType.LEFT }));
-  sections.push(blank());
+  body.push(pp(engDate, {align:AlignmentType.LEFT}));
+  body.push(blank());
 
   // VIA ELECTRONIC MAIL ONLY
-  sections.push(new Paragraph({ spacing: sp, children: [underlineBold('VIA ELECTRONIC MAIL ONLY')] }));
+  body.push(pp([bi('VIA ELECTRONIC MAIL ONLY')]));
 
-  // Client address block
-  sections.push(p(clientLabel, { align: AlignmentType.LEFT }));
-  if (isEntity && contactName) {
-    sections.push(p(`ATTENTION: ${contactName}${contactTitle ? ', ' + contactTitle : ''}`, { align: AlignmentType.LEFT }));
-  }
-  if (clientEmail) sections.push(p(clientEmail, { align: AlignmentType.LEFT }));
-  sections.push(blank());
+  // Address block
+  body.push(pp(clientLabel, {align:AlignmentType.LEFT}));
+  if (isEntity && contact) body.push(pp(`ATTENTION: ${contact}${title?', '+title:''}`, {align:AlignmentType.LEFT}));
+  if (email) body.push(pp(email, {align:AlignmentType.LEFT}));
+  body.push(blank());
 
-  // Re: line
-  sections.push(new Paragraph({ spacing: sp, children: [bold('Re: Engagement Letter \u2014 '), bold(`${matterType} \u2014 ${clientLabel}`)] }));
-  sections.push(blank());
+  // Re line
+  body.push(pp([b(`Re: Engagement Letter \u2014 ${matter} \u2014 ${clientLabel}`)]));
+  body.push(blank());
 
   // Dear
-  sections.push(p(`Dear ${contactName}:`));
+  body.push(pp(`Dear ${contact}:`));
 
-  // Intro paragraph
-  sections.push(p(`We are pleased that you seek to retain Margolis PLLC (the \u201cFirm\u201d, \u201cWe\u201d, \u201cOur\u201d or \u201cUs\u201d) to represent ${isEntity ? name : 'you'} (the \u201cClient\u201d or \u201cYou\u201d) in the above referenced matter. This engagement letter will govern the work to be performed by us as well as all other legal work (and related costs) accomplished by the Firm for the Client unless a different fee and cost arrangement for such work is agreed upon in writing by the parties.`));
-  sections.push(p('This engagement letter, and the attached Exhibit A, describes the basis on which our Firm will provide legal services to the Client and bill for those services.'));
-  sections.push(blank());
+  // Intro
+  body.push(pp(`We are pleased that you seek to retain Margolis PLLC (the \u201cFirm\u201d, \u201cWe\u201d, \u201cOur\u201d or \u201cUs\u201d) to represent ${isEntity?name:'you'} (the \u201cClient\u201d or \u201cYou\u201d) in the above referenced matter. This engagement letter will govern the work to be performed by us as well as all other legal work (and related costs) accomplished by the Firm for the Client unless a different fee and cost arrangement for such work is agreed upon in writing by the parties.`));
+  body.push(pp('This engagement letter, and the attached Exhibit A, describes the basis on which our Firm will provide legal services to the Client and bill for those services.'));
+  body.push(blank());
 
-  // Section 1: Attorney in Charge
-  sections.push(...numberedSection(1, 'Attorney in Charge', `I will be the \u201cAttorney in Charge.\u201d Other attorneys may become involved in assisting me in the Representation (as defined below), but please always feel free to contact me directly with any questions or comments you may have with respect to the Client\u2019s relationship with the Firm and the work being performed.`));
+  // Numbered sections
+  body.push(sect(1,'Attorney in Charge',`I will be the \u201cAttorney in Charge.\u201d Other attorneys may become involved in assisting me in the Representation (as defined below), but please always feel free to contact me directly with any questions or comments you may have with respect to the Client\u2019s relationship with the Firm and the work being performed.`));
+  body.push(sect(2,'Client',`You will be our only client in this matter. Unless we agree otherwise in writing, persons and entities related to you or sharing your interests including affiliated companies, owners, officers, directors, business partners, or family members are not our clients.`));
+  body.push(sect(3,'Scope',`The scope of our engagement and duties to you will relate solely to the above referenced matter. However, please note that this scope does not include: (1) tax law; (2) patent law; (3) public securities; (4) ERISA; (5) family law; and (6) bankruptcy/creditors rights. Our acceptance of this engagement does not mean we represent you or your interests in other matters. Any expansion of our scope of work in this matter, and any representation of you in other matters, will be set forth in a separate letter or agreement. If we undertake to represent you in other matters without specific terms of engagement, the terms of this engagement letter will apply.`));
+  body.push(sect(4,'What we need from you',`Please keep us informed of developments that may affect the work we are doing for you. Also, we expect that you will commit sufficient resources to meet the demands of the matter and be available to attend meetings and necessary legal proceedings. Please provide us all documents and other information necessary for us to perform our work for you. We also ask that you promptly review and pay our invoices. Please ask us any questions you may have about our services or charges.`));
+  body.push(sect(5,'Advice about Possible Outcomes',`During the course of our representation, we may advise you about various courses of action or results that might be obtained. That advice will be based on the information and circumstances known to us at the time. You should not regard our advice as a promise of what may happen in the future or a guarantee of future results.`));
+  body.push(sect(6,'Legal Services Fees',feeText));
+  body.push(sect(7,'Costs',`The Client agrees to pay all costs, including, but not limited to, items such as copy costs, messenger and delivery service, Westlaw, Lexis-Nexis, and/or Alexi research, travel (including mileage, parking, airfare, lodging, meals and ground transportation), court costs and filing fees. Unless special arrangements are made at the outset, fees and expenses of others (such as outside copy services, experts, investigators, witnesses, consultants and court reporters) will not be paid by us and will be the responsibility of, and billed directly to, you.`));
+  body.push(sect(8,'Payment',`We expect to send our bills to you monthly. Our bills are due upon receipt. Invoices over 15 days aged are considered past due. Interest shall accrue on unpaid balances over 15 days at 1.5% simple interest. If we are not promptly paid, we reserve the right to withdraw from representing you or to suspend further service to you until such time as we reach a resolution regarding payment.`));
+  body.push(sect(9,'Conflicts of Interest and Waiver',`We have evaluated this engagement for conflicts of interest on the basis that we represent only you in this matter. We are not presently aware of any conflicts except as more fully detailed below. The Firm may represent other companies and individuals in a variety of matters. It is possible that during the time we are representing you, some of our present or future clients may have transactions or disputes with you including litigation or other adversarial proceedings. You have agreed that the Firm may continue to represent or may undertake in the future to represent other clients in any matter not substantially related to our work for you, even if the interests of such clients in those other matters are directly adverse to you or a related entity, and even if such representations would be simultaneous. You also have agreed, as part of this prospective consent, that we may represent one or more of the parties opposite or adverse to you in this matter, in any future new matters unrelated to our work for you, even if such representations would be simultaneous. We agree, however, that your prospective consent to conflicting representations will not apply in an instance where, as the result of our representation of you, we have obtained sensitive, proprietary or other confidential or non-public information that, if known to any such other client of ours, could be used in any such other matter by such other client to your material disadvantage, and if screening procedures and similar measures would be insufficient to protect and maintain the confidentiality of that information.`));
+  body.push(sect(10,'Specialist/Local Network and Fee Sharing',`For certain matters, I may recommend a specialist or engage an attorney to provide specialized advice or legal services to you. Additionally, in some instances, I may have fee sharing arrangement with certain specialists whereby a portion of such specialists\u2019 fees are paid to me and a portion of the fees are retained by such specialist. By executing this engagement letter, you hereby acknowledge and consent to: (1) the existence of my written agreement with such specialist to divide the fee and that such division of fees will be made; and (2) the identity of the individuals or firms that are parties to this division have been disclosed to you; (3) the terms of the division have been disclosed to you. Unless we agree otherwise in writing, you will be responsible for the fees and expenses of such outside professionals, whether they are retained by me or by you directly and you acknowledge the existence of and consent to any fee sharing arrangements between me and my recommended specialists.`));
+  body.push(sect(11,'Use of Artificial Intelligence Tools',`The Firm may use artificial intelligence (\u201cAI\u201d) tools and software in connection with providing legal services to you, including but not limited to research, document review and drafting assistance. You hereby acknowledge and consent to our use of such AI tools subject to the following conditions: (1) all AI-generated work product will be reviewed, edited, and verified by qualified attorneys before being provided to you or relied upon in your matter; (2) we will not input your confidential information into AI systems that do not provide adequate data security and confidentiality protections; (3) you acknowledge that AI tools may have limitations, including potential for errors, biases, or incomplete analysis, and that such tools are used to supplement, not replace, professional legal judgment; (4) we will maintain appropriate oversight and quality control measures to ensure that any AI-assisted work meets our professional standards; (5) our use of AI tools does not diminish our professional responsibilities to you under applicable rules of professional conduct; and (6) you may request information about our AI usage policies or opt out of AI tool usage for your matter by providing written notice, though such opt-out may affect the efficiency and cost of our services. This consent shall remain in effect throughout our representation unless you revoke it in writing.`));
+  body.push(sect(12,'Termination of Engagement',`You may terminate our engagement at any time by written notice. Likewise, the Firm may also terminate this engagement at any time by written notice, subject to applicable rules of professional conduct. In the event we terminate our representation, we will take such steps as are reasonably practicable to protect your interests in the above matter, and you agree to take all steps necessary to free us of any obligation to perform further. We reserve the right to withdraw from our representation if, among other things, you fail to honor the terms of this engagement letter, you fail to cooperate or follow our advice on a material matter, or any fact or circumstance would, in our view, render our continuing representation unlawful or unethical. If we elect to withdraw, you will cooperate with us in taking all steps necessary to complete our withdrawal. If our engagement terminates for any reason, you will remain responsible for paying for all services rendered and costs or expenses paid or incurred on your behalf through and including the date of any withdrawal or termination.`));
+  body.push(sect(13,'Conclusion of Representation; Retention and Disposition of Documents',`Unless previously terminated, our representation will conclude when we complete the specific services you have retained us to perform. At your request, we will return your papers and property to you upon our receipt of final payment. We will retain our own files pertaining to the matter, including, for example, firm administrative records, internal lawyers\u2019 work product such as drafts, notes, internal memoranda and legal and factual research.`));
+  body.push(pp(`Please retain all documents that we send you in accordance with your own records retention practices. All documents we retain will be transferred to the person responsible for administering our records retention program at the end of our representation. Unless we agree otherwise, documents and other materials we retain may be destroyed or disposed of within a reasonable time after termination or conclusion of this engagement. The firm discourages substantive or important communications with our clients by text message. The firm does not maintain text messages sent to or received from clients, or their contents, and does not consider text messages to be, and does not maintain text messages as, part of the client\u2019s file. Text messages are not retained as part of a client\u2019s file materials under our Document Retention Policy.`));
+  body.push(sect(14,'Post-Engagement Matters',`You are engaging the Firm to provide legal services in connection with a specific matter. After the matter concludes, we may inform you from time to time of developments and changes in the law that might interest you, by newsletter or otherwise. These communications, however, do not create a new attorney-client relationship.`));
+  body.push(pp(`After this matter is concluded, changes in law or circumstances may occur that could impact your future rights and liabilities. Unless you specifically engage us to provide advice on matters arising in the future, we have no continuing obligation to advise you with respect to future developments.`));
+  body.push(sect(15,'Choice of Law & Venue',`The relationship between you and the Firm, including the validity, construction, and enforceability of this engagement letter, shall be governed in all respects by the law and professional conduct rules of Florida, without regard to conflicts of laws principles. The parties agree that any disputes arising under this engagement shall be brought in Palm Beach County, Florida.`));
 
-  // Section 2: Client
-  sections.push(...numberedSection(2, 'Client', `You will be our only client in this matter. Unless we agree otherwise in writing, persons and entities related to you or sharing your interests including affiliated companies, owners, officers, directors, business partners, or family members are not our clients.`));
+  body.push(blank());
+  body.push(pp(`This engagement letter, and the attached Exhibit A, constitutes the arrangement upon which we have agreed to undertake representation of the legal matters described in this letter. Please review the foregoing. If the arrangement described in this engagement letter is not acceptable to you in all respects, please call or email me. If it meets with your approval, kindly sign a copy of this letter on behalf of the Client and return it to me via email. When I receive the fully executed engagement letter, this engagement letter will constitute the arrangement between the Client and the Firm.`));
+  body.push(pp('Thank you for retaining us and we look forward to working with you.'));
+  body.push(blank());
+  body.push(blank());
 
-  // Section 3: Scope
-  sections.push(...numberedSection(3, 'Scope', `The scope of our engagement and duties to you will relate solely to the above referenced matter. However, please note that this scope does not include: (1) tax law; (2) patent law; (3) public securities; (4) ERISA; (5) family law; and (6) bankruptcy/creditors rights. Our acceptance of this engagement does not mean we represent you or your interests in other matters. Any expansion of our scope of work in this matter, and any representation of you in other matters, will be set forth in a separate letter or agreement. If we undertake to represent you in other matters without specific terms of engagement, the terms of this engagement letter will apply.`));
-
-  // Section 4: What we need from you
-  sections.push(...numberedSection(4, 'What we need from you', `Please keep us informed of developments that may affect the work we are doing for you. Also, we expect that you will commit sufficient resources to meet the demands of the matter and be available to attend meetings and necessary legal proceedings. Please provide us all documents and other information necessary for us to perform our work for you. We also ask that you promptly review and pay our invoices. Please ask us any questions you may have about our services or charges.`));
-
-  // Section 5: Advice about Possible Outcomes
-  sections.push(...numberedSection(5, 'Advice about Possible Outcomes', `During the course of our representation, we may advise you about various courses of action or results that might be obtained. That advice will be based on the information and circumstances known to us at the time. You should not regard our advice as a promise of what may happen in the future or a guarantee of future results.`));
-
-  // Section 6: Legal Services Fees
-  sections.push(...numberedSection(6, 'Legal Services Fees', feeText));
-
-  // Section 7: Costs
-  sections.push(...numberedSection(7, 'Costs', `The Client agrees to pay all costs, including, but not limited to, items such as copy costs, messenger and delivery service, Westlaw, Lexis-Nexis, and/or Alexi research, travel (including mileage, parking, airfare, lodging, meals and ground transportation), court costs and filing fees. Unless special arrangements are made at the outset, fees and expenses of others (such as outside copy services, experts, investigators, witnesses, consultants and court reporters) will not be paid by us and will be the responsibility of, and billed directly to, you.`));
-
-  // Section 8: Payment
-  sections.push(...numberedSection(8, 'Payment', `We expect to send our bills to you monthly. Our bills are due upon receipt. Invoices over 15 days aged are considered past due. Interest shall accrue on unpaid balances over 15 days at 1.5% simple interest. If we are not promptly paid, we reserve the right to withdraw from representing you or to suspend further service to you until such time as we reach a resolution regarding payment.`));
-
-  // Section 9: Conflicts
-  sections.push(...numberedSection(9, 'Conflicts of Interest and Waiver', `We have evaluated this engagement for conflicts of interest on the basis that we represent only you in this matter. We are not presently aware of any conflicts except as more fully detailed below. The Firm may represent other companies and individuals in a variety of matters. It is possible that during the time we are representing you, some of our present or future clients may have transactions or disputes with you including litigation or other adversarial proceedings. You have agreed that the Firm may continue to represent or may undertake in the future to represent other clients in any matter not substantially related to our work for you, even if the interests of such clients in those other matters are directly adverse to you or a related entity, and even if such representations would be simultaneous. You also have agreed, as part of this prospective consent, that we may represent one or more of the parties opposite or adverse to you in this matter, in any future new matters unrelated to our work for you, even if such representations would be simultaneous. We agree, however, that your prospective consent to conflicting representations will not apply in an instance where, as the result of our representation of you, we have obtained sensitive, proprietary or other confidential or non-public information that, if known to any such other client of ours, could be used in any such other matter by such other client to your material disadvantage, and if screening procedures and similar measures would be insufficient to protect and maintain the confidentiality of that information.`));
-
-  // Section 10: Specialist/Local Network
-  sections.push(...numberedSection(10, 'Specialist/Local Network and Fee Sharing', `For certain matters, I may recommend a specialist or engage an attorney to provide specialized advice or legal services to you. Additionally, in some instances, I may have fee sharing arrangement with certain specialists whereby a portion of such specialists\u2019 fees are paid to me and a portion of the fees are retained by such specialist. By executing this engagement letter, you hereby acknowledge and consent to: (1) the existence of my written agreement with such specialist to divide the fee and that such division of fees will be made; and (2) the identity of the individuals or firms that are parties to this division have been disclosed to you; (3) the terms of the division have been disclosed to you. Unless we agree otherwise in writing, you will be responsible for the fees and expenses of such outside professionals, whether they are retained by me or by you directly and you acknowledge the existence of and consent to any fee sharing arrangements between me and my recommended specialists.`));
-
-  // Section 11: AI
-  sections.push(...numberedSection(11, 'Use of Artificial Intelligence Tools', `The Firm may use artificial intelligence (\u201cAI\u201d) tools and software in connection with providing legal services to you, including but not limited to research, document review and drafting assistance. You hereby acknowledge and consent to our use of such AI tools subject to the following conditions: (1) all AI-generated work product will be reviewed, edited, and verified by qualified attorneys before being provided to you or relied upon in your matter; (2) we will not input your confidential information into AI systems that do not provide adequate data security and confidentiality protections; (3) you acknowledge that AI tools may have limitations, including potential for errors, biases, or incomplete analysis, and that such tools are used to supplement, not replace, professional legal judgment; (4) we will maintain appropriate oversight and quality control measures to ensure that any AI-assisted work meets our professional standards; (5) our use of AI tools does not diminish our professional responsibilities to you under applicable rules of professional conduct; and (6) you may request information about our AI usage policies or opt out of AI tool usage for your matter by providing written notice, though such opt-out may affect the efficiency and cost of our services. This consent shall remain in effect throughout our representation unless you revoke it in writing.`));
-
-  // Section 12: Termination
-  sections.push(...numberedSection(12, 'Termination of Engagement', `You may terminate our engagement at any time by written notice. Likewise, the Firm may also terminate this engagement at any time by written notice, subject to applicable rules of professional conduct. In the event we terminate our representation, we will take such steps as are reasonably practicable to protect your interests in the above matter, and you agree to take all steps necessary to free us of any obligation to perform further. We reserve the right to withdraw from our representation if, among other things, you fail to honor the terms of this engagement letter, you fail to cooperate or follow our advice on a material matter, or any fact or circumstance would, in our view, render our continuing representation unlawful or unethical. If we elect to withdraw, you will cooperate with us in taking all steps necessary to complete our withdrawal. If our engagement terminates for any reason, you will remain responsible for paying for all services rendered and costs or expenses paid or incurred on your behalf through and including the date of any withdrawal or termination.`));
-
-  // Section 13: Conclusion
-  sections.push(...numberedSection(13, 'Conclusion of Representation; Retention and Disposition of Documents', `Unless previously terminated, our representation will conclude when we complete the specific services you have retained us to perform. At your request, we will return your papers and property to you upon our receipt of final payment. We will retain our own files pertaining to the matter, including, for example, firm administrative records, internal lawyers\u2019 work product such as drafts, notes, internal memoranda and legal and factual research.`));
-
-  sections.push(p(`Please retain all documents that we send you in accordance with your own records retention practices. All documents we retain will be transferred to the person responsible for administering our records retention program at the end of our representation. Unless we agree otherwise, documents and other materials we retain may be destroyed or disposed of within a reasonable time after termination or conclusion of this engagement. The firm discourages substantive or important communications with our clients by text message. The firm does not maintain text messages sent to or received from clients, or their contents, and does not consider text messages to be, and does not maintain text messages as, part of the client\u2019s file. Text messages are not retained as part of a client\u2019s file materials under our Document Retention Policy.`, { indent: { left: 720 } }));
-
-  // Section 14: Post-Engagement
-  sections.push(...numberedSection(14, 'Post-Engagement Matters', `You are engaging the Firm to provide legal services in connection with a specific matter. After the matter concludes, we may inform you from time to time of developments and changes in the law that might interest you, by newsletter or otherwise. These communications, however, do not create a new attorney-client relationship.`));
-
-  sections.push(p(`After this matter is concluded, changes in law or circumstances may occur that could impact your future rights and liabilities. Unless you specifically engage us to provide advice on matters arising in the future, we have no continuing obligation to advise you with respect to future developments.`, { indent: { left: 720 } }));
-
-  // Section 15: Choice of Law
-  sections.push(...numberedSection(15, 'Choice of Law & Venue', `The relationship between you and the Firm, including the validity, construction, and enforceability of this engagement letter, shall be governed in all respects by the law and professional conduct rules of Florida, without regard to conflicts of laws principles. The parties agree that any disputes arising under this engagement shall be brought in Palm Beach County, Florida.`));
-
-  sections.push(blank());
-
-  // Closing paragraph
-  sections.push(p(`This engagement letter, and the attached Exhibit A, constitutes the arrangement upon which we have agreed to undertake representation of the legal matters described in this letter. Please review the foregoing. If the arrangement described in this engagement letter is not acceptable to you in all respects, please call or email me. If it meets with your approval, kindly sign a copy of this letter on behalf of the Client and return it to me via email. When I receive the fully executed engagement letter, this engagement letter will constitute the arrangement between the Client and the Firm.`));
-  sections.push(p('Thank you for retaining us and we look forward to working with you.'));
-
-  sections.push(blank());
-  sections.push(blank());
-
-  // Signature block
-  sections.push(p('Sincerely,', { align: AlignmentType.LEFT }));
-  sections.push(blank());
-  sections.push(new Paragraph({ spacing: sp, children: [bold('MARGOLIS PLLC')] }));
-  sections.push(blank());
-  sections.push(new Paragraph({ spacing: sp, children: [new TextRun({ ...bs, italics: true, underline: { type: UnderlineType.SINGLE }, text: `/s/ ${sigName}` })] }));
-  sections.push(blank());
-  sections.push(p(`By: ${sigFirst}, Esq.`, { align: AlignmentType.LEFT }));
-  sections.push(p('For the Firm', { align: AlignmentType.LEFT }));
-
-  sections.push(blank());
-  sections.push(blank());
+  // Signature
+  body.push(pp('Sincerely,', {align:AlignmentType.LEFT}));
+  body.push(blank());
+  body.push(pp([b('MARGOLIS PLLC')], {align:AlignmentType.LEFT}));
+  body.push(blank());
+  body.push(pp([bi(`/s/ ${sigFull}`)], {align:AlignmentType.LEFT}));
+  body.push(blank());
+  body.push(pp(`By: ${sigShort}, Esq.`, {align:AlignmentType.LEFT}));
+  body.push(pp('For the Firm', {align:AlignmentType.LEFT}));
+  body.push(blank());
+  body.push(blank());
 
   // ACKNOWLEDGED AND AGREED
-  sections.push(new Paragraph({ spacing: sp, children: [bold('ACKNOWLEDGED AND AGREED:')] }));
-  sections.push(blank());
-  sections.push(p(clientLabel, { align: AlignmentType.LEFT }));
-  sections.push(blank());
-  sections.push(p('By: _____________________________', { align: AlignmentType.LEFT }));
-  sections.push(p('Name: __________________________', { align: AlignmentType.LEFT }));
-  sections.push(p('Date: ___________________________', { align: AlignmentType.LEFT }));
+  body.push(pp([b('ACKNOWLEDGED AND AGREED:')], {align:AlignmentType.LEFT}));
+  body.push(blank());
+  body.push(pp(clientLabel, {align:AlignmentType.LEFT}));
+  body.push(blank());
+  body.push(pp('By: _____________________________', {align:AlignmentType.LEFT}));
+  body.push(pp('Name: __________________________', {align:AlignmentType.LEFT}));
+  body.push(pp('Date: ___________________________', {align:AlignmentType.LEFT}));
 
-  // PAGE BREAK — EXHIBIT A
-  sections.push(new Paragraph({ pageBreakBefore: true, spacing: sp, alignment: AlignmentType.CENTER, children: [new TextRun({ ...bs, bold: true, underline: { type: UnderlineType.SINGLE }, text: 'EXHIBIT A' })] }));
-  sections.push(blank());
-  sections.push(new Paragraph({ spacing: sp, alignment: AlignmentType.CENTER, children: [new TextRun({ ...bs, bold: true, underline: { type: UnderlineType.SINGLE }, text: 'SCOPE OF SERVICES' })] }));
-  sections.push(blank());
-  sections.push(p(matterDesc || '[Scope of services to be detailed here]'));
+  // EXHIBIT A — new page
+  body.push(new Paragraph({ pageBreakBefore:true, spacing:sp, alignment:AlignmentType.CENTER, children:[bu('EXHIBIT A')] }));
+  body.push(blank());
+  body.push(new Paragraph({ spacing:sp, alignment:AlignmentType.CENTER, children:[bu('SCOPE OF SERVICES')] }));
+  body.push(blank());
+  body.push(pp(matterDesc || '[Scope of services to be detailed here]'));
+
+  // Header — first page only
+  const headerChildren = [
+    new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:40}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'MATT A. MARGOLIS, ESQ.'})] }),
+    new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:40}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'PARTNER'})] }),
+    new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:80}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'MATTHEW@MARGOLISPLLC.COM'})] }),
+    new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:40}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'KARINA MARGOLIS, ESQ.'})] }),
+    new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:40}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'PARTNER'})] }),
+    new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:80}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'KARINA@MARGOLISPLLC.COM'})] }),
+    new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:40}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'JEN HEALY, ESQ.'})] }),
+    new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:40}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'PARTNER'})] }),
+    new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:80}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'JEN@MARGOLISPLLC.COM'})] }),
+    new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:40}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'HUNTER SUTHERLAND, ESQ.'})] }),
+    new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:40}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'ASSOCIATE'})] }),
+    new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:200}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'HUNTER@MARGOLISPLLC.COM'})] }),
+    new Paragraph({ border:{bottom:{style:BorderStyle.SINGLE,size:6,color:'8FAF8F',space:1}}, children:[] }),
+  ];
 
   const doc = new Document({
-    styles: { default: { document: { run: { font: 'Times New Roman', size: 22 } } } },
-    sections: [{
-      properties: { page: { size: { width: 12240, height: 15840 }, margin: { top: 1800, right: 1440, bottom: 1440, left: 1440 } } },
-      headers: {
-        default: new Header({
-          children: [
-            new Paragraph({ alignment: AlignmentType.RIGHT, spacing: { after: 40 }, children: [new TextRun({ font: 'Arial', size: 16, color: '888888', text: 'MATT A. MARGOLIS, ESQ.' })] }),
-            new Paragraph({ alignment: AlignmentType.RIGHT, spacing: { after: 40 }, children: [new TextRun({ font: 'Arial', size: 16, color: '888888', text: 'PARTNER' })] }),
-            new Paragraph({ alignment: AlignmentType.RIGHT, spacing: { after: 80 }, children: [new TextRun({ font: 'Arial', size: 16, color: '888888', text: 'MATTHEW@MARGOLISPLLC.COM' })] }),
-            new Paragraph({ alignment: AlignmentType.RIGHT, spacing: { after: 40 }, children: [new TextRun({ font: 'Arial', size: 16, color: '888888', text: 'KARINA S. MARGOLIS, ESQ.' })] }),
-            new Paragraph({ alignment: AlignmentType.RIGHT, spacing: { after: 40 }, children: [new TextRun({ font: 'Arial', size: 16, color: '888888', text: 'PARTNER' })] }),
-            new Paragraph({ alignment: AlignmentType.RIGHT, spacing: { after: 200 }, children: [new TextRun({ font: 'Arial', size: 16, color: '888888', text: 'KARINA@MARGOLISPLLC.COM' })] }),
-            new Paragraph({ border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: '8FAF8F', space: 1 } }, children: [] }),
-          ]
-        })
+    styles:{default:{document:{run:{font:'Times New Roman',size:22}}}},
+    sections:[{
+      properties:{
+        page:{size:{width:12240,height:15840},margin:{top:1800,right:1440,bottom:1440,left:1440}},
+        titlePage: true
       },
-      children: sections
+      headers:{
+        first: new Header({ children: headerChildren }),
+        default: new Header({ children: [] })
+      },
+      children: body
     }]
   });
 
@@ -672,35 +529,16 @@ async function generateEngagementLetter(data) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `Engagement_Letter_${name.replace(/[^a-zA-Z0-9]/g, '_')}.docx`;
+  a.download = `Engagement_Letter_${name.replace(/[^a-zA-Z0-9]/g,'_')}.docx`;
   a.click();
   URL.revokeObjectURL(url);
 }
 
-async function generateAll() {
-  if (!validateForm()) return;
-  const data = getFormData();
-  const btn = document.getElementById('generateBtn'); btn.disabled = true; btn.innerHTML = '<div class="loading-spinner"></div> Generating...';
-  try {
-    const saved = await addClient(data);
-    if (saved) { exportSingleClientExcel(saved); await generateEngagementLetter(data); showStatus(`✓ ${clientDisplayName(data)} added – letter and Excel downloaded!`, 'success'); resetForm(); }
-  } catch(e) { showStatus('Error: ' + e.message, 'error'); }
-  finally { btn.disabled = false; btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg> Generate Letter + Add to Tracker'; }
-}
+async function generateAll(){if(!validateForm())return;const d=getFormData();const btn=document.getElementById('generateBtn');btn.disabled=true;btn.innerHTML='<div class="loading-spinner"></div> Generating...';try{const saved=await addClient(d);if(saved){exportSingleClientExcel(saved);await generateEngagementLetter(d);showStatus(`\u2713 ${clientDisplayName(d)} added \u2013 letter downloaded!`,'success');resetForm();}}catch(e){showStatus('Error: '+e.message,'error');}finally{btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg> Generate Letter + Add to Tracker';}}
 
-async function addToTrackerOnly() {
-  if (!validateForm()) return;
-  const data = getFormData();
-  const btn = document.getElementById('trackerBtn'); btn.disabled = true; btn.innerHTML = '<div class="loading-spinner"></div> Adding...';
-  try { const saved = await addClient(data); if (saved) { showStatus(`✓ ${clientDisplayName(data)} added to tracker.`, 'success'); resetForm(); } }
-  finally { btn.disabled = false; btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg> Add to Tracker Only'; }
-}
+async function addToTrackerOnly(){if(!validateForm())return;const d=getFormData();const btn=document.getElementById('trackerBtn');btn.disabled=true;btn.innerHTML='<div class="loading-spinner"></div> Adding...';try{const saved=await addClient(d);if(saved){showStatus(`\u2713 ${clientDisplayName(d)} added.`,'success');resetForm();}}finally{btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg> Add to Tracker Only';}}
 
-async function regenLetter(id) {
-  const clients = await getClients(); const c = clients.find(x => x.id === id); if (!c) return;
-  try { await generateEngagementLetter(c); showStatus(`✓ Letter re-generated for ${clientDisplayName(c)}.`, 'success'); }
-  catch(e) { showStatus('Error: ' + e.message, 'error'); }
-}
+async function regenLetter(id){const clients=await getClients();const c=clients.find(x=>x.id===id);if(!c)return;try{await generateEngagementLetter(c);showStatus(`\u2713 Letter re-generated for ${clientDisplayName(c)}.`,'success');}catch(e){showStatus('Error: '+e.message,'error');}}
 
 checkAuth();
 </script>
