@@ -563,7 +563,7 @@ async function buildDocxBlob() {
     editedSections[s.id] = document.getElementById('rev_'+s.id).value;
   });
 
-  const { Document, Packer, Paragraph, TextRun, ImageRun, AlignmentType, Header, BorderStyle, UnderlineType, Table, TableRow, TableCell, WidthType, VerticalAlign, BorderStyle: TBorder } = window.docx;
+  const { Document, Packer, Paragraph, TextRun, ImageRun, AlignmentType, Header, BorderStyle, UnderlineType } = window.docx;
 
   const f = 'Times New Roman', sz = 22;
   const tr = (text, opts={}) => new TextRun({ font:f, size:sz, ...opts, text });
@@ -648,36 +648,18 @@ async function buildDocxBlob() {
   body.push(blank());
   textToParas(editedSections.exhibit).forEach(p => body.push(p));
 
-  const noBorders = { top:{style:TBorder.NONE,size:0}, bottom:{style:TBorder.NONE,size:0}, left:{style:TBorder.NONE,size:0}, right:{style:TBorder.NONE,size:0}, insideHorizontal:{style:TBorder.NONE,size:0}, insideVertical:{style:TBorder.NONE,size:0} };
   const firmLogo = getFirmLogoData();
-  const attorneyLines = [
-    new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:40}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'MATT A. MARGOLIS, ESQ.'})] }),
-    new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:40}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'PARTNER'})] }),
-    new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:80}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'MATTHEW@MARGOLISPLLC.COM'})] }),
-    new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:40}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'KARINA MARGOLIS, ESQ.'})] }),
-    new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:40}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'PARTNER'})] }),
-    new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:80}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'KARINA@MARGOLISPLLC.COM'})] }),
-    new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:40}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'JEN HEALY, ESQ.'})] }),
-    new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:40}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'PARTNER'})] }),
-    new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:80}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'JEN@MARGOLISPLLC.COM'})] }),
-    new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:40}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'HUNTER SUTHERLAND, ESQ.'})] }),
-    new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:40}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'ASSOCIATE'})] }),
-    new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:0}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'HUNTER@MARGOLISPLLC.COM'})] }),
-  ];
 
   let headerChildren;
   if (firmLogo) {
-    const logoCell = new TableCell({ borders:noBorders, verticalAlign:VerticalAlign.TOP, width:{size:3400,type:WidthType.DXA}, children:[new Paragraph({children:[new ImageRun({data:firmLogo.base64,transformation:{width:180,height:180}})]})] });
-    const infoCell = new TableCell({ borders:noBorders, verticalAlign:VerticalAlign.TOP, width:{size:5960,type:WidthType.DXA}, children:attorneyLines });
-    const headerTable = new Table({ rows:[new TableRow({children:[logoCell,infoCell]})], width:{size:9360,type:WidthType.DXA}, borders:noBorders });
-    headerChildren = [headerTable, new Paragraph({spacing:{before:200},border:{bottom:{style:BorderStyle.SINGLE,size:6,color:'8FAF8F',space:1}},children:[]})];
+    headerChildren = [new Paragraph({ alignment:AlignmentType.CENTER, children:[new ImageRun({data:firmLogo.base64,transformation:{width:180,height:180}})] })];
   } else {
-    headerChildren = [...attorneyLines, new Paragraph({spacing:{before:200},border:{bottom:{style:BorderStyle.SINGLE,size:6,color:'8FAF8F',space:1}},children:[]})];
+    headerChildren = [];
   }
 
   const doc = new Document({
     styles:{default:{document:{run:{font:'Times New Roman',size:22}}}},
-    sections:[{ properties:{ page:{size:{width:12240,height:15840},margin:{top:firmLogo?2800:1800,right:1440,bottom:1440,left:1440}}, titlePage:true }, headers:{ first:new Header({children:headerChildren}), default:new Header({children:[]}) }, children:body }]
+    sections:[{ properties:{ page:{size:{width:12240,height:15840},margin:{top:firmLogo?1800:1440,right:1440,bottom:1440,left:1440}}, titlePage:true }, headers:{ first:new Header({children:headerChildren}), default:new Header({children:[]}) }, children:body }]
   });
 
   return await Packer.toBlob(doc);
