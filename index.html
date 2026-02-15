@@ -661,9 +661,8 @@ async function buildDocxBlob() {
     sectParasHtml(sd.num, sd.title, editedSections[sd.key]).forEach(p => body.push(p));
   });
 
-  body.push(blank());
   htmlToParas(editedSections.closing).forEach(p => body.push(p));
-  body.push(blank()); body.push(blank());
+  body.push(blank());
   body.push(pp('Sincerely,', {align:AlignmentType.LEFT}));
   body.push(blank());
   body.push(pp([bold('MARGOLIS PLLC')], {align:AlignmentType.LEFT}));
