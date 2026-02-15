@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src https://jflxkrlxlvhrntodywth.supabase.co; img-src 'self' data: blob:;">
 <title>Intakr – Client Intake System</title>
 <script src="https://unpkg.com/docx@7.8.2/build/index.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -204,11 +205,39 @@
   .review-notes-box{background:var(--amber-pale);border:1px solid #E6D990;border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px;line-height:1.5;}
   .review-notes-box strong{display:block;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:#9A7B00;margin-bottom:4px;}
 
+  /* Settings Tab */
+  .settings{max-width:680px;margin:0 auto;padding:40px 24px 80px;}
+  .settings-header{margin-bottom:32px;}
+  .settings-header h2{font-size:28px;font-weight:700;letter-spacing:-0.5px;margin-bottom:4px;}
+  .settings-header p{color:var(--warm-gray);font-size:14px;}
+  .settings-card{background:var(--white);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:20px;}
+  .settings-card-header{background:var(--sage-pale);padding:14px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+  .settings-card-header h3{font-size:16px;font-weight:600;color:var(--charcoal);}
+  .settings-card-header svg{opacity:0.6;}
+  .settings-card-body{padding:24px;}
+  .settings-card-body p{font-size:13px;color:var(--warm-gray);margin-bottom:16px;line-height:1.6;}
+  .settings-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 0;border-bottom:1px solid var(--border);}
+  .settings-row:last-child{border-bottom:none;padding-bottom:0;}
+  .settings-row:first-child{padding-top:0;}
+  .settings-row-label{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0;}
+  .settings-row-label strong{font-size:14px;font-weight:600;}
+  .settings-row-label span{font-size:12px;color:var(--warm-gray);}
+  .settings-row-action{flex-shrink:0;}
+  .logo-preview-box{display:flex;align-items:center;gap:16px;padding:12px 16px;background:var(--cream);border:1px solid var(--border);border-radius:8px;margin-top:12px;}
+  .logo-preview-box img{height:40px;width:auto;border-radius:4px;border:1px solid var(--border);}
+  .logo-preview-box .remove-link{font-size:12px;color:var(--error);cursor:pointer;text-decoration:underline;margin-left:auto;}
+  .toggle-switch{position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0;}
+  .toggle-switch input{opacity:0;width:0;height:0;}
+  .toggle-slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--border);border-radius:24px;transition:0.2s;}
+  .toggle-slider:before{content:'';position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:var(--white);border-radius:50%;transition:0.2s;}
+  .toggle-switch input:checked+.toggle-slider{background:var(--sage);}
+  .toggle-switch input:checked+.toggle-slider:before{transform:translateX(20px);}
+
   @media(max-width:640px){
     .form-grid{grid-template-columns:1fr;}.header{padding:16px 20px;flex-direction:column;gap:12px;}
     .tab-bar{padding:0 16px;}.tab-btn{padding:12px 16px;font-size:13px;}
     .actions{flex-direction:column;}.btn{justify-content:center;}
-    .dashboard{padding:24px 16px;}.tracker-table-wrap{overflow-x:auto;}.auth-box{padding:32px 24px;}
+    .dashboard{padding:24px 16px;}.tracker-table-wrap{overflow-x:auto;}.auth-box{padding:32px 24px;}.settings{padding:24px 16px;}
   }
 </style>
 </head>
@@ -279,15 +308,13 @@
   </div>
   <div class="header-right">
     <div class="header-badge">Secure</div>
-    <button class="header-config-btn" id="logoUploadBtn" onclick="document.getElementById('logoFileInput').click()" title="Upload firm logo for engagement letter header"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg> <span id="logoUploadLabel">Logo</span></button>
-    <input type="file" id="logoFileInput" accept="image/png,image/jpeg" style="display:none" onchange="handleLogoUpload(event)">
-    <button class="header-config-btn" id="slackConfigBtn" onclick="configureSlackWebhook()" title="Configure Slack integration via Zapier"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 10c-.83 0-1.5-.67-1.5-1.5v-5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5z"/><path d="M20.5 10H19V8.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/><path d="M9.5 14c.83 0 1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5S8 21.33 8 20.5v-5c0-.83.67-1.5 1.5-1.5z"/><path d="M3.5 14H5v1.5c0 .83-.67 1.5-1.5 1.5S2 16.33 2 15.5 2.67 14 3.5 14z"/><path d="M14 14.5c0-.83.67-1.5 1.5-1.5h5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5h-5c-.83 0-1.5-.67-1.5-1.5z"/><path d="M14 20.5c0 .83-.67 1.5-1.5 1.5s-1.5-.67-1.5-1.5.67-1.5 1.5-1.5h1.5v1.5z"/><path d="M10 9.5C10 10.33 9.33 11 8.5 11h-5C2.67 11 2 10.33 2 9.5S2.67 8 3.5 8h5c.83 0 1.5.67 1.5 1.5z"/><path d="M10 3.5C10 2.67 10.67 2 11.5 2S13 2.67 13 3.5 12.33 5 11.5 5H10V3.5z"/></svg> <span id="slackConfigLabel">Slack</span></button>
     <div class="user-menu"><span id="userEmail"></span><button onclick="handleLogout()">Sign Out</button></div>
   </div>
 </div>
 <div class="tab-bar">
   <button class="tab-btn active" onclick="switchTab('intake',this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg> New Intake</button>
   <button class="tab-btn" onclick="switchTab('dashboard',this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg> Client Tracker <span class="count" id="trackerCount">0</span></button>
+  <button class="tab-btn" onclick="switchTab('settings',this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Settings</button>
 </div>
 
 <div class="tab-content active" id="tab-intake">
@@ -383,6 +410,67 @@
   <div class="tracker-table-wrap"><div id="trackerTableContainer"></div></div>
 </div>
 </div>
+
+<div class="tab-content" id="tab-settings">
+<div class="settings">
+  <div class="settings-header">
+    <h2>Settings</h2>
+    <p>Configure firm-wide preferences. Changes are saved automatically and shared across all users.</p>
+  </div>
+
+  <!-- Firm Logo -->
+  <div class="settings-card">
+    <div class="settings-card-header">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+      <h3>Firm Logo</h3>
+    </div>
+    <div class="settings-card-body">
+      <p>Upload your firm logo to include it in engagement letter headers. Accepts PNG or JPG, max 2 MB.</p>
+      <div class="settings-row">
+        <div class="settings-row-label">
+          <strong>Engagement Letter Logo</strong>
+          <span>Appears at the top of all generated .docx letters</span>
+        </div>
+        <div class="settings-row-action">
+          <button class="btn btn-secondary btn-sm" onclick="document.getElementById('logoFileInput').click()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Upload Logo</button>
+          <input type="file" id="logoFileInput" accept="image/png,image/jpeg" style="display:none" onchange="handleLogoUpload(event)">
+        </div>
+      </div>
+      <div id="logoPreviewArea" style="display:none;">
+        <div class="logo-preview-box">
+          <img id="logoPreviewImg" src="" alt="Firm logo">
+          <span>Current logo</span>
+          <span class="remove-link" onclick="removeLogo()">Remove</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Slack Notifications -->
+  <div class="settings-card">
+    <div class="settings-card-header">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 10c-.83 0-1.5-.67-1.5-1.5v-5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5z"/><path d="M20.5 10H19V8.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/><path d="M9.5 14c.83 0 1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5S8 21.33 8 20.5v-5c0-.83.67-1.5 1.5-1.5z"/><path d="M3.5 14H5v1.5c0 .83-.67 1.5-1.5 1.5S2 16.33 2 15.5 2.67 14 3.5 14z"/><path d="M14 14.5c0-.83.67-1.5 1.5-1.5h5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5h-5c-.83 0-1.5-.67-1.5-1.5z"/><path d="M14 20.5c0 .83-.67 1.5-1.5 1.5s-1.5-.67-1.5-1.5.67-1.5 1.5-1.5h1.5v1.5z"/><path d="M10 9.5C10 10.33 9.33 11 8.5 11h-5C2.67 11 2 10.33 2 9.5S2.67 8 3.5 8h5c.83 0 1.5.67 1.5 1.5z"/><path d="M10 3.5C10 2.67 10.67 2 11.5 2S13 2.67 13 3.5 12.33 5 11.5 5H10V3.5z"/></svg>
+      <h3>Slack Notifications</h3>
+    </div>
+    <div class="settings-card-body">
+      <p>When enabled, engagement letters can be sent to your firm's Slack channel. The webhook URL is configured server-side for security.</p>
+      <div class="settings-row">
+        <div class="settings-row-label">
+          <strong>Enable Slack Notifications</strong>
+          <span id="slackStatusText">Disabled</span>
+        </div>
+        <div class="settings-row-action">
+          <label class="toggle-switch">
+            <input type="checkbox" id="slackToggle" onchange="toggleSlack()">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
 </div>
 
 <!-- Review/Edit Engagement Letter Modal -->
@@ -453,11 +541,64 @@ async function handleUpdatePassword(){const n=document.getElementById('newPasswo
 
 async function handleLogout(){try{await db.auth.signOut();currentUser=null;document.getElementById('authContainer').style.display='flex';document.getElementById('appContainer').classList.remove('visible');showStatus('Signed out','success');}catch(x){showStatus('Error: '+x.message,'error');}}
 
-function showApp(){document.getElementById('authContainer').style.display='none';document.getElementById('appContainer').classList.add('visible');if(!currentUser.email.endsWith('@margolispllc.com')){handleLogout();return;}document.getElementById('userEmail').textContent=currentUser.email;updateTrackerCount();renderDashboard();}
+function showApp(){document.getElementById('authContainer').style.display='none';document.getElementById('appContainer').classList.add('visible');if(!currentUser.email.endsWith('@margolispllc.com')){handleLogout();return;}document.getElementById('userEmail').textContent=currentUser.email;updateTrackerCount();renderDashboard();loadFirmSettings();}
 
-async function checkAuth(){const{data:{session}}=await db.auth.getSession();const hp=new URLSearchParams(window.location.hash.substring(1));if(hp.get('type')==='recovery'){if(session&&session.user){if(!session.user.email.endsWith('@margolispllc.com')){await db.auth.signOut();return;}currentUser=session.user;}switchAuthTab('update-password');return;}if(session){if(!session.user.email.endsWith('@margolispllc.com')){await db.auth.signOut();return;}currentUser=session.user;showApp();handleDeepLink();}restoreLogoPreview();restoreSlackUI();}
+async function checkAuth(){const{data:{session}}=await db.auth.getSession();const hp=new URLSearchParams(window.location.hash.substring(1));if(hp.get('type')==='recovery'){if(session&&session.user){if(!session.user.email.endsWith('@margolispllc.com')){await db.auth.signOut();return;}currentUser=session.user;}switchAuthTab('update-password');return;}if(session){if(!session.user.email.endsWith('@margolispllc.com')){await db.auth.signOut();return;}currentUser=session.user;showApp();handleDeepLink();}}
 
 async function handleDeepLink(){const sp=new URLSearchParams(window.location.search);const letterId=sp.get('letter');if(!letterId)return;window.history.replaceState({},'',window.location.pathname);if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(letterId)){console.warn('Invalid letter ID format');return;}try{await openSavedLetter(letterId);}catch(e){console.warn('Deep link failed:',e.message);}}
+
+// --- Firm Settings (Supabase-persisted) ---
+async function saveFirmSetting(key, value) {
+  // Save to localStorage as cache
+  localStorage.setItem('firm_' + key, value);
+  // Persist to Supabase
+  if (!currentUser) return;
+  try {
+    const { error } = await db.from('firm_settings').upsert(
+      { key, value, updated_by: currentUser.id, updated_at: new Date().toISOString() },
+      { onConflict: 'key' }
+    );
+    if (error) throw error;
+  } catch (e) {
+    console.warn('Failed to save setting to DB:', e.message);
+  }
+}
+
+async function deleteFirmSetting(key) {
+  localStorage.removeItem('firm_' + key);
+  if (!currentUser) return;
+  try {
+    await db.from('firm_settings').delete().eq('key', key);
+  } catch (e) {
+    console.warn('Failed to delete setting from DB:', e.message);
+  }
+}
+
+async function loadFirmSettings() {
+  if (!currentUser) return;
+  // Migrate legacy localStorage keys to new firm_ prefix
+  const oldLogo = localStorage.getItem('firmLogoDataUrl');
+  if (oldLogo && !localStorage.getItem('firm_logoDataUrl')) {
+    localStorage.setItem('firm_logoDataUrl', oldLogo);
+    localStorage.removeItem('firmLogoDataUrl');
+    saveFirmSetting('logoDataUrl', oldLogo);
+  }
+  try {
+    const { data, error } = await db.from('firm_settings').select('key, value');
+    if (error) throw error;
+    if (data) {
+      data.forEach(row => {
+        localStorage.setItem('firm_' + row.key, row.value);
+      });
+    }
+  } catch (e) {
+    // Table may not exist yet — fall back to localStorage silently
+    console.warn('Could not load firm settings:', e.message);
+  }
+  // Restore UI after loading
+  restoreLogoPreview();
+  restoreSlackUI();
+}
 
 // --- Firm Logo for Engagement Letter Header ---
 function handleLogoUpload(event) {
@@ -474,13 +615,8 @@ function handleLogoUpload(event) {
   const reader = new FileReader();
   reader.onload = function(e) {
     const dataUrl = e.target.result;
-    try {
-      localStorage.setItem('firmLogoDataUrl', dataUrl);
-    } catch (err) {
-      showStatus('Logo too large to save. Try a smaller image.', 'error');
-      return;
-    }
-    updateLogoButton(dataUrl);
+    saveFirmSetting('logoDataUrl', dataUrl);
+    updateLogoPreview(dataUrl);
     showStatus('\u2713 Logo saved! It will appear in all future engagement letters.', 'success');
   };
   reader.onerror = function() {
@@ -490,106 +626,95 @@ function handleLogoUpload(event) {
 }
 
 function restoreLogoPreview() {
-  const saved = localStorage.getItem('firmLogoDataUrl');
-  if (saved) updateLogoButton(saved);
+  const saved = localStorage.getItem('firm_logoDataUrl');
+  if (saved) updateLogoPreview(saved);
+  else hideLogoPreview();
 }
 
-function updateLogoButton(dataUrl) {
-  const btn = document.getElementById('logoUploadBtn');
-  const label = document.getElementById('logoUploadLabel');
-  btn.classList.add('active');
-  label.innerHTML = '';
-  const img = document.createElement('img');
-  img.src = dataUrl;
-  img.alt = 'Firm logo';
-  label.appendChild(img);
-  // Add a small remove "x" next to the preview
-  const rm = document.createElement('span');
-  rm.textContent = '\u00d7';
-  rm.style.cssText = 'margin-left:4px;cursor:pointer;font-size:14px;font-weight:700;color:var(--warm-gray);';
-  rm.title = 'Remove logo';
-  rm.onclick = function(e) { e.stopPropagation(); removeLogo(); };
-  label.appendChild(rm);
+function updateLogoPreview(dataUrl) {
+  const area = document.getElementById('logoPreviewArea');
+  const img = document.getElementById('logoPreviewImg');
+  if (area && img) {
+    img.src = dataUrl;
+    area.style.display = 'block';
+  }
+}
+
+function hideLogoPreview() {
+  const area = document.getElementById('logoPreviewArea');
+  if (area) area.style.display = 'none';
 }
 
 function removeLogo() {
-  localStorage.removeItem('firmLogoDataUrl');
-  const btn = document.getElementById('logoUploadBtn');
-  const label = document.getElementById('logoUploadLabel');
-  btn.classList.remove('active');
-  label.textContent = 'Logo';
+  deleteFirmSetting('logoDataUrl');
+  hideLogoPreview();
   document.getElementById('logoFileInput').value = '';
   showStatus('Logo removed.', 'success');
 }
 
 function getFirmLogoData() {
-  const dataUrl = localStorage.getItem('firmLogoDataUrl');
+  const dataUrl = localStorage.getItem('firm_logoDataUrl');
   if (!dataUrl) return null;
   try {
     const base64 = dataUrl.split(',')[1];
     if (!base64) return null;
-    atob(base64); // validate the base64 is decodable
+    atob(base64);
     return { base64 };
   } catch (e) {
-    // Corrupted localStorage data — clear it and continue without logo
-    localStorage.removeItem('firmLogoDataUrl');
+    localStorage.removeItem('firm_logoDataUrl');
     return null;
   }
 }
 // --- End Logo ---
 
 // --- Slack Integration ---
-function configureSlackWebhook() {
-  const current = localStorage.getItem('slackWebhookUrl') || '';
-  const url = prompt(
-    'Enter your Slack Incoming Webhook URL:\n\n' +
-    'To set this up:\n' +
-    '1. Go to api.slack.com/apps \u2192 Create New App \u2192 From Scratch\n' +
-    '2. Under "Incoming Webhooks", toggle it on\n' +
-    '3. Click "Add New Webhook to Workspace" and pick your channel\n' +
-    '4. Copy the webhook URL and paste it below\n\n' +
-    'Leave blank and click OK to remove.',
-    current
-  );
-  if (url === null) return; // cancelled
-  if (url.trim() === '') {
+function toggleSlack() {
+  const toggle = document.getElementById('slackToggle');
+  const enabled = toggle.checked;
+  if (enabled) {
+    saveFirmSetting('slackEnabled', 'true');
+    // Clean up legacy keys
     localStorage.removeItem('slackWebhookUrl');
+    localStorage.removeItem('slackEnabled');
     updateSlackUI();
-    showStatus('Slack integration removed.', 'success');
-    return;
+    showStatus('\u2713 Slack notifications enabled! Webhook is configured server-side.', 'success');
+  } else {
+    deleteFirmSetting('slackEnabled');
+    localStorage.removeItem('slackWebhookUrl');
+    localStorage.removeItem('slackEnabled');
+    updateSlackUI();
+    showStatus('Slack notifications disabled.', 'success');
   }
-  const trimmed = url.trim();
-  if (!trimmed.startsWith('https://hooks.slack.com/') && !trimmed.startsWith('https://hooks.zapier.com/')) {
-    showStatus('Invalid URL. Must be a Slack or Zapier webhook URL.', 'error');
-    return;
-  }
-  localStorage.setItem('slackWebhookUrl', trimmed);
-  updateSlackUI();
-  showStatus('\u2713 Slack integration configured!', 'success');
+}
+
+function isSlackEnabled() {
+  return localStorage.getItem('firm_slackEnabled') === 'true'
+    || localStorage.getItem('slackEnabled') === 'true'
+    || !!localStorage.getItem('slackWebhookUrl');
 }
 
 function updateSlackUI() {
-  const hasWebhook = !!localStorage.getItem('slackWebhookUrl');
-  const configBtn = document.getElementById('slackConfigBtn');
-  const label = document.getElementById('slackConfigLabel');
-  if (hasWebhook) {
-    configBtn.classList.add('active');
-    label.textContent = 'Slack \u2713';
-  } else {
-    configBtn.classList.remove('active');
-    label.textContent = 'Slack';
-  }
+  const enabled = isSlackEnabled();
+  // Update toggle in settings tab
+  const toggle = document.getElementById('slackToggle');
+  if (toggle) toggle.checked = enabled;
+  const statusText = document.getElementById('slackStatusText');
+  if (statusText) statusText.textContent = enabled ? 'Enabled' : 'Disabled';
   // Show/hide all Send to Slack buttons
-  document.getElementById('slackSendBtn').style.display = hasWebhook ? '' : 'none';
-  document.querySelectorAll('.slack-send-btn').forEach(b => b.style.display = hasWebhook ? '' : 'none');
+  document.getElementById('slackSendBtn').style.display = enabled ? '' : 'none';
+  document.querySelectorAll('.slack-send-btn').forEach(b => b.style.display = enabled ? '' : 'none');
 }
 
 function restoreSlackUI() {
-  // Migrate from old localStorage key if present
-  const old = localStorage.getItem('zapierWebhookUrl');
-  if (old && !localStorage.getItem('slackWebhookUrl')) {
-    localStorage.setItem('slackWebhookUrl', old);
+  // Migrate from legacy localStorage keys
+  if (localStorage.getItem('slackWebhookUrl') || localStorage.getItem('zapierWebhookUrl')) {
+    localStorage.setItem('firm_slackEnabled', 'true');
+    localStorage.removeItem('slackWebhookUrl');
     localStorage.removeItem('zapierWebhookUrl');
+  }
+  // Also migrate old slackEnabled key
+  if (localStorage.getItem('slackEnabled') === 'true' && !localStorage.getItem('firm_slackEnabled')) {
+    localStorage.setItem('firm_slackEnabled', 'true');
   }
   updateSlackUI();
 }
@@ -745,9 +870,8 @@ async function buildDocxBlob() {
 }
 
 async function sendToSlack() {
-  const webhookUrl = localStorage.getItem('slackWebhookUrl');
-  if (!webhookUrl) {
-    showStatus('Slack not configured. Click the Slack button in the header to set up.', 'error');
+  if (!isSlackEnabled()) {
+    showStatus('Slack not configured. Enable it in Settings.', 'error');
     return;
   }
   if (!_letterReviewMeta || !_letterReviewSections) return;
@@ -763,7 +887,6 @@ async function sendToSlack() {
 
     // Save letter first so we can link to it
     let letterId = await saveLetterToDb();
-    // Fallback: look up latest letter for this client if save didn't return an ID
     if (!letterId && _letterClientId) {
       try {
         const { data: latest } = await db.from('engagement_letters')
@@ -777,58 +900,28 @@ async function sendToSlack() {
     const baseUrl = window.location.origin + window.location.pathname;
     const letterLink = letterId ? `${baseUrl}?letter=${letterId}` : baseUrl;
 
-    const isSlackDirect = webhookUrl.startsWith('https://hooks.slack.com/');
+    const blocks = [
+      { type: 'header', text: { type: 'plain_text', text: 'New Engagement Letter', emoji: true } },
+      { type: 'section', fields: [
+        { type: 'mrkdwn', text: `*Client:*\n${escSlack(meta.name)}` },
+        { type: 'mrkdwn', text: `*Matter:*\n${escSlack(meta.matter)}` }
+      ]},
+      { type: 'section', fields: [
+        { type: 'mrkdwn', text: `*Attorney:*\n${escSlack(meta.atty)}` },
+        { type: 'mrkdwn', text: `*Date:*\n${escSlack(revDate)}` }
+      ]},
+      { type: 'actions', elements: [
+        { type: 'button', text: { type: 'plain_text', text: 'View in Intakr', emoji: true }, url: letterLink, style: 'primary' }
+      ]},
+      { type: 'context', elements: [
+        { type: 'mrkdwn', text: `Sent by ${escSlack(sentBy)} | <${letterLink}|Open in Intakr>` }
+      ]},
+    ];
 
-    if (isSlackDirect) {
-      const blocks = [
-        { type: 'header', text: { type: 'plain_text', text: 'New Engagement Letter', emoji: true } },
-        { type: 'section', fields: [
-          { type: 'mrkdwn', text: `*Client:*\n${escSlack(meta.name)}` },
-          { type: 'mrkdwn', text: `*Matter:*\n${escSlack(meta.matter)}` }
-        ]},
-        { type: 'section', fields: [
-          { type: 'mrkdwn', text: `*Attorney:*\n${escSlack(meta.atty)}` },
-          { type: 'mrkdwn', text: `*Date:*\n${escSlack(revDate)}` }
-        ]},
-        { type: 'actions', elements: [
-          { type: 'button', text: { type: 'plain_text', text: 'View in Intakr', emoji: true }, url: letterLink, style: 'primary' }
-        ]},
-        { type: 'context', elements: [
-          { type: 'mrkdwn', text: `Sent by ${escSlack(sentBy)} | <${letterLink}|Open in Intakr>` }
-        ]},
-      ];
-
-      const slackPayload = {
-        text: `New Engagement Letter: ${escSlack(meta.name)} - ${escSlack(meta.matter)} — ${letterLink}`,
-        blocks: blocks
-      };
-      const body = 'payload=' + encodeURIComponent(JSON.stringify(slackPayload));
-      await fetch(webhookUrl, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: body
-      });
-    } else {
-      // Zapier webhook fallback
-      const linkLine = letterLink ? `\n<${letterLink}|View in Intakr>` : '';
-      const payload = {
-        client_name: meta.name,
-        matter_type: meta.matter,
-        attorney: meta.atty,
-        engagement_date: revDate,
-        sent_by: sentBy,
-        letter_url: letterLink || '',
-        message: `*New Engagement Letter* for ${escSlack(meta.name)}\n*Matter:* ${escSlack(meta.matter)} | *Attorney:* ${escSlack(meta.atty)} | *Date:* ${escSlack(revDate)}${linkLine}\n_Sent by ${escSlack(sentBy)}_`
-      };
-      const body = JSON.stringify(payload);
-      try {
-        const resp = await fetch(webhookUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: body });
-        if (!resp.ok && resp.status !== 0) throw new Error(`Zapier returned ${resp.status}`);
-      } catch (corsErr) {
-        await fetch(webhookUrl, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: body });
-      }
-    }
+    await notifySlack({
+      text: `New Engagement Letter: ${escSlack(meta.name)} - ${escSlack(meta.matter)} — ${letterLink}`,
+      blocks
+    });
 
     showStatus(`\u2713 Sent to Slack for ${meta.name}.`, 'success');
   } catch (err) {
@@ -862,6 +955,25 @@ document.getElementById('engagementDate').valueAsDate=new Date();
 function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
 // Escape Slack mrkdwn special chars to prevent formatting injection
 function escSlack(s){return String(s||'').replace(/[&<>*_~`|]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','*':'\\*','_':'\\_','~':'\\~','`':'\\`','|':'\\|'})[c]||c);}
+
+// Send Slack notification via Supabase Edge Function (webhook URL stays server-side)
+async function notifySlack(payload) {
+  const session = (await db.auth.getSession()).data.session;
+  if (!session) return;
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/slack-notify`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${session.access_token}`,
+      'apikey': SUPABASE_ANON_KEY
+    },
+    body: JSON.stringify(payload)
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || `Slack notify failed (${res.status})`);
+  }
+}
 
 // Sanitize HTML to only allow safe formatting tags (prevents stored XSS)
 function sanitizeHtml(html) {
@@ -1063,36 +1175,31 @@ async function submitForReview() {
   showStatus('\u2713 Letter submitted for review.', 'success');
 
   // Send Slack notification if configured
-  const webhookUrl = localStorage.getItem('slackWebhookUrl');
-  if (webhookUrl && _letterReviewMeta) {
+  if (isSlackEnabled() && _letterReviewMeta) {
     const meta = _letterReviewMeta;
     const baseUrl = window.location.origin + window.location.pathname;
     const letterLink = letterId ? `${baseUrl}?letter=${letterId}` : baseUrl;
     const sentBy = currentUser ? currentUser.email : 'unknown';
 
     try {
-      const isSlackDirect = webhookUrl.startsWith('https://hooks.slack.com/');
-      if (isSlackDirect) {
-        const blocks = [
-          { type: 'header', text: { type: 'plain_text', text: '\ud83d\udcdd Letter Needs Review', emoji: true } },
-          { type: 'section', fields: [
-            { type: 'mrkdwn', text: `*Client:*\n${escSlack(meta.name)}` },
-            { type: 'mrkdwn', text: `*Matter:*\n${escSlack(meta.matter)}` }
-          ]},
-          { type: 'section', fields: [
-            { type: 'mrkdwn', text: `*Attorney:*\n${escSlack(meta.atty)}` },
-            { type: 'mrkdwn', text: `*Submitted by:*\n${escSlack(sentBy)}` }
-          ]},
-          { type: 'actions', elements: [
-            { type: 'button', text: { type: 'plain_text', text: 'Review in Intakr', emoji: true }, url: letterLink, style: 'primary' }
-          ]}
-        ];
-        const payload = 'payload=' + encodeURIComponent(JSON.stringify({
-          text: `Letter needs review: ${escSlack(meta.name)} - ${escSlack(meta.matter)}`,
-          blocks
-        }));
-        await fetch(webhookUrl, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: payload });
-      }
+      const blocks = [
+        { type: 'header', text: { type: 'plain_text', text: '\ud83d\udcdd Letter Needs Review', emoji: true } },
+        { type: 'section', fields: [
+          { type: 'mrkdwn', text: `*Client:*\n${escSlack(meta.name)}` },
+          { type: 'mrkdwn', text: `*Matter:*\n${escSlack(meta.matter)}` }
+        ]},
+        { type: 'section', fields: [
+          { type: 'mrkdwn', text: `*Attorney:*\n${escSlack(meta.atty)}` },
+          { type: 'mrkdwn', text: `*Submitted by:*\n${escSlack(sentBy)}` }
+        ]},
+        { type: 'actions', elements: [
+          { type: 'button', text: { type: 'plain_text', text: 'Review in Intakr', emoji: true }, url: letterLink, style: 'primary' }
+        ]}
+      ];
+      await notifySlack({
+        text: `Letter needs review: ${escSlack(meta.name)} - ${escSlack(meta.matter)}`,
+        blocks
+      });
     } catch (e) { /* Slack notification is best-effort */ }
   }
 }
@@ -1127,17 +1234,12 @@ async function approveLetter() {
     showStatus('\u2713 Letter approved!', 'success');
 
     // Slack notification
-    const webhookUrl = localStorage.getItem('slackWebhookUrl');
-    if (webhookUrl && _letterReviewMeta) {
+    if (isSlackEnabled() && _letterReviewMeta) {
       const meta = _letterReviewMeta;
       try {
-        const isSlackDirect = webhookUrl.startsWith('https://hooks.slack.com/');
-        if (isSlackDirect) {
-          const payload = 'payload=' + encodeURIComponent(JSON.stringify({
-            text: `\u2705 Letter approved: ${escSlack(meta.name)} - ${escSlack(meta.matter)} (by ${escSlack(currentUser.email)})`
-          }));
-          await fetch(webhookUrl, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: payload });
-        }
+        await notifySlack({
+          text: `\u2705 Letter approved: ${escSlack(meta.name)} - ${escSlack(meta.matter)} (by ${escSlack(currentUser.email)})`
+        });
       } catch (e) { /* best-effort */ }
     }
   } catch (e) {
@@ -1179,17 +1281,12 @@ async function requestChanges() {
     showStatus('Changes requested.', 'success');
 
     // Slack notification
-    const webhookUrl = localStorage.getItem('slackWebhookUrl');
-    if (webhookUrl && _letterReviewMeta) {
+    if (isSlackEnabled() && _letterReviewMeta) {
       const meta = _letterReviewMeta;
       try {
-        const isSlackDirect = webhookUrl.startsWith('https://hooks.slack.com/');
-        if (isSlackDirect) {
-          const payload = 'payload=' + encodeURIComponent(JSON.stringify({
-            text: `\u270f\ufe0f Changes requested on letter: ${escSlack(meta.name)} - ${escSlack(meta.matter)}\nNotes: ${escSlack(notes.trim())} (by ${escSlack(currentUser.email)})`
-          }));
-          await fetch(webhookUrl, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: payload });
-        }
+        await notifySlack({
+          text: `\u270f\ufe0f Changes requested on letter: ${escSlack(meta.name)} - ${escSlack(meta.matter)}\nNotes: ${escSlack(notes.trim())} (by ${escSlack(currentUser.email)})`
+        });
       } catch (e) { /* best-effort */ }
     }
   } catch (e) {
@@ -1550,6 +1647,22 @@ function showLetterModal(meta, sections, clientId, headerOverrides, savedVersion
   });
 
   container.innerHTML = html;
+
+  // Strip rich HTML on paste — only allow plain text into contenteditable editors
+  container.querySelectorAll('.rich-editor').forEach(ed => {
+    ed.addEventListener('paste', e => {
+      e.preventDefault();
+      const text = e.clipboardData.getData('text/plain');
+      const sel = window.getSelection();
+      if (!sel.rangeCount) return;
+      const range = sel.getRangeAt(0);
+      range.deleteContents();
+      range.insertNode(document.createTextNode(text));
+      range.collapse(false);
+      sel.removeAllRanges();
+      sel.addRange(range);
+    });
+  });
 
   // Render the approval bar
   if (_letterApprovalStatus) {
