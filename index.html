@@ -144,6 +144,11 @@
   .letter-modal-footer{padding:16px 28px;border-top:1px solid var(--border);background:var(--light-gray);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
   .letter-modal-footer .hint{font-size:12px;color:var(--warm-gray);}
 
+  .logo-upload-btn{display:flex;align-items:center;gap:6px;background:var(--cream);border:1px dashed var(--sage);border-radius:20px;padding:6px 14px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:var(--sage-dark);cursor:pointer;transition:all 0.2s;text-transform:uppercase;letter-spacing:0.5px;}
+  .logo-upload-btn:hover{background:var(--sage-pale);border-style:solid;}
+  .logo-upload-btn.has-logo{border-style:solid;background:var(--sage-pale);}
+  .logo-upload-btn img{height:20px;width:auto;border-radius:3px;}
+
   @media(max-width:640px){
     .form-grid{grid-template-columns:1fr;}.header{padding:16px 20px;flex-direction:column;gap:12px;}
     .tab-bar{padding:0 16px;}.tab-btn{padding:12px 16px;font-size:13px;}
@@ -219,6 +224,8 @@
   </div>
   <div class="header-right">
     <div class="header-badge">Secure</div>
+    <button class="logo-upload-btn" id="logoUploadBtn" onclick="document.getElementById('logoFileInput').click()" title="Upload firm logo for engagement letter header"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg> <span id="logoUploadLabel">Logo</span></button>
+    <input type="file" id="logoFileInput" accept="image/png,image/jpeg" style="display:none" onchange="handleLogoUpload(event)">
     <div class="user-menu"><span id="userEmail"></span><button onclick="handleLogout()">Sign Out</button></div>
   </div>
 </div>
@@ -357,7 +364,73 @@ async function handleLogout(){try{await db.auth.signOut();currentUser=null;docum
 
 function showApp(){document.getElementById('authContainer').style.display='none';document.getElementById('appContainer').classList.add('visible');if(!currentUser.email.endsWith('@margolispllc.com')){handleLogout();return;}document.getElementById('userEmail').textContent=currentUser.email;updateTrackerCount();renderDashboard();}
 
-async function checkAuth(){const{data:{session}}=await db.auth.getSession();const hp=new URLSearchParams(window.location.hash.substring(1));if(hp.get('type')==='recovery'){if(session&&session.user){if(!session.user.email.endsWith('@margolispllc.com')){await db.auth.signOut();return;}currentUser=session.user;}switchAuthTab('update-password');return;}if(session){if(!session.user.email.endsWith('@margolispllc.com')){await db.auth.signOut();return;}currentUser=session.user;showApp();}}
+async function checkAuth(){const{data:{session}}=await db.auth.getSession();const hp=new URLSearchParams(window.location.hash.substring(1));if(hp.get('type')==='recovery'){if(session&&session.user){if(!session.user.email.endsWith('@margolispllc.com')){await db.auth.signOut();return;}currentUser=session.user;}switchAuthTab('update-password');return;}if(session){if(!session.user.email.endsWith('@margolispllc.com')){await db.auth.signOut();return;}currentUser=session.user;showApp();}restoreLogoPreview();}
+
+// --- Firm Logo for Engagement Letter Header ---
+function handleLogoUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (!file.type.match(/^image\/(png|jpeg)$/)) {
+    showStatus('Please upload a PNG or JPG image.', 'error');
+    return;
+  }
+  if (file.size > 2 * 1024 * 1024) {
+    showStatus('Logo must be under 2 MB.', 'error');
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const dataUrl = e.target.result;
+    localStorage.setItem('firmLogoDataUrl', dataUrl);
+    updateLogoButton(dataUrl);
+    showStatus('\u2713 Logo saved! It will appear in all future engagement letters.', 'success');
+  };
+  reader.readAsDataURL(file);
+}
+
+function restoreLogoPreview() {
+  const saved = localStorage.getItem('firmLogoDataUrl');
+  if (saved) updateLogoButton(saved);
+}
+
+function updateLogoButton(dataUrl) {
+  const btn = document.getElementById('logoUploadBtn');
+  const label = document.getElementById('logoUploadLabel');
+  btn.classList.add('has-logo');
+  label.innerHTML = '';
+  const img = document.createElement('img');
+  img.src = dataUrl;
+  img.alt = 'Firm logo';
+  label.appendChild(img);
+  // Add a small remove "x" next to the preview
+  const rm = document.createElement('span');
+  rm.textContent = '\u00d7';
+  rm.style.cssText = 'margin-left:4px;cursor:pointer;font-size:14px;font-weight:700;color:var(--warm-gray);';
+  rm.title = 'Remove logo';
+  rm.onclick = function(e) { e.stopPropagation(); removeLogo(); };
+  label.appendChild(rm);
+}
+
+function removeLogo() {
+  localStorage.removeItem('firmLogoDataUrl');
+  const btn = document.getElementById('logoUploadBtn');
+  const label = document.getElementById('logoUploadLabel');
+  btn.classList.remove('has-logo');
+  label.textContent = 'Logo';
+  document.getElementById('logoFileInput').value = '';
+  showStatus('Logo removed.', 'success');
+}
+
+function getFirmLogoBuffer() {
+  const dataUrl = localStorage.getItem('firmLogoDataUrl');
+  if (!dataUrl) return null;
+  const base64 = dataUrl.split(',')[1];
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return { buffer: bytes, type: dataUrl.startsWith('data:image/png') ? 'png' : 'jpg' };
+}
+// --- End Logo ---
 
 async function getClients(){try{const{data,error}=await db.from('clients').select('*').order('created_at',{ascending:false});if(error)throw error;return data||[];}catch(e){showStatus('Error: '+e.message,'error');return[];}}
 
@@ -529,7 +602,7 @@ async function downloadFromReview() {
     editedSections[s.id] = document.getElementById('rev_'+s.id).value;
   });
 
-  const { Document, Packer, Paragraph, TextRun, AlignmentType, Header, BorderStyle, UnderlineType } = window.docx;
+  const { Document, Packer, Paragraph, TextRun, ImageRun, AlignmentType, Header, BorderStyle, UnderlineType, TabStopType, TabStopPosition } = window.docx;
 
   const f = 'Times New Roman', sz = 22;
   const tr = (text, opts={}) => new TextRun({ font:f, size:sz, ...opts, text });
@@ -645,7 +718,11 @@ async function downloadFromReview() {
   textToParas(editedSections.exhibit).forEach(p => body.push(p));
 
   // Header — first page only
-  const headerChildren = [
+  const { Table, TableRow, TableCell, WidthType, VerticalAlign, BorderStyle: TBorder } = window.docx;
+  const noBorders = { top:{style:TBorder.NONE,size:0}, bottom:{style:TBorder.NONE,size:0}, left:{style:TBorder.NONE,size:0}, right:{style:TBorder.NONE,size:0} };
+
+  const firmLogo = getFirmLogoBuffer();
+  const attorneyLines = [
     new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:40}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'MATT A. MARGOLIS, ESQ.'})] }),
     new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:40}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'PARTNER'})] }),
     new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:80}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'MATTHEW@MARGOLISPLLC.COM'})] }),
@@ -657,15 +734,50 @@ async function downloadFromReview() {
     new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:80}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'JEN@MARGOLISPLLC.COM'})] }),
     new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:40}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'HUNTER SUTHERLAND, ESQ.'})] }),
     new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:40}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'ASSOCIATE'})] }),
-    new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:200}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'HUNTER@MARGOLISPLLC.COM'})] }),
-    new Paragraph({ border:{bottom:{style:BorderStyle.SINGLE,size:6,color:'8FAF8F',space:1}}, children:[] }),
+    new Paragraph({ alignment:AlignmentType.RIGHT, spacing:{after:0}, children:[new TextRun({font:'Arial',size:16,color:'888888',text:'HUNTER@MARGOLISPLLC.COM'})] }),
   ];
+
+  let headerChildren;
+  if (firmLogo) {
+    // Two-column layout: logo on left, attorney info on right
+    const logoCell = new TableCell({
+      borders: noBorders,
+      verticalAlign: VerticalAlign.TOP,
+      width: { size: 3400, type: WidthType.DXA },
+      children: [
+        new Paragraph({ children: [
+          new ImageRun({ data: firmLogo.buffer, transformation: { width: 180, height: 180 }, type: firmLogo.type === 'png' ? 'png' : 'jpg' })
+        ]})
+      ]
+    });
+    const infoCell = new TableCell({
+      borders: noBorders,
+      verticalAlign: VerticalAlign.TOP,
+      width: { size: 5960, type: WidthType.DXA },
+      children: attorneyLines
+    });
+    const headerTable = new Table({
+      rows: [ new TableRow({ children: [logoCell, infoCell] }) ],
+      width: { size: 9360, type: WidthType.DXA },
+      borders: noBorders
+    });
+    headerChildren = [
+      headerTable,
+      new Paragraph({ spacing:{before:200}, border:{bottom:{style:BorderStyle.SINGLE,size:6,color:'8FAF8F',space:1}}, children:[] }),
+    ];
+  } else {
+    // No logo — original right-aligned layout
+    headerChildren = [
+      ...attorneyLines,
+      new Paragraph({ spacing:{before:200}, border:{bottom:{style:BorderStyle.SINGLE,size:6,color:'8FAF8F',space:1}}, children:[] }),
+    ];
+  }
 
   const doc = new Document({
     styles:{default:{document:{run:{font:'Times New Roman',size:22}}}},
     sections:[{
       properties:{
-        page:{size:{width:12240,height:15840},margin:{top:1800,right:1440,bottom:1440,left:1440}},
+        page:{size:{width:12240,height:15840},margin:{top:firmLogo?2800:1800,right:1440,bottom:1440,left:1440}},
         titlePage: true
       },
       headers:{
