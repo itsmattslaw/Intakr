@@ -1016,7 +1016,7 @@ function formatDate(dateStr) {
   return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 }
 
-function clientDisplayName(d) { return d.entity_name || d.contact_name; }
+function clientDisplayName(d) { return d.entity_name || d.contact_name || d.entityName || d.contactName || 'Unknown'; }
 
 async function renderDashboard() {
   const clients = await getClients();
