@@ -457,7 +457,7 @@ function showApp(){document.getElementById('authContainer').style.display='none'
 
 async function checkAuth(){const{data:{session}}=await db.auth.getSession();const hp=new URLSearchParams(window.location.hash.substring(1));if(hp.get('type')==='recovery'){if(session&&session.user){if(!session.user.email.endsWith('@margolispllc.com')){await db.auth.signOut();return;}currentUser=session.user;}switchAuthTab('update-password');return;}if(session){if(!session.user.email.endsWith('@margolispllc.com')){await db.auth.signOut();return;}currentUser=session.user;showApp();handleDeepLink();}restoreLogoPreview();restoreSlackUI();}
 
-async function handleDeepLink(){const sp=new URLSearchParams(window.location.search);const letterId=sp.get('letter');if(!letterId)return;window.history.replaceState({},'',window.location.pathname);try{await openSavedLetter(letterId);}catch(e){console.warn('Deep link failed:',e.message);}}
+async function handleDeepLink(){const sp=new URLSearchParams(window.location.search);const letterId=sp.get('letter');if(!letterId)return;window.history.replaceState({},'',window.location.pathname);if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(letterId)){console.warn('Invalid letter ID format');return;}try{await openSavedLetter(letterId);}catch(e){console.warn('Deep link failed:',e.message);}}
 
 // --- Firm Logo for Engagement Letter Header ---
 function handleLogoUpload(event) {
@@ -607,7 +607,7 @@ async function buildDocxBlob() {
 
   const editedSections = {};
   _letterReviewSections.forEach(s => {
-    editedSections[s.id] = document.getElementById('rev_'+s.id).innerHTML;
+    editedSections[s.id] = sanitizeHtml(document.getElementById('rev_'+s.id).innerHTML);
   });
 
   const { Document, Packer, Paragraph, TextRun, ImageRun, AlignmentType, Header, BorderStyle, UnderlineType } = window.docx;
@@ -783,23 +783,23 @@ async function sendToSlack() {
       const blocks = [
         { type: 'header', text: { type: 'plain_text', text: 'New Engagement Letter', emoji: true } },
         { type: 'section', fields: [
-          { type: 'mrkdwn', text: `*Client:*\n${meta.name}` },
-          { type: 'mrkdwn', text: `*Matter:*\n${meta.matter}` }
+          { type: 'mrkdwn', text: `*Client:*\n${escSlack(meta.name)}` },
+          { type: 'mrkdwn', text: `*Matter:*\n${escSlack(meta.matter)}` }
         ]},
         { type: 'section', fields: [
-          { type: 'mrkdwn', text: `*Attorney:*\n${meta.atty}` },
-          { type: 'mrkdwn', text: `*Date:*\n${revDate}` }
+          { type: 'mrkdwn', text: `*Attorney:*\n${escSlack(meta.atty)}` },
+          { type: 'mrkdwn', text: `*Date:*\n${escSlack(revDate)}` }
         ]},
         { type: 'actions', elements: [
           { type: 'button', text: { type: 'plain_text', text: 'View in Intakr', emoji: true }, url: letterLink, style: 'primary' }
         ]},
         { type: 'context', elements: [
-          { type: 'mrkdwn', text: `Sent by ${sentBy} | <${letterLink}|Open in Intakr>` }
+          { type: 'mrkdwn', text: `Sent by ${escSlack(sentBy)} | <${letterLink}|Open in Intakr>` }
         ]},
       ];
 
       const slackPayload = {
-        text: `New Engagement Letter: ${meta.name} - ${meta.matter} — ${letterLink}`,
+        text: `New Engagement Letter: ${escSlack(meta.name)} - ${escSlack(meta.matter)} — ${letterLink}`,
         blocks: blocks
       };
       const body = 'payload=' + encodeURIComponent(JSON.stringify(slackPayload));
@@ -819,7 +819,7 @@ async function sendToSlack() {
         engagement_date: revDate,
         sent_by: sentBy,
         letter_url: letterLink || '',
-        message: `*New Engagement Letter* for ${meta.name}\n*Matter:* ${meta.matter} | *Attorney:* ${meta.atty} | *Date:* ${revDate}${linkLine}\n_Sent by ${sentBy}_`
+        message: `*New Engagement Letter* for ${escSlack(meta.name)}\n*Matter:* ${escSlack(meta.matter)} | *Attorney:* ${escSlack(meta.atty)} | *Date:* ${escSlack(revDate)}${linkLine}\n_Sent by ${escSlack(sentBy)}_`
       };
       const body = JSON.stringify(payload);
       try {
@@ -860,8 +860,43 @@ document.getElementById('specialistInvolved').addEventListener('change',e=>{docu
 document.getElementById('engagementDate').valueAsDate=new Date();
 
 function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+// Escape Slack mrkdwn special chars to prevent formatting injection
+function escSlack(s){return String(s||'').replace(/[&<>*_~`|]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','*':'\\*','_':'\\_','~':'\\~','`':'\\`','|':'\\|'})[c]||c);}
+
+// Sanitize HTML to only allow safe formatting tags (prevents stored XSS)
+function sanitizeHtml(html) {
+  const ALLOWED_TAGS = new Set(['b','i','u','strong','em','div','br','p','span']);
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html;
+  function walk(node) {
+    const children = Array.from(node.childNodes);
+    for (const child of children) {
+      if (child.nodeType === Node.TEXT_NODE) continue;
+      if (child.nodeType === Node.ELEMENT_NODE) {
+        const tag = child.tagName.toLowerCase();
+        if (!ALLOWED_TAGS.has(tag)) {
+          // Replace disallowed element with its text content
+          const text = document.createTextNode(child.textContent);
+          node.replaceChild(text, child);
+        } else {
+          // Strip all attributes except safe ones (none needed for formatting)
+          while (child.attributes.length > 0) {
+            child.removeAttribute(child.attributes[0].name);
+          }
+          walk(child);
+        }
+      } else {
+        // Remove comments and other node types
+        node.removeChild(child);
+      }
+    }
+  }
+  walk(tmp);
+  return tmp.innerHTML;
+}
+
 function textToEditorHtml(text){
-  if(/<\/?(?:b|i|u|strong|em|div|br|p|span)\b/i.test(text)) return text;
+  if(/<\/?(?:b|i|u|strong|em|div|br|p|span)\b/i.test(text)) return sanitizeHtml(text);
   return esc(text).replace(/\n/g,'<br>');
 }
 
@@ -1041,19 +1076,19 @@ async function submitForReview() {
         const blocks = [
           { type: 'header', text: { type: 'plain_text', text: '\ud83d\udcdd Letter Needs Review', emoji: true } },
           { type: 'section', fields: [
-            { type: 'mrkdwn', text: `*Client:*\n${meta.name}` },
-            { type: 'mrkdwn', text: `*Matter:*\n${meta.matter}` }
+            { type: 'mrkdwn', text: `*Client:*\n${escSlack(meta.name)}` },
+            { type: 'mrkdwn', text: `*Matter:*\n${escSlack(meta.matter)}` }
           ]},
           { type: 'section', fields: [
-            { type: 'mrkdwn', text: `*Attorney:*\n${meta.atty}` },
-            { type: 'mrkdwn', text: `*Submitted by:*\n${sentBy}` }
+            { type: 'mrkdwn', text: `*Attorney:*\n${escSlack(meta.atty)}` },
+            { type: 'mrkdwn', text: `*Submitted by:*\n${escSlack(sentBy)}` }
           ]},
           { type: 'actions', elements: [
             { type: 'button', text: { type: 'plain_text', text: 'Review in Intakr', emoji: true }, url: letterLink, style: 'primary' }
           ]}
         ];
         const payload = 'payload=' + encodeURIComponent(JSON.stringify({
-          text: `Letter needs review: ${meta.name} - ${meta.matter}`,
+          text: `Letter needs review: ${escSlack(meta.name)} - ${escSlack(meta.matter)}`,
           blocks
         }));
         await fetch(webhookUrl, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: payload });
@@ -1064,6 +1099,18 @@ async function submitForReview() {
 
 async function approveLetter() {
   if (!_letterApprovalId) { showStatus('No letter to approve.', 'error'); return; }
+
+  // Prevent self-approval: check if current user created this letter
+  try {
+    const { data: letterData } = await db.from('engagement_letters')
+      .select('created_by_email')
+      .eq('id', _letterApprovalId)
+      .single();
+    if (letterData && letterData.created_by_email === currentUser.email) {
+      showStatus('You cannot approve your own letter. Another attorney must review it.', 'error');
+      return;
+    }
+  } catch (e) { /* proceed if check fails */ }
 
   try {
     const { error } = await db.from('engagement_letters')
@@ -1087,7 +1134,7 @@ async function approveLetter() {
         const isSlackDirect = webhookUrl.startsWith('https://hooks.slack.com/');
         if (isSlackDirect) {
           const payload = 'payload=' + encodeURIComponent(JSON.stringify({
-            text: `\u2705 Letter approved: ${meta.name} - ${meta.matter} (by ${currentUser.email})`
+            text: `\u2705 Letter approved: ${escSlack(meta.name)} - ${escSlack(meta.matter)} (by ${escSlack(currentUser.email)})`
           }));
           await fetch(webhookUrl, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: payload });
         }
@@ -1103,6 +1150,18 @@ async function requestChanges() {
   if (notes === null) return;
   if (!notes.trim()) { showStatus('Please provide notes about the requested changes.', 'error'); return; }
   if (!_letterApprovalId) { showStatus('No letter selected.', 'error'); return; }
+
+  // Prevent self-review
+  try {
+    const { data: letterData } = await db.from('engagement_letters')
+      .select('created_by_email')
+      .eq('id', _letterApprovalId)
+      .single();
+    if (letterData && letterData.created_by_email === currentUser.email) {
+      showStatus('You cannot review your own letter. Another attorney must review it.', 'error');
+      return;
+    }
+  } catch (e) { /* proceed if check fails */ }
 
   try {
     const { error } = await db.from('engagement_letters')
@@ -1127,7 +1186,7 @@ async function requestChanges() {
         const isSlackDirect = webhookUrl.startsWith('https://hooks.slack.com/');
         if (isSlackDirect) {
           const payload = 'payload=' + encodeURIComponent(JSON.stringify({
-            text: `\u270f\ufe0f Changes requested on letter: ${meta.name} - ${meta.matter}\nNotes: ${notes.trim()} (by ${currentUser.email})`
+            text: `\u270f\ufe0f Changes requested on letter: ${escSlack(meta.name)} - ${escSlack(meta.matter)}\nNotes: ${escSlack(notes.trim())} (by ${escSlack(currentUser.email)})`
           }));
           await fetch(webhookUrl, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: payload });
         }
@@ -1259,34 +1318,24 @@ let _letterSavedThisSession = false;
  * =============================================
  * MIGRATION — ASSIGN TO + SHARED VISIBILITY
  * =============================================
- * Run this SQL to add the assigned_to column and enable shared visibility:
+ * Run this SQL to add assignment columns and enable shared visibility.
+ * We use assigned_to_user_id (UUID) for RLS and assigned_to (TEXT) for display.
  *
  * ALTER TABLE clients ADD COLUMN IF NOT EXISTS assigned_to TEXT;
+ * ALTER TABLE clients ADD COLUMN IF NOT EXISTS assigned_to_user_id UUID;
  *
  * -- To enable cross-user visibility for assigned matters,
- * -- update the RLS SELECT policy on clients:
+ * -- update the RLS SELECT policy on clients (uses UUID, not name):
  *
  * DROP POLICY IF EXISTS "Users can view own clients" ON clients;
  * CREATE POLICY "Users can view own or assigned clients"
  *   ON clients FOR SELECT
- *   USING (
- *     auth.uid() = user_id
- *     OR assigned_to IN (
- *       SELECT raw_user_meta_data->>'full_name'
- *       FROM auth.users WHERE id = auth.uid()
- *     )
- *   );
+ *   USING (auth.uid() = user_id OR auth.uid() = assigned_to_user_id);
  *
  * DROP POLICY IF EXISTS "Users can update own clients" ON clients;
  * CREATE POLICY "Users can update own or assigned clients"
  *   ON clients FOR UPDATE
- *   USING (
- *     auth.uid() = user_id
- *     OR assigned_to IN (
- *       SELECT raw_user_meta_data->>'full_name'
- *       FROM auth.users WHERE id = auth.uid()
- *     )
- *   );
+ *   USING (auth.uid() = user_id OR auth.uid() = assigned_to_user_id);
  *
  * -- Also update engagement_letters RLS so assigned users can view/update letters:
  *
@@ -1298,10 +1347,7 @@ let _letterSavedThisSession = false;
  *     OR EXISTS (
  *       SELECT 1 FROM clients
  *       WHERE clients.id = engagement_letters.client_id
- *       AND clients.assigned_to IN (
- *         SELECT raw_user_meta_data->>'full_name'
- *         FROM auth.users WHERE id = auth.uid()
- *       )
+ *       AND auth.uid() = clients.assigned_to_user_id
  *     )
  *   );
  *
@@ -1313,10 +1359,7 @@ let _letterSavedThisSession = false;
  *     OR EXISTS (
  *       SELECT 1 FROM clients
  *       WHERE clients.id = engagement_letters.client_id
- *       AND clients.assigned_to IN (
- *         SELECT raw_user_meta_data->>'full_name'
- *         FROM auth.users WHERE id = auth.uid()
- *       )
+ *       AND auth.uid() = clients.assigned_to_user_id
  *     )
  *   );
  *
@@ -1353,7 +1396,7 @@ async function saveLetterToDb(approvalStatus) {
     const editedSections = _letterReviewSections.map(s => ({
       id: s.id,
       label: s.label,
-      text: document.getElementById('rev_' + s.id)?.innerHTML || s.text,
+      text: sanitizeHtml(document.getElementById('rev_' + s.id)?.innerHTML || s.text),
     }));
 
     // Determine next version number for this client
