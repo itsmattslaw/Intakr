@@ -973,7 +973,10 @@ async function notifySlack(payload) {
 
   const { data, error } = await db.functions.invoke('slack-notify', {
     body: payload,
-    headers: { Authorization: `Bearer ${session.access_token}` }
+    headers: {
+      Authorization: `Bearer ${session.access_token}`,
+      apikey: SUPABASE_ANON_KEY
+    }
   });
   if (error) {
     const msg = error.message || 'Slack notify failed';
