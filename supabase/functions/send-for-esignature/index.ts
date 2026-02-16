@@ -227,7 +227,7 @@ serve(async (req) => {
           global: { headers: { Authorization: authHeader } },
         })
         await serviceClient.from('engagement_letters')
-          .update({ boldsign_document_id: documentId, esign_status: 'sent' })
+          .update({ boldsign_document_id: documentId, esign_status: 'sent', approval_status: 'Approved' })
           .eq('id', letterId)
       } catch (e) {
         // Non-fatal — log but don't fail the request

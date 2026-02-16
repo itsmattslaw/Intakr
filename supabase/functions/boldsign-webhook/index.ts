@@ -121,9 +121,13 @@ serve(async (req) => {
     const letter = letters[0]
 
     // Update esign_status on the engagement letter
+    const updateData: Record<string, string> = { esign_status: esignStatus }
+    if (eventType === 'Completed') {
+      updateData.approval_status = 'Executed'
+    }
     const { error: updateError } = await supabase
       .from('engagement_letters')
-      .update({ esign_status: esignStatus })
+      .update(updateData)
       .eq('id', letter.id)
 
     if (updateError) {

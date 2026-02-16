@@ -208,12 +208,14 @@
   .approval-pending{background:var(--amber-pale);color:#9A7B00;}
   .approval-approved{background:var(--sage-pale);color:var(--sage-dark);}
   .approval-changes{background:#FBEAEA;color:var(--error);}
+  .approval-executed{background:#E8F5E9;color:#2E7D32;}
   .approval-bar{display:flex;flex-direction:column;gap:12px;padding:16px 18px;border:1px solid var(--border);border-radius:10px;margin-bottom:20px;}
   .approval-bar .approval-top-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
   .approval-bar.bar-draft{background:var(--light-gray);border-color:var(--border);}
   .approval-bar.bar-pending{background:var(--amber-pale);border-color:#E6D990;}
   .approval-bar.bar-approved{background:var(--sage-pale);border-color:var(--sage-light);}
   .approval-bar.bar-changes{background:#FBEAEA;border-color:#ECC;}
+  .approval-bar.bar-executed{background:#E8F5E9;border-color:#A5D6A7;}
   .approval-bar .approval-status-text{font-size:13px;font-weight:600;flex:1;}
   .approval-bar .approval-status-text small{font-weight:400;color:var(--warm-gray);display:block;font-size:11px;margin-top:2px;}
   .approval-bar .approval-actions{display:flex;gap:8px;flex-shrink:0;}
@@ -568,7 +570,7 @@
         <button class="btn btn-secondary btn-sm" onclick="closeLetterModal()" style="font-size:18px;line-height:1;padding:4px 10px;min-width:0;" title="Close">&times;</button>
         <button class="btn btn-slack btn-sm slack-send-btn" id="slackSendBtn" onclick="sendToSlack()" style="display:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 10c-.83 0-1.5-.67-1.5-1.5v-5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5z"/><path d="M20.5 10H19V8.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/><path d="M9.5 14c.83 0 1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5S8 21.33 8 20.5v-5c0-.83.67-1.5 1.5-1.5z"/><path d="M3.5 14H5v1.5c0 .83-.67 1.5-1.5 1.5S2 16.33 2 15.5 2.67 14 3.5 14z"/><path d="M14 14.5c0-.83.67-1.5 1.5-1.5h5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5h-5c-.83 0-1.5-.67-1.5-1.5z"/><path d="M15.5 19H14v1.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5-.67-1.5-1.5-1.5z"/><path d="M10 9.5C10 10.33 9.33 11 8.5 11h-5C2.67 11 2 10.33 2 9.5S2.67 8 3.5 8h5c.83 0 1.5.67 1.5 1.5z"/><path d="M8.5 5H10V3.5C10 2.67 9.33 2 8.5 2S7 2.67 7 3.5 7.67 5 8.5 5z"/></svg> Send to Slack</button>
         <button class="btn btn-send-email btn-sm email-send-btn" id="emailSendBtn" onclick="toggleEmailCompose()" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> Send to Client</button>
-        <button class="btn btn-sm boldsign-send-btn" id="boldsignSendBtn" onclick="toggleEsignCompose()" style="display:none;background:var(--sage);color:var(--white);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg> Send for E-Signature</button>
+        <button class="btn btn-sm boldsign-send-btn" id="boldsignSendBtn" onclick="toggleEsignCompose()" style="display:none;background:#6C5CE7;color:var(--white);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg> Send for E-Signature</button>
         <button class="btn btn-primary btn-sm" onclick="downloadFromReview()" id="modalDownloadBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download .docx</button>
       </div>
     </div>
@@ -917,7 +919,7 @@ function renderEsignComposePanel(meta) {
   const message = `Please review and sign the attached engagement letter for the above-referenced matter. If you have any questions, please do not hesitate to contact us.`;
 
   let html = `<div class="email-compose-panel" id="esignComposePanel">`;
-  html += `<div class="email-compose-header" style="border-left:3px solid var(--sage);"><h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg> Send for E-Signature</h3><button class="close-compose" onclick="toggleEsignCompose()" title="Close">&times;</button></div>`;
+  html += `<div class="email-compose-header" style="border-left:3px solid #6C5CE7;"><h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg> Send for E-Signature</h3><button class="close-compose" onclick="toggleEsignCompose()" title="Close">&times;</button></div>`;
   html += `<div class="email-compose-body">`;
   html += `<div class="email-field-row"><div class="email-field"><label>Signer Email</label><input type="email" id="esignEmail" value="${esc(clientEmail)}" placeholder="client@example.com"></div>`;
   html += `<div class="email-field"><label>Signer Name</label><input type="text" id="esignName" value="${esc(contact || clientName)}" placeholder="Full name"></div></div>`;
@@ -925,7 +927,7 @@ function renderEsignComposePanel(meta) {
   html += `</div>`;
   html += `<div class="email-compose-footer">`;
   html += `<span style="font-size:11px;color:var(--warm-gray);flex:1;">The engagement letter PDF will be sent via BoldSign. The client will receive a link to sign electronically.</span>`;
-  html += `<button class="btn btn-sm boldsign-send-btn" style="background:var(--sage);color:var(--white);" onclick="sendForESignature()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg> Send for Signature</button>`;
+  html += `<button class="btn btn-sm boldsign-send-btn" style="background:#6C5CE7;color:var(--white);" onclick="sendForESignature()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg> Send for Signature</button>`;
   html += `</div></div>`;
   return html;
 }
@@ -1017,6 +1019,7 @@ async function sendForESignature() {
       },
       body: JSON.stringify(payload)
     });
+
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
@@ -1991,7 +1994,7 @@ async function renderDashboard() {
   }
 
   const sc = s => ({ Prospective:'status-prospective', 'Letter Sent':'status-sent', Executed:'status-executed', Declined:'status-declined' }[s] || '');
-  const approvalClass = s => ({ Draft:'approval-draft', 'Pending Review':'approval-pending', Approved:'approval-approved', 'Changes Requested':'approval-changes' }[s] || 'approval-draft');
+  const approvalClass = s => ({ Draft:'approval-draft', 'Pending Review':'approval-pending', Approved:'approval-approved', 'Changes Requested':'approval-changes', Executed:'approval-executed' }[s] || 'approval-draft');
 
   const rows = clients.map(c => {
     const ls = letterStatusMap[c.id];
@@ -2319,7 +2322,8 @@ function updateApprovalBar(reviewNotes, reviewedBy) {
     Draft: 'bar-draft',
     'Pending Review': 'bar-pending',
     Approved: 'bar-approved',
-    'Changes Requested': 'bar-changes'
+    'Changes Requested': 'bar-changes',
+    Executed: 'bar-executed'
   }[status] || 'bar-draft';
 
   let html = `<div class="approval-bar ${barClass}">`;
@@ -2343,6 +2347,9 @@ function updateApprovalBar(reviewNotes, reviewedBy) {
   } else if (status === 'Approved') {
     html += `Status: Approved`;
     if (reviewedBy) html += `<small>Approved by ${esc(reviewedBy)}</small>`;
+  } else if (status === 'Executed') {
+    html += `Status: Executed`;
+    html += `<small>This engagement letter has been fully signed and executed.</small>`;
   } else if (status === 'Changes Requested') {
     html += `Status: Sent Back`;
     if (reviewedBy) html += `<small>Returned by ${esc(reviewedBy)} &mdash; see notes below. Edit the letter and resubmit.</small>`;
@@ -2528,7 +2535,6 @@ let _lastSavedLetterId = null;
 
 async function saveLetterToDb(approvalStatus, assignedReviewer) {
   if (!_letterReviewMeta || !_letterReviewSections || !_letterClientId) return null;
-  if (_letterSavedThisSession && !approvalStatus) return _lastSavedLetterId;
   // Capture references before any async work (modal close can null these)
   const meta = _letterReviewMeta;
   const sections = _letterReviewSections;
@@ -2550,6 +2556,21 @@ async function saveLetterToDb(approvalStatus, assignedReviewer) {
       text: sanitizeHtml(document.getElementById('rev_' + s.id)?.innerHTML || s.text),
     }));
 
+    const letterData = { meta, header: headerData, sections: editedSections };
+
+    // If we already have a saved letter ID and no approval status change,
+    // update the existing record instead of creating a new version
+    if (_lastSavedLetterId && !approvalStatus) {
+      const { error: updateError } = await db.from('engagement_letters')
+        .update({ letter_data: letterData })
+        .eq('id', _lastSavedLetterId);
+      if (!updateError) {
+        _letterApprovalId = _lastSavedLetterId;
+        return _lastSavedLetterId;
+      }
+      // If update fails, fall through to insert a new version
+    }
+
     // Determine next version number for this client
     const { data: existing } = await db.from('engagement_letters')
       .select('version')
@@ -2564,7 +2585,7 @@ async function saveLetterToDb(approvalStatus, assignedReviewer) {
       client_id: clientId,
       user_id: currentUser.id,
       version: nextVersion,
-      letter_data: { meta, header: headerData, sections: editedSections },
+      letter_data: letterData,
       file_name: fileName,
       created_by_email: currentUser.email,
     };
@@ -2575,7 +2596,6 @@ async function saveLetterToDb(approvalStatus, assignedReviewer) {
       .insert([insertData]).select('id').single();
 
     if (error) throw error;
-    _letterSavedThisSession = true;
     _lastSavedLetterId = inserted ? inserted.id : null;
     _letterApprovalId = _lastSavedLetterId;
     return _lastSavedLetterId;
@@ -2645,7 +2665,35 @@ function buildLetterSections(data) {
   return { meta, sections };
 }
 
-function openLetterReview(data, clientId) {
+async function openLetterReview(data, clientId) {
+  // Try to load the most recent saved version for this client
+  try {
+    const { data: latest, error } = await db.from('engagement_letters')
+      .select('*')
+      .eq('client_id', clientId)
+      .order('version', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (!error && latest && latest.letter_data) {
+      const ld = latest.letter_data;
+      const versionDate = new Date(latest.created_at).toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' });
+      const versionLabel = `Saved version ${latest.version} from ${versionDate}`;
+      const approvalData = {
+        status: latest.approval_status || 'Draft',
+        letterId: latest.id,
+        reviewedBy: latest.reviewed_by || null,
+        reviewNotes: latest.review_notes || null,
+        assignedReviewer: latest.assigned_reviewer || null,
+        createdByEmail: latest.created_by_email || null,
+      };
+      _lastSavedLetterId = latest.id;
+      showLetterModal(ld.meta, ld.sections, clientId, ld.header, versionLabel, approvalData);
+      return;
+    }
+  } catch (e) { /* no saved version — generate fresh */ }
+
+  // No saved version found — generate from client data
   const { meta, sections } = buildLetterSections(data);
   showLetterModal(meta, sections, clientId);
 }
@@ -2654,7 +2702,7 @@ function showLetterModal(meta, sections, clientId, headerOverrides, savedVersion
   _letterReviewMeta = meta;
   _letterReviewSections = sections;
   _letterClientId = clientId || null;
-  _letterSavedThisSession = !!savedVersionLabel;
+  _letterSavedThisSession = false;
 
   // Set approval state
   _letterApprovalStatus = (approvalData && approvalData.status) || null;
@@ -2807,7 +2855,7 @@ async function viewLetterHistory(clientId) {
         <div class="doc-version-info">
           <div class="doc-version-badge">v${letter.version}</div>
           <div>
-            <div class="doc-version-name">${esc(letter.file_name)}${letter.approval_status ? ` <span class="approval-pill ${({'Draft':'approval-draft','Pending Review':'approval-pending','Approved':'approval-approved','Changes Requested':'approval-changes'})[letter.approval_status] || 'approval-draft'}">${esc(letter.approval_status)}</span>` : ''}</div>
+            <div class="doc-version-name">${esc(letter.file_name)}${letter.approval_status ? ` <span class="approval-pill ${({'Draft':'approval-draft','Pending Review':'approval-pending','Approved':'approval-approved','Changes Requested':'approval-changes','Executed':'approval-executed'})[letter.approval_status] || 'approval-draft'}">${esc(letter.approval_status)}</span>` : ''}</div>
             <div class="doc-version-detail">${esc(date)} \u00b7 ${esc(letter.created_by_email || 'Unknown')}</div>
           </div>
         </div>
