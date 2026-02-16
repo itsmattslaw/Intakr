@@ -56,18 +56,13 @@ serve(async (req) => {
   try {
     const rawBody = await req.text()
 
-    // Verify webhook signature if secret is configured
+    // Verify webhook signature if secret is configured and BoldSign sends one
     const webhookSecret = Deno.env.get('BOLDSIGN_WEBHOOK_SECRET')
-    if (webhookSecret) {
-      const signature = req.headers.get('X-BoldSign-Signature') || ''
-      if (!signature) {
-        return new Response(JSON.stringify({ error: 'Missing webhook signature' }), {
-          status: 401,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
-      }
+    const signature = req.headers.get('X-BoldSign-Signature') || ''
+    if (webhookSecret && signature) {
       const valid = await verifyWebhookSignature(rawBody, signature, webhookSecret)
       if (!valid) {
+        console.warn('Webhook signature verification failed')
         return new Response(JSON.stringify({ error: 'Invalid webhook signature' }), {
           status: 401,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -77,7 +72,7 @@ serve(async (req) => {
 
     const payload = JSON.parse(rawBody)
     const eventType = payload.event?.eventType || payload.eventType
-    const documentId = payload.event?.document?.documentId || payload.documentId
+    const documentId = payload.data?.documentId || payload.document?.documentId || payload.event?.document?.documentId || payload.documentId
 
     if (!eventType || !documentId) {
       // Acknowledge unknown payloads gracefully (BoldSign verification pings)
