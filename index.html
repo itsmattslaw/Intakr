@@ -1922,7 +1922,7 @@ async function editClient(id) {
   html += `<div id="editHourlyRateGroup" style="${showHourly?'':'display:none'}"><label>Attorney Hourly Rate</label><input type="text" id="edit_hourlyRate" value="${esc(c.hourly_rate||'')}"></div>`;
   html += `<div id="editParalegalRateGroup" style="${showHourly?'':'display:none'}"><label>Paralegal Hourly Rate</label><input type="text" id="edit_paralegalRate" value="${esc(c.paralegal_rate||'')}"></div>`;
   html += `<div id="editFlatFeeGroup" style="${showFlat?'':'display:none'}"><label>Flat Fee Amount</label><input type="text" id="edit_flatFeeAmount" value="${esc(c.flat_fee_amount||'')}"></div>`;
-  html += `<div id="editMonthlyFeeGroup" style="${showMonthly?'':'display:none'}"><label>Monthly Subscription Fee</label><input type="text" id="edit_monthlyFee" value="${esc(c.monthly_fee||'')}"></div>`;
+  html += `<div id="editMonthlyFeeGroup" style="${showMonthly?'':'display:none'}"><label>Monthly Subscription Fee</label><input type="text" id="edit_monthlyFee" value="${esc(c.retainer_amount||'')}"></div>`;
   html += `<div><label>Retainer Amount</label><input type="text" id="edit_retainerAmount" value="${esc(c.retainer_amount||'')}"></div>`;
   html += `<div><label>Engagement Date</label><input type="date" id="edit_engagementDate" value="${esc(c.engagement_date||'')}"></div>`;
 
@@ -2024,8 +2024,9 @@ async function saveClientEdits() {
       hourly_rate: document.getElementById('edit_hourlyRate').value,
       paralegal_rate: document.getElementById('edit_paralegalRate').value,
       flat_fee_amount: document.getElementById('edit_flatFeeAmount').value,
-      monthly_fee: document.getElementById('edit_monthlyFee').value,
-      retainer_amount: document.getElementById('edit_retainerAmount').value,
+      retainer_amount: document.querySelector('input[name="editFeeType"]:checked').value === 'Subscription'
+        ? document.getElementById('edit_monthlyFee').value
+        : document.getElementById('edit_retainerAmount').value,
       engagement_date: document.getElementById('edit_engagementDate').value,
       conflicts: document.getElementById('edit_conflicts').value,
       specialist_involved: document.getElementById('edit_specialistInvolved').value,
