@@ -174,6 +174,24 @@
   .btn-slack{background:#4A154B;color:#fff;border:none;}
   .btn-slack:hover:not(:disabled){background:#611f69;transform:translateY(-1px);box-shadow:0 4px 16px rgba(74,21,75,0.3);}
   .btn-slack:disabled{background:#4A154B;}
+  .btn-send-email{background:#2980B9;color:#fff;border:none;}
+  .btn-send-email:hover:not(:disabled){background:#2471a3;transform:translateY(-1px);box-shadow:0 4px 16px rgba(41,128,185,0.3);}
+  .btn-send-email:disabled{background:#2980B9;}
+  .email-compose-panel{background:var(--cream);border:1px solid var(--border);border-radius:10px;margin-bottom:20px;overflow:hidden;display:none;}
+  .email-compose-panel.visible{display:block;}
+  .email-compose-header{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;background:var(--sage-pale);border-bottom:1px solid var(--border);}
+  .email-compose-header h3{font-size:14px;font-weight:600;color:var(--charcoal);display:flex;align-items:center;gap:8px;}
+  .email-compose-header .close-compose{background:none;border:none;font-size:18px;cursor:pointer;color:var(--warm-gray);padding:0 4px;line-height:1;}
+  .email-compose-header .close-compose:hover{color:var(--charcoal);}
+  .email-compose-body{padding:18px;}
+  .email-compose-body .email-field{margin-bottom:14px;}
+  .email-compose-body .email-field label{display:block;font-size:12px;font-weight:600;color:var(--dark);margin-bottom:4px;}
+  .email-compose-body .email-field input,.email-compose-body .email-field textarea{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;background:var(--white);box-sizing:border-box;}
+  .email-compose-body .email-field input:focus,.email-compose-body .email-field textarea:focus{border-color:var(--navy);outline:none;box-shadow:0 0 0 2px rgba(44,62,80,0.12);}
+  .email-compose-body .email-field textarea{resize:vertical;min-height:120px;line-height:1.5;}
+  .email-compose-body .email-field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .email-compose-footer{display:flex;justify-content:flex-end;gap:10px;padding:0 18px 18px;}
+  .email-sent-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:10px;background:#E8F5E9;color:#2E7D32;white-space:nowrap;}
 
   /* Assignment & Approval Workflow */
   .dash-filters{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap;}
@@ -473,6 +491,38 @@
       </div>
     </div>
   </div>
+
+  <!-- Client Email Delivery -->
+  <div class="settings-card">
+    <div class="settings-card-header">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+      <h3>Client Email Delivery</h3>
+    </div>
+    <div class="settings-card-body">
+      <p>When enabled, engagement letters can be emailed directly to clients from the letter review modal. The email API key is configured server-side for security.</p>
+      <div class="settings-row">
+        <div class="settings-row-label">
+          <strong>Enable Send to Client</strong>
+          <span id="emailStatusText">Disabled</span>
+        </div>
+        <div class="settings-row-action">
+          <label class="toggle-switch">
+            <input type="checkbox" id="emailToggle" onchange="toggleEmail()">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+      <div class="settings-row">
+        <div class="settings-row-label">
+          <strong>Reply-To Address</strong>
+          <span>Clients will reply to this address (defaults to the sending attorney's email)</span>
+        </div>
+        <div class="settings-row-action">
+          <input type="text" id="emailReplyTo" placeholder="e.g. info@margolispllc.com" style="padding:7px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;width:220px;" onchange="saveEmailReplyTo()">
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 </div>
 
@@ -485,7 +535,8 @@
       <h2><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Review Engagement Letter</h2>
       <div class="modal-actions">
         <button class="btn btn-secondary btn-sm" onclick="closeLetterModal()">Cancel</button>
-        <button class="btn btn-slack btn-sm" id="slackSendBtn" onclick="sendToSlack()" style="display:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 10c-.83 0-1.5-.67-1.5-1.5v-5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5z"/><path d="M20.5 10H19V8.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/><path d="M9.5 14c.83 0 1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5S8 21.33 8 20.5v-5c0-.83.67-1.5 1.5-1.5z"/><path d="M3.5 14H5v1.5c0 .83-.67 1.5-1.5 1.5S2 16.33 2 15.5 2.67 14 3.5 14z"/><path d="M14 14.5c0-.83.67-1.5 1.5-1.5h5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5h-5c-.83 0-1.5-.67-1.5-1.5z"/><path d="M15.5 19H14v1.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5-.67-1.5-1.5-1.5z"/><path d="M10 9.5C10 10.33 9.33 11 8.5 11h-5C2.67 11 2 10.33 2 9.5S2.67 8 3.5 8h5c.83 0 1.5.67 1.5 1.5z"/><path d="M8.5 5H10V3.5C10 2.67 9.33 2 8.5 2S7 2.67 7 3.5 7.67 5 8.5 5z"/></svg> Send to Slack</button>
+        <button class="btn btn-slack btn-sm slack-send-btn" id="slackSendBtn" onclick="sendToSlack()" style="display:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 10c-.83 0-1.5-.67-1.5-1.5v-5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5z"/><path d="M20.5 10H19V8.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/><path d="M9.5 14c.83 0 1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5S8 21.33 8 20.5v-5c0-.83.67-1.5 1.5-1.5z"/><path d="M3.5 14H5v1.5c0 .83-.67 1.5-1.5 1.5S2 16.33 2 15.5 2.67 14 3.5 14z"/><path d="M14 14.5c0-.83.67-1.5 1.5-1.5h5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5h-5c-.83 0-1.5-.67-1.5-1.5z"/><path d="M15.5 19H14v1.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5-.67-1.5-1.5-1.5z"/><path d="M10 9.5C10 10.33 9.33 11 8.5 11h-5C2.67 11 2 10.33 2 9.5S2.67 8 3.5 8h5c.83 0 1.5.67 1.5 1.5z"/><path d="M8.5 5H10V3.5C10 2.67 9.33 2 8.5 2S7 2.67 7 3.5 7.67 5 8.5 5z"/></svg> Send to Slack</button>
+        <button class="btn btn-send-email btn-sm email-send-btn" id="emailSendBtn" onclick="toggleEmailCompose()" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> Send to Client</button>
         <button class="btn btn-primary btn-sm" onclick="downloadFromReview()" id="modalDownloadBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download .docx</button>
       </div>
     </div>
@@ -496,8 +547,6 @@
       <span class="hint">Edit sections above. Save draft, submit for review, or download.</span>
       <div style="display:flex;gap:10px;">
         <button class="btn btn-secondary btn-sm" onclick="saveDraft()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save Draft</button>
-        <button class="btn btn-slack btn-sm slack-send-btn" onclick="sendToSlack()" style="display:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 10c-.83 0-1.5-.67-1.5-1.5v-5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5z"/><path d="M20.5 10H19V8.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/><path d="M9.5 14c.83 0 1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5S8 21.33 8 20.5v-5c0-.83.67-1.5 1.5-1.5z"/><path d="M3.5 14H5v1.5c0 .83-.67 1.5-1.5 1.5S2 16.33 2 15.5 2.67 14 3.5 14z"/><path d="M14 14.5c0-.83.67-1.5 1.5-1.5h5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5h-5c-.83 0-1.5-.67-1.5-1.5z"/><path d="M15.5 19H14v1.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5-.67-1.5-1.5-1.5z"/><path d="M10 9.5C10 10.33 9.33 11 8.5 11h-5C2.67 11 2 10.33 2 9.5S2.67 8 3.5 8h5c.83 0 1.5.67 1.5 1.5z"/><path d="M8.5 5H10V3.5C10 2.67 9.33 2 8.5 2S7 2.67 7 3.5 7.67 5 8.5 5z"/></svg> Send to Slack</button>
-        <button class="btn btn-primary btn-sm" onclick="downloadFromReview()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download .docx</button>
       </div>
     </div>
   </div>
@@ -604,6 +653,7 @@ async function loadFirmSettings() {
   // Restore UI after loading
   restoreLogoPreview();
   restoreSlackUI();
+  restoreEmailUI();
 }
 
 // --- Firm Logo for Engagement Letter Header ---
@@ -724,6 +774,224 @@ function restoreSlackUI() {
   }
   updateSlackUI();
 }
+
+// --- Client Email Delivery ---
+function toggleEmail() {
+  const toggle = document.getElementById('emailToggle');
+  if (toggle.checked) {
+    saveFirmSetting('emailEnabled', 'true');
+    updateEmailUI();
+    showStatus('\u2713 Client email delivery enabled! Configure the Resend API key in your Supabase Edge Function secrets.', 'success');
+  } else {
+    deleteFirmSetting('emailEnabled');
+    updateEmailUI();
+    showStatus('Client email delivery disabled.', 'success');
+  }
+}
+
+function saveEmailReplyTo() {
+  const val = document.getElementById('emailReplyTo').value.trim();
+  if (val) {
+    saveFirmSetting('emailReplyTo', val);
+    showStatus('\u2713 Reply-to address saved.', 'success');
+  } else {
+    deleteFirmSetting('emailReplyTo');
+  }
+}
+
+function isEmailEnabled() {
+  return localStorage.getItem('firm_emailEnabled') === 'true';
+}
+
+function getEmailReplyTo() {
+  return localStorage.getItem('firm_emailReplyTo') || '';
+}
+
+function updateEmailUI() {
+  const enabled = isEmailEnabled();
+  const toggle = document.getElementById('emailToggle');
+  if (toggle) toggle.checked = enabled;
+  const statusText = document.getElementById('emailStatusText');
+  if (statusText) statusText.textContent = enabled ? 'Enabled' : 'Disabled';
+  const replyToInput = document.getElementById('emailReplyTo');
+  if (replyToInput) replyToInput.value = getEmailReplyTo();
+  // Show/hide Send to Client buttons
+  const headerBtn = document.getElementById('emailSendBtn');
+  if (headerBtn) headerBtn.style.display = enabled ? '' : 'none';
+  document.querySelectorAll('.email-send-btn').forEach(b => b.style.display = enabled ? '' : 'none');
+}
+
+function restoreEmailUI() {
+  updateEmailUI();
+}
+
+function toggleEmailCompose() {
+  const panel = document.getElementById('emailComposePanel');
+  if (panel) {
+    const isVisible = panel.classList.contains('visible');
+    if (isVisible) {
+      panel.classList.remove('visible');
+    } else {
+      panel.classList.add('visible');
+      panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+    return;
+  }
+  // Panel doesn't exist yet — it gets rendered in showLetterModal via renderEmailComposePanel
+}
+
+function renderEmailComposePanel(meta) {
+  const clientEmail = meta.email || '';
+  const senderAtty = meta.sigFull || 'Matt A. Margolis';
+  const contact = meta.contact || meta.clientLabel || '';
+  const matterLabel = meta.matter || '';
+  const clientName = meta.clientLabel || meta.name || '';
+
+  const subject = `Engagement Letter \u2014 ${matterLabel} \u2014 Margolis PLLC`;
+
+  const bodyText = `Dear ${contact},\n\nThank you for choosing Margolis PLLC. Please find attached your engagement letter for the above-referenced matter.\n\nPlease review the enclosed engagement letter carefully. If the arrangement described is acceptable, kindly sign a copy and return it to us via email.\n\nIf you have any questions or would like to discuss any of the terms, please do not hesitate to contact me.\n\nBest regards,\n${senderAtty}, Esq.\nMargolis PLLC`;
+
+  let html = `<div class="email-compose-panel" id="emailComposePanel">`;
+  html += `<div class="email-compose-header"><h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> Send to Client</h3><button class="close-compose" onclick="toggleEmailCompose()" title="Close">&times;</button></div>`;
+  html += `<div class="email-compose-body">`;
+  html += `<div class="email-field-row"><div class="email-field"><label>To</label><input type="email" id="emailTo" value="${esc(clientEmail)}" placeholder="client@example.com"></div>`;
+  html += `<div class="email-field"><label>CC <span style="font-weight:400;color:var(--warm-gray)">(optional)</span></label><input type="email" id="emailCc" placeholder="colleague@margolispllc.com"></div></div>`;
+  html += `<div class="email-field"><label>Subject</label><input type="text" id="emailSubject" value="${esc(subject)}"></div>`;
+  html += `<div class="email-field"><label>Message</label><textarea id="emailBody">${esc(bodyText)}</textarea></div>`;
+  html += `</div>`;
+  html += `<div class="email-compose-footer">`;
+  html += `<span style="font-size:11px;color:var(--warm-gray);flex:1;">The engagement letter .docx will be attached automatically.</span>`;
+  html += `<button class="btn btn-send-email btn-sm" onclick="sendToClient()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg> Send Email</button>`;
+  html += `</div></div>`;
+  return html;
+}
+
+async function sendToClient() {
+  if (!_letterReviewMeta || !_letterReviewSections) return;
+
+  const to = document.getElementById('emailTo').value.trim();
+  const cc = document.getElementById('emailCc').value.trim();
+  const subject = document.getElementById('emailSubject').value.trim();
+  const bodyText = document.getElementById('emailBody').value.trim();
+
+  if (!to) { showStatus('Please enter a recipient email address.', 'error'); return; }
+  if (!subject) { showStatus('Please enter a subject line.', 'error'); return; }
+  if (!bodyText) { showStatus('Please enter a message body.', 'error'); return; }
+
+  // CRLF injection prevention — reject newlines in header-sensitive fields
+  if (/[\r\n]/.test(to) || /[\r\n]/.test(subject)) {
+    showStatus('Invalid characters in email or subject.', 'error'); return;
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(to)) { showStatus('Invalid recipient email address.', 'error'); return; }
+  if (cc && (!emailRegex.test(cc) || /[\r\n]/.test(cc))) { showStatus('Invalid CC email address.', 'error'); return; }
+
+  // Disable all send buttons
+  const sendBtns = document.querySelectorAll('.btn-send-email');
+  const savedLabels = [];
+  sendBtns.forEach(b => { savedLabels.push(b.innerHTML); b.disabled = true; b.innerHTML = '<div class="loading-spinner"></div> Sending...'; });
+
+  try {
+    // Save letter first
+    await saveLetterToDb();
+
+    // Generate DOCX blob and convert to base64
+    const blob = await buildDocxBlob();
+    if (!blob) throw new Error('Failed to generate document');
+
+    const arrayBuf = await blob.arrayBuffer();
+    const bytes = new Uint8Array(arrayBuf);
+    let binary = '';
+    for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+    const attachmentBase64 = btoa(binary);
+
+    const meta = _letterReviewMeta;
+    const fileName = `Engagement_Letter_${meta.name.replace(/[^a-zA-Z0-9]/g, '_')}.docx`;
+
+    // Build HTML email body from plain text
+    const htmlBody = bodyText.split('\n').map(line => line ? `<p style="margin:0 0 10px;font-family:Georgia,serif;font-size:14px;color:#333;">${esc(line)}</p>` : `<br>`).join('\n');
+
+    // Determine reply-to: firm setting, or sending attorney's email
+    const replyTo = getEmailReplyTo() || (currentUser ? currentUser.email : '');
+
+    // Get auth session
+    let session = (await db.auth.getSession()).data.session;
+    if (!session) throw new Error('Not authenticated — please sign in again.');
+
+    const nowSec = Math.floor(Date.now() / 1000);
+    if (session.expires_at && (session.expires_at - nowSec) < 120) {
+      const { data, error: refreshErr } = await db.auth.refreshSession();
+      if (refreshErr || !data.session) throw new Error('Session expired — please sign in again.');
+      session = data.session;
+    }
+
+    const payload = {
+      to,
+      subject,
+      html: htmlBody,
+      replyTo,
+      attachmentBase64,
+      attachmentFilename: fileName,
+    };
+
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/send-letter-email`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${session.access_token}`
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      if (res.status === 401) throw new Error('Authentication error — try signing out and back in.');
+      throw new Error(err.detail || err.error || `Email send failed (${res.status})`);
+    }
+
+    // Auto-update client status to "Letter Sent"
+    if (_letterClientId) {
+      await updateClientStatus(_letterClientId, 'Letter Sent');
+    }
+
+    // Notify Slack if enabled (best-effort)
+    if (isSlackEnabled()) {
+      try {
+        const sentBy = currentUser ? currentUser.email : 'unknown';
+        await notifySlack({
+          text: `Engagement letter emailed to ${to} for ${meta.name}`,
+          blocks: [
+            { type: 'header', text: { type: 'plain_text', text: 'Engagement Letter Sent to Client', emoji: true } },
+            { type: 'section', fields: [
+              { type: 'mrkdwn', text: `*Client:*\n${escSlack(meta.name)}` },
+              { type: 'mrkdwn', text: `*Sent To:*\n${escSlack(to)}` }
+            ]},
+            { type: 'section', fields: [
+              { type: 'mrkdwn', text: `*Matter:*\n${escSlack(meta.matter)}` },
+              { type: 'mrkdwn', text: `*Attorney:*\n${escSlack(meta.atty)}` }
+            ]},
+            { type: 'context', elements: [
+              { type: 'mrkdwn', text: `Sent by ${escSlack(sentBy)}` }
+            ]},
+          ]
+        });
+      } catch (e) { /* best-effort */ }
+    }
+
+    // Close compose panel and show success
+    const panel = document.getElementById('emailComposePanel');
+    if (panel) panel.classList.remove('visible');
+
+    showStatus(`\u2713 Engagement letter emailed to ${to}. Status updated to "Letter Sent".`, 'success');
+  } catch (err) {
+    showStatus('Email error: ' + err.message, 'error');
+  } finally {
+    sendBtns.forEach((b, i) => { b.disabled = false; b.innerHTML = savedLabels[i]; });
+  }
+}
+// --- End Client Email ---
 
 async function buildDocxBlob() {
   if (!_letterReviewMeta || !_letterReviewSections) return null;
@@ -1028,7 +1296,12 @@ function sanitizeHtml(html) {
     }
   }
   walk(tmp);
-  return tmp.innerHTML;
+  // Defense-in-depth: reject output if dangerous patterns somehow survived
+  const out = tmp.innerHTML;
+  if (/\bon\w+\s*=/i.test(out) || /javascript\s*:/i.test(out)) {
+    return out.replace(/<[^>]*>/g, '');
+  }
+  return out;
 }
 
 function textToEditorHtml(text){
@@ -1821,6 +2094,11 @@ function showLetterModal(meta, sections, clientId, headerOverrides, savedVersion
     html += `<div contenteditable="true" id="rev_${s.id}" class="rich-editor${tall}">${editorHtml}</div></div>`;
   });
 
+  // Email compose panel (rendered at bottom of letter body)
+  if (isEmailEnabled()) {
+    html += renderEmailComposePanel(meta);
+  }
+
   container.innerHTML = html;
 
   // Strip rich HTML on paste — only allow plain text into contenteditable editors
@@ -1849,6 +2127,7 @@ function showLetterModal(meta, sections, clientId, headerOverrides, savedVersion
   document.getElementById('letterModal').classList.add('visible');
   document.body.style.overflow = 'hidden';
   updateSlackUI();
+  updateEmailUI();
 }
 
 function closeLetterModal() {
@@ -1912,7 +2191,7 @@ async function viewLetterHistory(clientId) {
     let html = `<p style="font-size:12px;color:var(--warm-gray);margin-bottom:16px">${data.length} version${data.length!==1?'s':''} saved</p>`;
     data.forEach(letter => {
       const date = new Date(letter.created_at).toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric', hour:'numeric', minute:'2-digit' });
-      html += `<div class="doc-version-card">
+      html += `<div class="doc-version-card" data-letter-id="${esc(letter.id)}">
         <div class="doc-version-info">
           <div class="doc-version-badge">v${letter.version}</div>
           <div>
@@ -1972,12 +2251,9 @@ async function deleteLetterVersion(letterId) {
   try {
     const { error } = await db.from('engagement_letters').delete().eq('id', letterId);
     if (error) throw error;
-    // Re-render the list: find the card and remove it, or refresh
-    const card = document.querySelector(`[onclick="openSavedLetter('${letterId}')"]`);
-    if (card) {
-      const versionCard = card.closest('.doc-version-card');
-      if (versionCard) versionCard.remove();
-    }
+    // Re-render the list: find the card and remove it via data attribute
+    const card = document.querySelector(`.doc-version-card[data-letter-id="${CSS.escape(letterId)}"]`);
+    if (card) card.remove();
     showStatus('Letter version deleted.', 'success');
   } catch (e) {
     showStatus('Error: ' + e.message, 'error');

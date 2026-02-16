@@ -6,6 +6,13 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Max request body size: 100 KB (Slack messages should be small)
+const MAX_BODY_SIZE = 100 * 1024
+// Max text field length
+const MAX_TEXT_LENGTH = 4000
+// Max blocks array length
+const MAX_BLOCKS = 20
+
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -13,6 +20,15 @@ serve(async (req) => {
   }
 
   try {
+    // Enforce request body size limit
+    const contentLength = req.headers.get('content-length')
+    if (contentLength && parseInt(contentLength, 10) > MAX_BODY_SIZE) {
+      return new Response(JSON.stringify({ error: 'Request too large' }), {
+        status: 413,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
     // Verify the caller is authenticated
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
@@ -65,6 +81,20 @@ serve(async (req) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
       }
+    }
+
+    // Validate content size limits
+    if (typeof body.text === 'string' && body.text.length > MAX_TEXT_LENGTH) {
+      return new Response(JSON.stringify({ error: 'Text field too large' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+    if (Array.isArray(body.blocks) && body.blocks.length > MAX_BLOCKS) {
+      return new Response(JSON.stringify({ error: 'Too many blocks' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
     }
 
     const slackRes = await fetch(webhookUrl, {
