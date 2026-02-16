@@ -1131,7 +1131,10 @@ async function buildDocxBlob() {
 
   const noBorder = { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' };
   const noBorders = { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder };
-  const headerGray = '808080';
+  const headerSage = '8B9D93';
+  const hdrFont = 'Times New Roman';
+  const hdrSize = 16;
+  const hdrSpacing = { after: 0, line: 240 };
 
   let headerChildren;
   if (firmLogo) {
@@ -1139,24 +1142,30 @@ async function buildDocxBlob() {
       rows: [new TableRow({
         children: [
           new TableCell({
-            width: { size: 30, type: WidthType.PERCENTAGE },
+            width: { size: 25, type: WidthType.PERCENTAGE },
             borders: noBorders,
             verticalAlign: VerticalAlign.CENTER,
             children: [new Paragraph({ alignment: AlignmentType.LEFT, children: [
-              new ImageRun({ data: firmLogo.base64, transformation: { width: 130, height: 130 } })
+              new ImageRun({ data: firmLogo.base64, transformation: { width: 160, height: 160 } })
             ]})]
           }),
           new TableCell({
-            width: { size: 70, type: WidthType.PERCENTAGE },
+            width: { size: 75, type: WidthType.PERCENTAGE },
             borders: noBorders,
             verticalAlign: VerticalAlign.CENTER,
             children: [
-              new Paragraph({ alignment: AlignmentType.RIGHT, spacing: { after: 0, line: 240 }, children: [
-                new TextRun({ font: 'Times New Roman', size: 16, color: headerGray, text: 'MATT A. MARGOLIS, ESQ. / PARTNER / MATTHEW@MARGOLISPLLC.COM' })
+              new Paragraph({ alignment: AlignmentType.CENTER, spacing: hdrSpacing, children: [
+                new TextRun({ font: hdrFont, size: hdrSize, color: headerSage, text: 'MATT A. MARGOLIS, ESQ. / PARTNER /' })
               ]}),
-              new Paragraph({ alignment: AlignmentType.RIGHT, spacing: { after: 0, line: 240 }, children: [] }),
-              new Paragraph({ alignment: AlignmentType.RIGHT, spacing: { after: 0, line: 240 }, children: [
-                new TextRun({ font: 'Times New Roman', size: 16, color: headerGray, text: 'KARINA S. MARGOLIS, ESQ. / PARTNER / KARINA@MARGOLISPLLC.COM' })
+              new Paragraph({ alignment: AlignmentType.CENTER, spacing: hdrSpacing, children: [
+                new TextRun({ font: hdrFont, size: hdrSize, color: headerSage, text: 'MATTHEW@MARGOLISPLLC.COM' })
+              ]}),
+              new Paragraph({ alignment: AlignmentType.CENTER, spacing: hdrSpacing, children: [] }),
+              new Paragraph({ alignment: AlignmentType.CENTER, spacing: hdrSpacing, children: [
+                new TextRun({ font: hdrFont, size: hdrSize, color: headerSage, text: 'KARINA S. MARGOLIS, ESQ. / PARTNER /' })
+              ]}),
+              new Paragraph({ alignment: AlignmentType.CENTER, spacing: hdrSpacing, children: [
+                new TextRun({ font: hdrFont, size: hdrSize, color: headerSage, text: 'KARINA@MARGOLISPLLC.COM' })
               ]})
             ]
           })
