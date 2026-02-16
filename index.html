@@ -8,6 +8,7 @@
 <script src="https://unpkg.com/docx@7.8.2/build/index.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.95.3"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -896,9 +897,9 @@ async function sendToClient() {
     // Save letter first
     await saveLetterToDb();
 
-    // Generate DOCX blob and convert to base64
-    const blob = await buildDocxBlob();
-    if (!blob) throw new Error('Failed to generate document');
+    // Generate PDF blob for client email attachment
+    const blob = await buildPdfBlob();
+    if (!blob) throw new Error('Failed to generate PDF');
 
     const arrayBuf = await blob.arrayBuffer();
     const bytes = new Uint8Array(arrayBuf);
@@ -907,7 +908,7 @@ async function sendToClient() {
     const attachmentBase64 = btoa(binary);
 
     const meta = _letterReviewMeta;
-    const fileName = `Engagement_Letter_${meta.name.replace(/[^a-zA-Z0-9]/g, '_')}.docx`;
+    const fileName = `Engagement_Letter_${meta.name.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
 
     // Build HTML email body from plain text
     const htmlBody = bodyText.split('\n').map(line => line ? `<p style="margin:0 0 10px;font-family:Georgia,serif;font-size:14px;color:#333;">${esc(line)}</p>` : `<br>`).join('\n');
@@ -1184,6 +1185,266 @@ async function buildDocxBlob() {
   });
 
   return await Packer.toBlob(doc);
+}
+
+// --- PDF generation for client emails ---
+async function buildPdfBlob() {
+  if (!_letterReviewMeta || !_letterReviewSections) return null;
+
+  const meta = _letterReviewMeta;
+  const revDate = document.getElementById('rev_date').value;
+  const revRecipient = document.getElementById('rev_recipient').value;
+  const revAttention = document.getElementById('rev_attention') ? document.getElementById('rev_attention').value : '';
+  const revEmail = document.getElementById('rev_email').value;
+  const revRe = document.getElementById('rev_re').value;
+  const revGreeting = document.getElementById('rev_greeting').value;
+
+  const editedSections = {};
+  _letterReviewSections.forEach(s => {
+    editedSections[s.id] = sanitizeHtml(document.getElementById('rev_'+s.id).innerHTML);
+  });
+
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF({ unit: 'pt', format: 'letter' });
+
+  // Page dimensions (letter = 612 x 792 pt)
+  const PW = 612, PH = 792;
+  const ML = 72, MR = 72, MB = 72;
+  let MT = 72;
+  const CW = PW - ML - MR; // content width = 468pt
+  let y = MT;
+
+  // --- Helpers ---
+  function setF(style, size) { pdf.setFont('times', style || 'normal'); pdf.setFontSize(size || 11); }
+  function checkPage(need) { if (y + (need||14) > PH - MB) { pdf.addPage(); y = MT; } }
+  function blankLine(h) { y += (h || 14); }
+
+  // Strip HTML to plain text
+  function strip(html) { const d = document.createElement('div'); d.innerHTML = html; return (d.textContent || '').trim(); }
+
+  // Parse HTML into paragraphs of text runs: [[{text,bold,italic,underline},...],...]
+  function parseHtml(html) {
+    const div = document.createElement('div'); div.innerHTML = html;
+    const paras = []; let cur = [];
+    function flush() { if (cur.length > 0) { paras.push(cur); cur = []; } }
+    function walk(node, fmt) {
+      if (node.nodeType === Node.TEXT_NODE) {
+        const t = node.textContent;
+        if (t) cur.push({ text: t, bold: fmt.b, italic: fmt.i, underline: fmt.u });
+      } else if (node.nodeType === Node.ELEMENT_NODE) {
+        const tag = node.tagName.toLowerCase();
+        const nf = {...fmt};
+        if (tag==='b'||tag==='strong') nf.b = true;
+        if (tag==='i'||tag==='em') nf.i = true;
+        if (tag==='u') nf.u = true;
+        if (tag==='div'||tag==='p') { flush(); for (const c of node.childNodes) walk(c, nf); flush(); }
+        else if (tag==='br') { flush(); }
+        else { for (const c of node.childNodes) walk(c, nf); }
+      }
+    }
+    for (const c of div.childNodes) walk(c, {b:false,i:false,u:false});
+    flush();
+    return paras;
+  }
+
+  // Get jsPDF font style string
+  function fontStyle(run) {
+    if (run.bold && run.italic) return 'bolditalic';
+    if (run.bold) return 'bolditalic'.substring(0,4);
+    if (run.italic) return 'italic';
+    return 'normal';
+  }
+
+  // Render a single paragraph of formatted text runs with word wrapping
+  function renderPara(runs, opts) {
+    const fontSize = (opts && opts.size) || 11;
+    const align = (opts && opts.align) || 'left';
+    const lh = fontSize * 1.4;
+    const afterSpace = (opts && opts.after !== undefined) ? opts.after : 6;
+
+    // Flatten runs into word tokens with formatting
+    const words = [];
+    for (const run of runs) {
+      const parts = run.text.split(/( +)/);
+      for (const part of parts) {
+        if (part.length > 0) {
+          words.push({ text: part, bold: run.bold, italic: run.italic, underline: run.underline });
+        }
+      }
+    }
+
+    if (words.length === 0) return;
+    checkPage(lh);
+
+    let lineWords = [];
+    let lineWidth = 0;
+
+    function flushLine(isLast) {
+      if (lineWords.length === 0) return;
+      let x = ML;
+      if (align === 'center') {
+        x = ML + (CW - lineWidth) / 2;
+      } else if (align === 'right') {
+        x = ML + CW - lineWidth;
+      }
+      for (const w of lineWords) {
+        setF(fontStyle(w), fontSize);
+        pdf.text(w.text, x, y);
+        if (w.underline) {
+          const tw = pdf.getTextWidth(w.text);
+          pdf.setLineWidth(0.5);
+          pdf.line(x, y + 1.5, x + tw, y + 1.5);
+        }
+        x += pdf.getTextWidth(w.text);
+      }
+      y += lh;
+      checkPage(lh);
+      lineWords = [];
+      lineWidth = 0;
+    }
+
+    for (const w of words) {
+      setF(fontStyle(w), fontSize);
+      const ww = pdf.getTextWidth(w.text);
+      if (lineWidth + ww > CW && lineWidth > 0 && w.text.trim()) {
+        flushLine(false);
+      }
+      lineWords.push(w);
+      lineWidth += ww;
+    }
+    flushLine(true);
+    y += afterSpace;
+  }
+
+  // Render plain text line
+  function addLine(text, opts) {
+    const fontSize = (opts && opts.size) || 11;
+    const style = (opts && opts.style) || 'normal';
+    const align = (opts && opts.align) || 'left';
+    const after = (opts && opts.after !== undefined) ? opts.after : 6;
+    const lh = fontSize * 1.4;
+    setF(style, fontSize);
+    const lines = pdf.splitTextToSize(text, CW);
+    for (const line of lines) {
+      checkPage(lh);
+      let x = ML;
+      if (align === 'center') x = PW / 2;
+      else if (align === 'right') x = PW - MR;
+      pdf.text(line, x, y, { align });
+      y += lh;
+    }
+    y += after;
+  }
+
+  // Render HTML section body
+  function addHtmlParas(html, opts) {
+    const paras = parseHtml(html);
+    for (const runs of paras) {
+      if (runs.length > 0) renderPara(runs, opts);
+    }
+  }
+
+  // --- Header on first page ---
+  const firmLogo = getFirmLogoData();
+  if (firmLogo) {
+    const logoDataUrl = localStorage.getItem('firm_logoDataUrl');
+    if (logoDataUrl) {
+      try { pdf.addImage(logoDataUrl, 'PNG', ML, 24, 55, 55); } catch(e) { /* skip logo if unsupported format */ }
+    }
+    // Attorney info - right aligned, sage color
+    pdf.setTextColor(139, 157, 147);
+    setF('normal', 8);
+    const rx = PW - MR;
+    pdf.text('MATT A. MARGOLIS, ESQ. / PARTNER /', rx, 32, { align: 'right' });
+    pdf.text('MATTHEW@MARGOLISPLLC.COM', rx, 42, { align: 'right' });
+    pdf.text('KARINA S. MARGOLIS, ESQ. / PARTNER /', rx, 58, { align: 'right' });
+    pdf.text('KARINA@MARGOLISPLLC.COM', rx, 68, { align: 'right' });
+    pdf.setTextColor(0, 0, 0);
+    MT = 100;
+    y = MT;
+  }
+
+  // --- Letter body ---
+  blankLine(4);
+  addLine(revDate, { align: 'center' });
+  blankLine(8);
+
+  // VIA ELECTRONIC MAIL ONLY
+  renderPara([{ text: 'VIA ELECTRONIC MAIL ONLY', bold: true, italic: true, underline: true }], { after: 6 });
+  addLine(revRecipient, { after: 0 });
+  if (revAttention) addLine('ATTENTION: ' + revAttention, { after: 0 });
+  if (revEmail) addLine(revEmail, { after: 0 });
+  blankLine(8);
+
+  // Re: line
+  addLine('Re: ' + revRe, { style: 'bold' });
+  blankLine(4);
+
+  // Greeting
+  addLine(revGreeting);
+  addHtmlParas(editedSections.intro);
+
+  // Numbered sections
+  const sectionDefs = [
+    {num:1, key:'s1', title:'Attorney in Charge'},{num:2, key:'s2', title:'Client'},
+    {num:3, key:'s3', title:'Scope'},{num:4, key:'s4', title:'What we need from you'},
+    {num:5, key:'s5', title:'Advice about Possible Outcomes'},{num:6, key:'s6', title:'Legal Services Fees'},
+    {num:7, key:'s7', title:'Costs'},{num:8, key:'s8', title:'Payment'},
+    {num:9, key:'s9', title:'Conflicts of Interest and Waiver'},
+    {num:10, key:'s10', title:'Specialist/Local Network and Fee Sharing'},
+    {num:11, key:'s11', title:'Use of Artificial Intelligence Tools'},
+    {num:12, key:'s12', title:'Termination of Engagement'},
+    {num:13, key:'s13', title:'Conclusion of Representation; Retention and Disposition of Documents'},
+    {num:14, key:'s14', title:'Post-Engagement Matters'},
+    {num:15, key:'s15', title:'Choice of Law & Venue'},
+  ];
+
+  for (const sd of sectionDefs) {
+    const html = editedSections[sd.key];
+    const paras = parseHtml(html);
+    if (paras.length > 0 && paras[0].length > 0) {
+      // First paragraph: prepend "N. Title: " then the content
+      const prefix = [
+        { text: sd.num + '. ', bold: false, italic: false, underline: false },
+        { text: sd.title + ':', bold: false, italic: false, underline: true },
+        { text: ' ', bold: false, italic: false, underline: false }
+      ];
+      renderPara([...prefix, ...paras[0]]);
+      for (let i = 1; i < paras.length; i++) {
+        if (paras[i].length > 0) renderPara(paras[i]);
+      }
+    }
+  }
+
+  // Closing
+  addHtmlParas(editedSections.closing);
+  blankLine(8);
+  addLine('Sincerely,', { after: 0 });
+  blankLine(40);
+  addLine('MARGOLIS PLLC', { style: 'bold', after: 8 });
+  renderPara([{ text: '/s/ ' + meta.sigFull, bold: true, italic: true, underline: false }], { after: 8 });
+  addLine('By: ' + meta.sigShort + ', Esq.', { after: 0 });
+  addLine('For the Firm');
+  blankLine(20);
+
+  // Acknowledgment
+  addLine('ACKNOWLEDGED AND AGREED:', { style: 'bold' });
+  blankLine(4);
+  addLine(revRecipient);
+  blankLine(4);
+  addLine('By: _____________________________', { after: 0 });
+  addLine('Name: __________________________', { after: 0 });
+  addLine('Date: ___________________________');
+
+  // --- Exhibit A (new page) ---
+  pdf.addPage();
+  y = MT;
+  renderPara([{ text: 'EXHIBIT A', bold: true, italic: false, underline: true }], { align: 'center', size: 11, after: 8 });
+  renderPara([{ text: 'SCOPE OF SERVICES', bold: true, italic: false, underline: true }], { align: 'center', size: 11, after: 8 });
+  blankLine(4);
+  addHtmlParas(editedSections.exhibit);
+
+  return pdf.output('blob');
 }
 
 async function sendToSlack() {
