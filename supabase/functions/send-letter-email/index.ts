@@ -6,108 +6,24 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Max attachment size: 10 MB (base64 inflates ~33%, so check for ~14 MB of base64 text)
 const MAX_ATTACHMENT_BASE64_LENGTH = 14 * 1024 * 1024
+// Max overall request body size: 15 MB
 const MAX_BODY_SIZE = 15 * 1024 * 1024
+// Max subject / filename length
 const MAX_SUBJECT_LENGTH = 500
 const MAX_FILENAME_LENGTH = 255
+// Max HTML body length: 500 KB
 const MAX_HTML_LENGTH = 512 * 1024
 
+// Reject strings containing CRLF / newline sequences (header injection prevention)
 function hasCRLF(s: string): boolean {
   return /[\r\n]/.test(s)
 }
 
+// Sanitize attachment filename: allow only safe characters
 function sanitizeFilename(name: string): string {
   return name.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, MAX_FILENAME_LENGTH)
-}
-
-// --- Gmail API via Service Account ---
-
-function base64url(data: Uint8Array): string {
-  return btoa(String.fromCharCode(...data))
-    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
-}
-
-function base64urlStr(str: string): string {
-  return base64url(new TextEncoder().encode(str))
-}
-
-async function importPrivateKey(pem: string): Promise<CryptoKey> {
-  const pemBody = pem
-    .replace(/-----BEGIN PRIVATE KEY-----/, '')
-    .replace(/-----END PRIVATE KEY-----/, '')
-    .replace(/\s/g, '')
-  const binaryDer = Uint8Array.from(atob(pemBody), c => c.charCodeAt(0))
-  return crypto.subtle.importKey(
-    'pkcs8', binaryDer, { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['sign']
-  )
-}
-
-async function getGmailAccessToken(serviceEmail: string, privateKeyPem: string, sendAs: string): Promise<string> {
-  const now = Math.floor(Date.now() / 1000)
-  const header = base64urlStr(JSON.stringify({ alg: 'RS256', typ: 'JWT' }))
-  const payload = base64urlStr(JSON.stringify({
-    iss: serviceEmail,
-    sub: sendAs,
-    scope: 'https://www.googleapis.com/auth/gmail.send',
-    aud: 'https://oauth2.googleapis.com/token',
-    iat: now,
-    exp: now + 3600,
-  }))
-  const signingInput = `${header}.${payload}`
-  const key = await importPrivateKey(privateKeyPem)
-  const sig = new Uint8Array(await crypto.subtle.sign('RSASSA-PKCS1-v1_5', key, new TextEncoder().encode(signingInput)))
-  const jwt = `${signingInput}.${base64url(sig)}`
-
-  const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: `grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=${jwt}`,
-  })
-  if (!tokenRes.ok) {
-    const err = await tokenRes.text()
-    throw new Error(`Google token exchange failed: ${err}`)
-  }
-  const tokenData = await tokenRes.json()
-  return tokenData.access_token
-}
-
-function buildRfc822Message(
-  from: string, to: string, subject: string, html: string,
-  replyTo?: string, attachmentBase64?: string, attachmentFilename?: string
-): string {
-  const boundary = `boundary_${crypto.randomUUID()}`
-  const lines: string[] = []
-
-  lines.push(`From: ${from}`)
-  lines.push(`To: ${to}`)
-  lines.push(`Subject: ${subject}`)
-  if (replyTo) lines.push(`Reply-To: ${replyTo}`)
-  lines.push('MIME-Version: 1.0')
-
-  if (attachmentBase64 && attachmentFilename) {
-    lines.push(`Content-Type: multipart/mixed; boundary="${boundary}"`)
-    lines.push('')
-    lines.push(`--${boundary}`)
-    lines.push('Content-Type: text/html; charset="UTF-8"')
-    lines.push('')
-    lines.push(html)
-    lines.push(`--${boundary}`)
-    lines.push(`Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document`)
-    lines.push(`Content-Disposition: attachment; filename="${attachmentFilename}"`)
-    lines.push('Content-Transfer-Encoding: base64')
-    lines.push('')
-    // Break base64 into 76-char lines per RFC 2045
-    for (let i = 0; i < attachmentBase64.length; i += 76) {
-      lines.push(attachmentBase64.slice(i, i + 76))
-    }
-    lines.push(`--${boundary}--`)
-  } else {
-    lines.push('Content-Type: text/html; charset="UTF-8"')
-    lines.push('')
-    lines.push(html)
-  }
-
-  return lines.join('\r\n')
 }
 
 serve(async (req) => {
@@ -116,6 +32,7 @@ serve(async (req) => {
   }
 
   try {
+    // Enforce request body size limit
     const contentLength = req.headers.get('content-length')
     if (contentLength && parseInt(contentLength, 10) > MAX_BODY_SIZE) {
       return new Response(JSON.stringify({ error: 'Request too large' }), {
@@ -124,6 +41,7 @@ serve(async (req) => {
       })
     }
 
+    // Verify the caller is authenticated
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
       return new Response(JSON.stringify({ error: 'Missing authorization' }), {
@@ -153,12 +71,9 @@ serve(async (req) => {
       })
     }
 
-    // Verify Gmail config
-    const serviceEmail = Deno.env.get('GOOGLE_SERVICE_ACCOUNT_EMAIL')
-    const privateKey = Deno.env.get('GOOGLE_PRIVATE_KEY')
-    const sendAs = Deno.env.get('GMAIL_SEND_AS')
-    if (!serviceEmail || !privateKey || !sendAs) {
-      return new Response(JSON.stringify({ error: 'Gmail service account not configured' }), {
+    const resendApiKey = Deno.env.get('RESEND_API_KEY')
+    if (!resendApiKey) {
+      return new Response(JSON.stringify({ error: 'Email service not configured' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
@@ -166,6 +81,7 @@ serve(async (req) => {
 
     const body = await req.json()
 
+    // Only allow expected fields
     const allowedKeys = new Set(['to', 'subject', 'html', 'replyTo', 'attachmentBase64', 'attachmentFilename'])
     for (const key of Object.keys(body)) {
       if (!allowedKeys.has(key)) {
@@ -178,6 +94,7 @@ serve(async (req) => {
 
     const { to, subject, html, replyTo, attachmentBase64, attachmentFilename } = body
 
+    // Validate required fields
     if (!to || !subject || !html) {
       return new Response(JSON.stringify({ error: 'Missing required fields: to, subject, html' }), {
         status: 400,
@@ -185,6 +102,7 @@ serve(async (req) => {
       })
     }
 
+    // Type checks
     if (typeof to !== 'string' || typeof subject !== 'string' || typeof html !== 'string') {
       return new Response(JSON.stringify({ error: 'Invalid field types' }), {
         status: 400,
@@ -192,6 +110,7 @@ serve(async (req) => {
       })
     }
 
+    // CRLF injection prevention on header-sensitive fields
     if (hasCRLF(to) || hasCRLF(subject)) {
       return new Response(JSON.stringify({ error: 'Invalid characters in email fields' }), {
         status: 400,
@@ -205,6 +124,7 @@ serve(async (req) => {
       })
     }
 
+    // Length limits
     if (subject.length > MAX_SUBJECT_LENGTH) {
       return new Response(JSON.stringify({ error: 'Subject too long' }), {
         status: 400,
@@ -218,6 +138,7 @@ serve(async (req) => {
       })
     }
 
+    // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(to)) {
       return new Response(JSON.stringify({ error: 'Invalid recipient email' }), {
@@ -226,6 +147,7 @@ serve(async (req) => {
       })
     }
 
+    // Attachment size limit
     if (typeof attachmentBase64 === 'string' && attachmentBase64.length > MAX_ATTACHMENT_BASE64_LENGTH) {
       return new Response(JSON.stringify({ error: 'Attachment too large (max 10 MB)' }), {
         status: 413,
@@ -233,43 +155,47 @@ serve(async (req) => {
       })
     }
 
-    // Get Gmail access token via service account
-    const accessToken = await getGmailAccessToken(serviceEmail, privateKey, sendAs)
+    // Sender domain — use env var or default
+    const fromAddress = Deno.env.get('EMAIL_FROM_ADDRESS') || 'Margolis PLLC <noreply@margolispllc.com>'
 
-    // Build RFC 822 email message
-    const validReplyTo = typeof replyTo === 'string' && emailRegex.test(replyTo) ? replyTo : undefined
-    const safeFilename = typeof attachmentFilename === 'string' ? sanitizeFilename(attachmentFilename) : undefined
-    const rawMessage = buildRfc822Message(
-      sendAs, to, subject, html, validReplyTo,
-      typeof attachmentBase64 === 'string' && attachmentBase64.length > 0 ? attachmentBase64 : undefined,
-      safeFilename
-    )
+    // Build Resend payload
+    const emailPayload: Record<string, unknown> = {
+      from: fromAddress,
+      to: [to],
+      subject,
+      html,
+    }
 
-    // Base64url-encode the message for Gmail API
-    const rawBase64 = base64url(new TextEncoder().encode(rawMessage))
+    if (typeof replyTo === 'string' && emailRegex.test(replyTo)) {
+      emailPayload.reply_to = [replyTo]
+    }
 
-    // Send via Gmail API
-    const gmailRes = await fetch(
-      `https://gmail.googleapis.com/gmail/v1/users/${encodeURIComponent(sendAs)}/messages/send`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({ raw: rawBase64 }),
-      }
-    )
+    // Attach DOCX if provided (with sanitized filename)
+    if (typeof attachmentBase64 === 'string' && attachmentBase64.length > 0 && typeof attachmentFilename === 'string') {
+      emailPayload.attachments = [{
+        filename: sanitizeFilename(attachmentFilename),
+        content: attachmentBase64,
+      }]
+    }
 
-    if (!gmailRes.ok) {
-      const errBody = await gmailRes.json().catch(() => ({}))
-      return new Response(JSON.stringify({ error: 'Gmail send failed', detail: errBody.error?.message || gmailRes.statusText }), {
+    const resendRes = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${resendApiKey}`,
+      },
+      body: JSON.stringify(emailPayload),
+    })
+
+    if (!resendRes.ok) {
+      const errBody = await resendRes.json().catch(() => ({}))
+      return new Response(JSON.stringify({ error: 'Email delivery failed', detail: errBody.message || resendRes.statusText }), {
         status: 502,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
-    const result = await gmailRes.json()
+    const result = await resendRes.json()
 
     return new Response(JSON.stringify({ ok: true, id: result.id }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
