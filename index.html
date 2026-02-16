@@ -1009,7 +1009,7 @@ async function buildDocxBlob() {
     editedSections[s.id] = sanitizeHtml(document.getElementById('rev_'+s.id).innerHTML);
   });
 
-  const { Document, Packer, Paragraph, TextRun, ImageRun, AlignmentType, Header, BorderStyle, UnderlineType } = window.docx;
+  const { Document, Packer, Paragraph, TextRun, ImageRun, AlignmentType, Header, BorderStyle, UnderlineType, Table, TableRow, TableCell, WidthType, VerticalAlign } = window.docx;
 
   const f = 'Times New Roman', sz = 22;
   const tr = (text, opts={}) => new TextRun({ font:f, size:sz, ...opts, text });
@@ -1129,9 +1129,41 @@ async function buildDocxBlob() {
 
   const firmLogo = getFirmLogoData();
 
+  const noBorder = { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' };
+  const noBorders = { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder };
+  const headerGray = '808080';
+
   let headerChildren;
   if (firmLogo) {
-    headerChildren = [new Paragraph({ alignment:AlignmentType.LEFT, children:[new ImageRun({data:firmLogo.base64,transformation:{width:180,height:180}})] })];
+    headerChildren = [new Table({
+      rows: [new TableRow({
+        children: [
+          new TableCell({
+            width: { size: 30, type: WidthType.PERCENTAGE },
+            borders: noBorders,
+            verticalAlign: VerticalAlign.CENTER,
+            children: [new Paragraph({ alignment: AlignmentType.LEFT, children: [
+              new ImageRun({ data: firmLogo.base64, transformation: { width: 130, height: 130 } })
+            ]})]
+          }),
+          new TableCell({
+            width: { size: 70, type: WidthType.PERCENTAGE },
+            borders: noBorders,
+            verticalAlign: VerticalAlign.CENTER,
+            children: [
+              new Paragraph({ alignment: AlignmentType.RIGHT, spacing: { after: 0, line: 240 }, children: [
+                new TextRun({ font: 'Times New Roman', size: 16, color: headerGray, text: 'MATT A. MARGOLIS, ESQ. / PARTNER / MATTHEW@MARGOLISPLLC.COM' })
+              ]}),
+              new Paragraph({ alignment: AlignmentType.RIGHT, spacing: { after: 0, line: 240 }, children: [] }),
+              new Paragraph({ alignment: AlignmentType.RIGHT, spacing: { after: 0, line: 240 }, children: [
+                new TextRun({ font: 'Times New Roman', size: 16, color: headerGray, text: 'KARINA S. MARGOLIS, ESQ. / PARTNER / KARINA@MARGOLISPLLC.COM' })
+              ]})
+            ]
+          })
+        ]
+      })],
+      width: { size: 100, type: WidthType.PERCENTAGE }
+    })];
   } else {
     headerChildren = [];
   }
