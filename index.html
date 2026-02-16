@@ -1073,7 +1073,8 @@ async function buildDocxBlob() {
   }
 
   const body = [];
-  body.push(pp(revDate, {align:AlignmentType.LEFT}));
+  body.push(blank());
+  body.push(pp(revDate, {align:AlignmentType.CENTER}));
   body.push(blank());
   body.push(pp([bi('VIA ELECTRONIC MAIL ONLY')], {align:AlignmentType.LEFT}));
   body.push(pp(revRecipient, {align:AlignmentType.LEFT, spacing:spTight}));
@@ -1154,17 +1155,17 @@ async function buildDocxBlob() {
             borders: noBorders,
             verticalAlign: VerticalAlign.CENTER,
             children: [
-              new Paragraph({ alignment: AlignmentType.CENTER, spacing: hdrSpacing, children: [
+              new Paragraph({ alignment: AlignmentType.RIGHT, spacing: hdrSpacing, children: [
                 new TextRun({ font: hdrFont, size: hdrSize, color: headerSage, text: 'MATT A. MARGOLIS, ESQ. / PARTNER /' })
               ]}),
-              new Paragraph({ alignment: AlignmentType.CENTER, spacing: hdrSpacing, children: [
+              new Paragraph({ alignment: AlignmentType.RIGHT, spacing: hdrSpacing, children: [
                 new TextRun({ font: hdrFont, size: hdrSize, color: headerSage, text: 'MATTHEW@MARGOLISPLLC.COM' })
               ]}),
-              new Paragraph({ alignment: AlignmentType.CENTER, spacing: hdrSpacing, children: [] }),
-              new Paragraph({ alignment: AlignmentType.CENTER, spacing: hdrSpacing, children: [
+              new Paragraph({ alignment: AlignmentType.RIGHT, spacing: hdrSpacing, children: [] }),
+              new Paragraph({ alignment: AlignmentType.RIGHT, spacing: hdrSpacing, children: [
                 new TextRun({ font: hdrFont, size: hdrSize, color: headerSage, text: 'KARINA S. MARGOLIS, ESQ. / PARTNER /' })
               ]}),
-              new Paragraph({ alignment: AlignmentType.CENTER, spacing: hdrSpacing, children: [
+              new Paragraph({ alignment: AlignmentType.RIGHT, spacing: hdrSpacing, children: [
                 new TextRun({ font: hdrFont, size: hdrSize, color: headerSage, text: 'KARINA@MARGOLISPLLC.COM' })
               ]})
             ]
