@@ -1882,16 +1882,18 @@ async function approveLetter() {
   }
   if (!_letterApprovalId) { showStatus('Letter must be saved before it can be approved. Try saving as draft first.', 'error'); if (approveBtn) approveBtn.disabled = false; if (sendBackBtn) sendBackBtn.disabled = false; return; }
 
-  // Prevent self-approval: check if current user created this letter
-  // SECURITY: do NOT silently skip — block the action if the check fails
+  // Prevent self-approval UNLESS the letter has already been through a review cycle
+  // (i.e., another attorney already reviewed it and sent it back with changes)
   try {
     const { data: letterData, error: fetchErr } = await db.from('engagement_letters')
-      .select('created_by_email')
+      .select('created_by_email, reviewed_by')
       .eq('id', _letterApprovalId)
       .single();
     if (fetchErr) throw fetchErr;
-    if (letterData && letterData.created_by_email === currentUser.email) {
-      showStatus('You cannot approve your own letter. Another attorney must review it.', 'error');
+    const isAuthor = letterData && letterData.created_by_email === currentUser.email;
+    const wasReviewedByOther = letterData && letterData.reviewed_by && letterData.reviewed_by !== currentUser.email;
+    if (isAuthor && !wasReviewedByOther) {
+      showStatus('You cannot approve your own letter. Another attorney must review it first.', 'error');
       if (approveBtn) approveBtn.disabled = false; if (sendBackBtn) sendBackBtn.disabled = false;
       return;
     }
@@ -1946,10 +1948,12 @@ function showSendBackNotesUI() {
   const originalId = _letterApprovalId;
   if (!originalId) { showStatus('Letter must be saved before it can be reviewed.', 'error'); return; }
 
-  db.from('engagement_letters').select('created_by_email').eq('id', originalId).single()
+  db.from('engagement_letters').select('created_by_email, reviewed_by').eq('id', originalId).single()
     .then(({ data }) => {
-      if (data && data.created_by_email === currentUser.email) {
-        showStatus('You cannot review your own letter. Another attorney must review it.', 'error');
+      const isAuthor = data && data.created_by_email === currentUser.email;
+      const wasReviewedByOther = data && data.reviewed_by && data.reviewed_by !== currentUser.email;
+      if (isAuthor && !wasReviewedByOther) {
+        showStatus('You cannot review your own letter. Another attorney must review it first.', 'error');
         return;
       }
       // Show inline notes area in the approval bar
