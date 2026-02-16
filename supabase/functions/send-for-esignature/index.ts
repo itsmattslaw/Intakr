@@ -74,7 +74,7 @@ serve(async (req) => {
     const allowedKeys = new Set([
       'pdfBase64', 'fileName', 'signerName', 'signerEmail',
       'title', 'message', 'clientId', 'letterId',
-      'signaturePageNumber',
+      'signaturePageNumber', 'redirectUrl',
     ])
     for (const key of Object.keys(body)) {
       if (!allowedKeys.has(key)) {
@@ -85,7 +85,7 @@ serve(async (req) => {
       }
     }
 
-    const { pdfBase64, fileName, signerName, signerEmail, title, message, clientId, letterId, signaturePageNumber } = body
+    const { pdfBase64, fileName, signerName, signerEmail, title, message, clientId, letterId, signaturePageNumber, redirectUrl } = body
 
     // Validate required fields
     if (!pdfBase64 || !signerName || !signerEmail || !title) {
@@ -164,6 +164,11 @@ serve(async (req) => {
     formData.append('Signers[0][EmailAddress]', signerEmail)
     formData.append('Signers[0][SignerType]', 'Signer')
 
+    // Redirect the signer back to Intakr after signing
+    if (typeof redirectUrl === 'string' && redirectUrl.startsWith('https://')) {
+      formData.append('Signers[0][RedirectUrl]', redirectUrl)
+    }
+
     // Signature field — overlays the "By: _____" line
     formData.append('Signers[0][FormFields][0][Id]', 'clientSignature')
     formData.append('Signers[0][FormFields][0][Name]', 'Client Signature')
@@ -220,33 +225,29 @@ serve(async (req) => {
     const documentId = boldsignResult.documentId
 
     // Update the engagement letter record with the BoldSign document ID
+    // Use service role key to bypass RLS
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    const serviceClient = createClient(supabaseUrl, serviceRoleKey)
+
     if (letterId && documentId) {
-      try {
-        // Use service role key for direct DB update (bypasses RLS for webhook-style updates)
-        const serviceClient = createClient(supabaseUrl, supabaseAnonKey, {
-          global: { headers: { Authorization: authHeader } },
-        })
-        await serviceClient.from('engagement_letters')
-          .update({ boldsign_document_id: documentId, esign_status: 'sent', approval_status: 'Approved' })
-          .eq('id', letterId)
-      } catch (e) {
-        // Non-fatal — log but don't fail the request
-        console.warn('Failed to update engagement letter with BoldSign ID:', e.message)
+      const { error: letterUpdateError } = await serviceClient.from('engagement_letters')
+        .update({ boldsign_document_id: documentId, esign_status: 'sent', approval_status: 'Approved' })
+        .eq('id', letterId)
+
+      if (letterUpdateError) {
+        console.error('Failed to update engagement letter with BoldSign ID:', letterUpdateError.message)
       }
     }
 
     // Update client status to "Letter Sent" if clientId provided
     if (clientId) {
-      try {
-        const serviceClient = createClient(supabaseUrl, supabaseAnonKey, {
-          global: { headers: { Authorization: authHeader } },
-        })
-        const today = new Date().toISOString().slice(0, 10)
-        await serviceClient.from('clients')
-          .update({ status: 'Letter Sent', letter_sent: today })
-          .eq('id', clientId)
-      } catch (e) {
-        console.warn('Failed to update client status:', e.message)
+      const today = new Date().toISOString().slice(0, 10)
+      const { error: clientUpdateError } = await serviceClient.from('clients')
+        .update({ status: 'Letter Sent', letter_sent: today })
+        .eq('id', clientId)
+
+      if (clientUpdateError) {
+        console.error('Failed to update client status:', clientUpdateError.message)
       }
     }
 
