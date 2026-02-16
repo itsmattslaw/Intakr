@@ -134,6 +134,41 @@ serve(async (req) => {
       console.error('Failed to update esign_status:', updateError.message)
     }
 
+    // On completion, download signed PDF from BoldSign and store in Supabase Storage
+    if (eventType === 'Completed') {
+      const boldsignApiKey = Deno.env.get('BOLDSIGN_API_KEY')
+      if (boldsignApiKey) {
+        try {
+          const dlRes = await fetch(
+            `https://api.boldsign.com/v1/document/download?documentId=${encodeURIComponent(documentId)}`,
+            { headers: { 'X-API-KEY': boldsignApiKey } },
+          )
+          if (dlRes.ok) {
+            const pdfBytes = new Uint8Array(await dlRes.arrayBuffer())
+            const storagePath = `${letter.client_id}/${letter.id}_signed.pdf`
+            const { error: uploadError } = await supabase.storage
+              .from('signed-letters')
+              .upload(storagePath, pdfBytes, {
+                contentType: 'application/pdf',
+                upsert: true,
+              })
+            if (uploadError) {
+              console.error('Failed to upload signed PDF:', uploadError.message)
+            } else {
+              // Store the path on the engagement letter record
+              await supabase.from('engagement_letters')
+                .update({ signed_pdf_path: storagePath })
+                .eq('id', letter.id)
+            }
+          } else {
+            console.warn('BoldSign download failed:', dlRes.status, await dlRes.text())
+          }
+        } catch (e) {
+          console.warn('Signed PDF download/upload failed:', e.message)
+        }
+      }
+    }
+
     // On completion, update the client status to "Executed"
     if (eventType === 'Completed' && letter.client_id) {
       const today = new Date().toISOString().slice(0, 10)

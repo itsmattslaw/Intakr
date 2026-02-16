@@ -2175,7 +2175,7 @@ async function renderDashboard() {
     const clientIds = allClients.map(c => c.id);
     if (clientIds.length > 0) {
       const { data: letters } = await db.from('engagement_letters')
-        .select('client_id, approval_status, reviewed_by, review_notes, assigned_reviewer, created_at, esign_status')
+        .select('id, client_id, approval_status, reviewed_by, review_notes, assigned_reviewer, created_at, esign_status, signed_pdf_path')
         .in('client_id', clientIds)
         .order('created_at', { ascending: false });
       if (letters) {
@@ -2239,7 +2239,7 @@ async function renderDashboard() {
   const rows = clients.map(c => {
     const ls = letterStatusMap[c.id];
     const letterStatus = ls ? ls.approval_status || 'Draft' : '\u2014';
-    const esignPill = ls && ls.esign_status ? ` <span class="approval-pill" style="background:${ls.esign_status === 'completed' ? '#E8F5E9;color:#2E7D32' : ls.esign_status === 'declined' ? '#FFEBEE;color:#C62828' : '#FFF8E1;color:#E6A817'};font-size:9px;padding:2px 7px;">${esc(ls.esign_status === 'completed' ? 'Signed' : ls.esign_status === 'sent' ? 'E-Sign Pending' : ls.esign_status)}</span>` : '';
+    const esignPill = ls && ls.esign_status ? ` <span class="approval-pill" style="background:${ls.esign_status === 'completed' ? '#E8F5E9;color:#2E7D32' : ls.esign_status === 'declined' ? '#FFEBEE;color:#C62828' : '#FFF8E1;color:#E6A817'};font-size:9px;padding:2px 7px;${ls.signed_pdf_path ? 'cursor:pointer;text-decoration:underline;' : ''}" ${ls.signed_pdf_path ? `onclick="downloadSignedCopy('${esc(ls.id)}','${esc(ls.signed_pdf_path)}')" title="Download signed copy"` : ''}>${esc(ls.esign_status === 'completed' ? 'Signed' : ls.esign_status === 'sent' ? 'E-Sign Pending' : ls.esign_status)}${ls.signed_pdf_path ? ' \u2193' : ''}</span>` : '';
     const letterPill = ls ? `<span class="approval-pill ${approvalClass(letterStatus)}">${esc(letterStatus)}</span>${esignPill}` : `<span style="color:var(--warm-gray);font-size:11px">\u2014</span>`;
     const assignedShort = c.assigned_to ? getAttyShortName(c.assigned_to) : '';
     const assignedHtml = assignedShort ? `<span class="assigned-badge has-assignee">${esc(assignedShort)}</span>` : `<span style="color:var(--warm-gray);font-size:11px">\u2014</span>`;
@@ -3063,6 +3063,67 @@ function closeDocHistoryModal() {
   document.body.style.overflow = '';
 }
 
+async function downloadSignedCopy(letterId, storagePath) {
+  try {
+    const { data, error } = await db.storage
+      .from('signed-letters')
+      .createSignedUrl(storagePath, 60);
+    if (error) throw error;
+    const a = document.createElement('a');
+    a.href = data.signedUrl;
+    a.download = `Signed_Engagement_Letter.pdf`;
+    a.target = '_blank';
+    a.click();
+  } catch (e) {
+    showStatus('Error downloading signed copy: ' + e.message, 'error');
+  }
+}
+
+async function fetchSignedCopy(letterId, btn) {
+  const savedLabel = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<div class="loading-spinner" style="width:12px;height:12px;border-width:2px;"></div> Fetching...';
+
+  try {
+    let session = (await db.auth.getSession()).data.session;
+    if (!session) throw new Error('Please sign in again.');
+
+    const nowSec = Math.floor(Date.now() / 1000);
+    if (session.expires_at && (session.expires_at - nowSec) < 120) {
+      const { data: refreshData, error: refreshErr } = await db.auth.refreshSession();
+      if (refreshErr || !refreshData.session) throw new Error('Session expired — please sign in again.');
+      session = refreshData.session;
+    }
+
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/fetch-signed-document`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON_KEY,
+      },
+      body: JSON.stringify({ letterId }),
+    });
+
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.error || 'Failed to fetch signed document');
+
+    // Download the file now that it's stored
+    await downloadSignedCopy(letterId, result.path);
+
+    // Replace the button with a green "Signed Copy" button
+    btn.style.background = '#2E7D32';
+    btn.disabled = false;
+    btn.onclick = () => downloadSignedCopy(letterId, result.path);
+    btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Signed Copy`;
+    showStatus('Signed copy retrieved and stored.', 'success');
+  } catch (e) {
+    showStatus('Error: ' + e.message, 'error');
+    btn.disabled = false;
+    btn.innerHTML = savedLabel;
+  }
+}
+
 async function viewLetterHistory(clientId) {
   const modal = document.getElementById('docHistoryModal');
   const body = document.getElementById('docHistoryBody');
@@ -3101,6 +3162,7 @@ async function viewLetterHistory(clientId) {
           </div>
         </div>
         <div class="doc-version-actions">
+          ${letter.signed_pdf_path ? `<button class="btn btn-sm" style="background:#2E7D32;color:#fff;" onclick="downloadSignedCopy('${esc(letter.id)}','${esc(letter.signed_pdf_path)}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Signed Copy</button>` : (letter.esign_status === 'completed' || letter.esign_status === 'signed') ? `<button class="btn btn-sm" style="background:var(--amber);color:#fff;" onclick="fetchSignedCopy('${esc(letter.id)}',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Fetch Signed</button>` : ''}
           <button class="btn btn-secondary btn-sm" onclick="openSavedLetter('${esc(letter.id)}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Review</button>
           <button class="btn btn-danger btn-sm" onclick="deleteLetterVersion('${esc(letter.id)}')">&#10005;</button>
         </div>
