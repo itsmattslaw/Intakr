@@ -956,19 +956,26 @@ async function sendForESignature() {
 
   try {
     // Save letter first
+    console.log('[ESIGN] Step 1: Saving letter to DB...');
     await saveLetterToDb();
+    console.log('[ESIGN] Step 1: Done.');
 
     // Generate PDF blob
+    console.log('[ESIGN] Step 2: Building PDF blob...');
     const blob = await buildPdfBlob();
     if (!blob) throw new Error('Failed to generate PDF');
+    console.log('[ESIGN] Step 2: Done. Blob size:', blob.size);
 
+    console.log('[ESIGN] Step 3: Converting PDF to base64...');
     const arrayBuf = await blob.arrayBuffer();
     const bytes = new Uint8Array(arrayBuf);
     let binary = '';
     for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
     const pdfBase64 = btoa(binary);
+    console.log('[ESIGN] Step 3: Done. Base64 length:', pdfBase64.length);
 
     const meta = _letterReviewMeta;
+    console.log('[ESIGN] Step 4: meta =', meta);
     const fileName = `Engagement_Letter_${meta.name.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
     const title = `Engagement Letter \u2014 ${meta.matter} \u2014 ${meta.name}`;
 
@@ -986,8 +993,10 @@ async function sendForESignature() {
     }
 
     // Get auth session
+    console.log('[ESIGN] Step 5: Getting auth session...');
     let session = (await db.auth.getSession()).data.session;
     if (!session) throw new Error('Not authenticated \u2014 please sign in again.');
+    console.log('[ESIGN] Step 5: Done. Token expires_at:', session.expires_at);
 
     const nowSec = Math.floor(Date.now() / 1000);
     if (session.expires_at && (session.expires_at - nowSec) < 120) {
@@ -1008,6 +1017,7 @@ async function sendForESignature() {
       signaturePageNumber: _lastPdfSignaturePageNum || 2,
     };
 
+    console.log('[ESIGN] Step 6: Sending fetch to edge function... Payload size:', JSON.stringify(payload).length);
     const res = await fetch(`${SUPABASE_URL}/functions/v1/send-for-esignature`, {
       method: 'POST',
       headers: {
@@ -1017,6 +1027,7 @@ async function sendForESignature() {
       },
       body: JSON.stringify(payload)
     });
+    console.log('[ESIGN] Step 6: Got response. Status:', res.status);
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
@@ -1061,6 +1072,7 @@ async function sendForESignature() {
 
     showStatus(`\u2713 Engagement letter sent to ${signerEmail} for electronic signature via BoldSign.`, 'success');
   } catch (err) {
+    console.error('[ESIGN] Error:', err);
     showStatus('E-signature error: ' + err.message, 'error');
   } finally {
     sendBtns.forEach((b, i) => { b.disabled = false; b.innerHTML = savedLabels[i]; });
