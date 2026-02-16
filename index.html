@@ -169,6 +169,38 @@
   .doc-version-actions{display:flex;gap:6px;flex-shrink:0;}
   .doc-saved-banner{background:var(--amber-pale);border:1px solid #E6D990;border-radius:8px;padding:10px 16px;margin-bottom:20px;font-size:12px;font-weight:500;color:#7A6800;display:flex;align-items:center;gap:8px;}
 
+  /* Edit Client Modal */
+  .edit-client-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:260;display:none;align-items:center;justify-content:center;padding:24px;}
+  .edit-client-overlay.visible{display:flex;}
+  .edit-client-panel{background:var(--white);border-radius:16px;max-width:860px;width:100%;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,0.2);overflow:hidden;}
+  .edit-client-header{display:flex;align-items:center;justify-content:space-between;padding:20px 28px;border-bottom:1px solid var(--border);background:var(--sage-pale);flex-shrink:0;}
+  .edit-client-header h2{font-size:18px;font-weight:700;color:var(--charcoal);display:flex;align-items:center;gap:10px;}
+  .edit-client-body{overflow-y:auto;padding:24px 28px;flex:1;}
+  .edit-warning-box{background:#FFF3E0;border:1px solid #FFB74D;border-radius:10px;padding:16px 20px;margin-bottom:24px;display:flex;align-items:flex-start;gap:12px;}
+  .edit-warning-box svg{flex-shrink:0;color:#E65100;margin-top:1px;}
+  .edit-warning-box .edit-warning-text{font-size:13px;color:#BF360C;line-height:1.5;}
+  .edit-warning-box .edit-warning-text strong{display:block;font-size:14px;margin-bottom:4px;color:#E65100;}
+  .edit-ack-row{margin-top:10px;display:flex;align-items:center;gap:8px;}
+  .edit-ack-row input[type="checkbox"]{width:16px;height:16px;accent-color:#E65100;cursor:pointer;}
+  .edit-ack-row label{font-size:12px;font-weight:600;color:#BF360C;cursor:pointer;}
+  .edit-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 20px;}
+  .edit-form-grid .full-width{grid-column:1/-1;}
+  .edit-form-grid label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--warm-gray);margin-bottom:4px;}
+  .edit-form-grid input,.edit-form-grid select,.edit-form-grid textarea{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;transition:border-color 0.2s;}
+  .edit-form-grid input:focus,.edit-form-grid select:focus,.edit-form-grid textarea:focus{border-color:var(--sage);outline:none;box-shadow:0 0 0 3px rgba(143,175,143,0.15);}
+  .edit-form-grid textarea{min-height:60px;resize:vertical;}
+  .edit-section-label{grid-column:1/-1;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--sage-dark);padding:12px 0 4px;border-bottom:1px solid var(--border);margin-top:8px;}
+  .edit-fee-toggle{display:flex;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:4px;}
+  .edit-fee-toggle label{flex:1;text-align:center;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;background:var(--white);color:var(--warm-gray);border-right:1px solid var(--border);}
+  .edit-fee-toggle label:last-child{border-right:none;}
+  .edit-fee-toggle input{display:none;}
+  .edit-fee-toggle input:checked+label,.edit-fee-toggle label.active{background:var(--sage);color:var(--white);}
+  .edit-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:24px;padding-top:16px;border-top:1px solid var(--border);}
+  .edit-actions .btn{min-width:140px;}
+  .btn-save-edit{background:#E65100;color:#fff;border:none;}
+  .btn-save-edit:hover:not(:disabled){background:#BF360C;transform:translateY(-1px);box-shadow:0 4px 16px rgba(230,81,0,0.3);}
+  .btn-save-edit:disabled{background:#FFAB91;cursor:not-allowed;}
+
   .header-config-btn{display:flex;align-items:center;gap:6px;background:var(--cream);border:1px dashed var(--sage);border-radius:20px;padding:6px 14px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:var(--sage-dark);cursor:pointer;transition:all 0.2s;text-transform:uppercase;letter-spacing:0.5px;}
   .header-config-btn:hover{background:var(--sage-pale);border-style:solid;}
   .header-config-btn.active{border-style:solid;background:var(--sage-pale);}
@@ -594,6 +626,17 @@
       <button class="btn btn-secondary btn-sm" onclick="closeDocHistoryModal()">Close</button>
     </div>
     <div class="doc-history-body" id="docHistoryBody"></div>
+  </div>
+</div>
+
+<!-- Edit Client Modal -->
+<div class="edit-client-overlay" id="editClientModal">
+  <div class="edit-client-panel">
+    <div class="edit-client-header">
+      <h2><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit Matter</h2>
+      <button class="btn btn-secondary btn-sm" onclick="closeEditClientModal()" style="font-size:18px;line-height:1;padding:4px 10px;min-width:0;">&times;</button>
+    </div>
+    <div class="edit-client-body" id="editClientBody"></div>
   </div>
 </div>
 
@@ -1810,6 +1853,202 @@ async function deleteClient(id){if(!confirm('Delete this client?'))return;try{co
 
 async function clearAllData(){if(prompt('This will permanently delete ALL client records. Type DELETE to confirm')!=='DELETE')return;try{const{error}=await db.from('clients').delete().neq('id','00000000-0000-0000-0000-000000000000');if(error)throw error;renderDashboard();showStatus('Cleared.','success');}catch(e){showStatus('Error: '+e.message,'error');}}
 
+// =============================================
+// EDIT CLIENT FUNCTIONS
+// =============================================
+
+let _editClientId = null;
+
+async function editClient(id) {
+  const clients = await getClients();
+  const c = clients.find(x => x.id === id);
+  if (!c) { showStatus('Client not found.', 'error'); return; }
+  _editClientId = id;
+
+  const matterOptions = [
+    'Corporate/Business Formation','Commercial Litigation','Real Estate','Employment',
+    'Intellectual Property','Contract Drafting/Review','Regulatory/Compliance',
+    'M&A/Transactions','Fractional General Counsel','Fractional Corporate Counsel','Other'
+  ];
+  const attorneyOptions = [
+    'Matt A. Margolis, Esq.','Karina Margolis, Esq.','Jen Healy, Esq.','Hunter Sutherland, Esq.'
+  ];
+
+  const feeType = c.fee_type || 'Hourly';
+  const showHourly = feeType === 'Hourly' || feeType === 'Hybrid';
+  const showFlat = feeType === 'Flat Fee' || feeType === 'Hybrid';
+  const showMonthly = feeType === 'Subscription';
+  const showSpecialist = c.specialist_involved === 'Yes';
+
+  let html = '';
+  // Warning box
+  html += `<div class="edit-warning-box">`;
+  html += `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`;
+  html += `<div class="edit-warning-text">`;
+  html += `<strong>You are editing an existing matter</strong>`;
+  html += `Changes to this record will update the client data in the tracker. If an engagement letter has already been generated, you may need to regenerate it to reflect any changes.`;
+  html += `<div class="edit-ack-row"><input type="checkbox" id="editAckCheckbox"><label for="editAckCheckbox">I understand and want to proceed with editing this matter</label></div>`;
+  html += `</div></div>`;
+
+  // Form
+  html += `<div class="edit-form-grid" id="editFormFields" style="opacity:0.5;pointer-events:none;">`;
+
+  // Section: Client Info
+  html += `<div class="edit-section-label">Client Information</div>`;
+  html += `<div><label>Client Type</label><select id="edit_clientType"><option value="Individual" ${c.client_type==='Individual'?'selected':''}>Individual</option><option value="Business Entity" ${c.client_type==='Business Entity'?'selected':''}>Business Entity</option></select></div>`;
+  html += `<div><label>Entity Name</label><input type="text" id="edit_entityName" value="${esc(c.entity_name||'')}"></div>`;
+  html += `<div><label>Contact Full Name</label><input type="text" id="edit_contactName" value="${esc(c.contact_name||'')}"></div>`;
+  html += `<div><label>Title / Role</label><input type="text" id="edit_contactTitle" value="${esc(c.contact_title||'')}"></div>`;
+  html += `<div><label>Email</label><input type="email" id="edit_clientEmail" value="${esc(c.client_email||'')}"></div>`;
+  html += `<div><label>Phone</label><input type="tel" id="edit_clientPhone" value="${esc(c.client_phone||'')}"></div>`;
+  html += `<div class="full-width"><label>Mailing Address</label><input type="text" id="edit_clientAddress" value="${esc(c.client_address||'')}"></div>`;
+
+  // Section: Matter Details
+  html += `<div class="edit-section-label">Matter Details</div>`;
+  html += `<div><label>Matter Type</label><select id="edit_matterType">${matterOptions.map(m => `<option value="${esc(m)}" ${(c.matter_type||'')===m?'selected':''}>${esc(m)}</option>`).join('')}</select></div>`;
+  html += `<div><label>Attorney in Charge</label><select id="edit_attorney">${attorneyOptions.map(a => `<option value="${esc(a)}" ${(c.attorney||'')===a?'selected':''}>${esc(a)}</option>`).join('')}</select></div>`;
+  html += `<div><label>Assign To</label><select id="edit_assignTo"><option value="">Not assigned</option>${attorneyOptions.map(a => `<option value="${esc(a)}" ${(c.assigned_to||'')===a?'selected':''}>${esc(a)}</option>`).join('')}</select></div>`;
+  html += `<div class="full-width"><label>Matter Description</label><textarea id="edit_matterDescription">${esc(c.matter_description||'')}</textarea></div>`;
+  html += `<div class="full-width"><label>Adverse / Opposing Party</label><input type="text" id="edit_adverseParty" value="${esc(c.adverse_party||'')}"></div>`;
+
+  // Section: Fee Structure
+  html += `<div class="edit-section-label">Fee Structure</div>`;
+  html += `<div class="full-width"><label>Fee Type</label><div class="edit-fee-toggle" id="editFeeToggle">`;
+  html += `<input type="radio" name="editFeeType" id="editFeeHourly" value="Hourly" ${feeType==='Hourly'?'checked':''}><label for="editFeeHourly" ${feeType==='Hourly'?'class="active"':''}>Hourly</label>`;
+  html += `<input type="radio" name="editFeeType" id="editFeeFlat" value="Flat Fee" ${feeType==='Flat Fee'?'checked':''}><label for="editFeeFlat" ${feeType==='Flat Fee'?'class="active"':''}>Flat Fee</label>`;
+  html += `<input type="radio" name="editFeeType" id="editFeeHybrid" value="Hybrid" ${feeType==='Hybrid'?'checked':''}><label for="editFeeHybrid" ${feeType==='Hybrid'?'class="active"':''}>Hybrid</label>`;
+  html += `<input type="radio" name="editFeeType" id="editFeeSub" value="Subscription" ${feeType==='Subscription'?'checked':''}><label for="editFeeSub" ${feeType==='Subscription'?'class="active"':''}>Subscription</label>`;
+  html += `</div></div>`;
+  html += `<div id="editHourlyRateGroup" style="${showHourly?'':'display:none'}"><label>Attorney Hourly Rate</label><input type="text" id="edit_hourlyRate" value="${esc(c.hourly_rate||'')}"></div>`;
+  html += `<div id="editParalegalRateGroup" style="${showHourly?'':'display:none'}"><label>Paralegal Hourly Rate</label><input type="text" id="edit_paralegalRate" value="${esc(c.paralegal_rate||'')}"></div>`;
+  html += `<div id="editFlatFeeGroup" style="${showFlat?'':'display:none'}"><label>Flat Fee Amount</label><input type="text" id="edit_flatFeeAmount" value="${esc(c.flat_fee_amount||'')}"></div>`;
+  html += `<div id="editMonthlyFeeGroup" style="${showMonthly?'':'display:none'}"><label>Monthly Subscription Fee</label><input type="text" id="edit_monthlyFee" value="${esc(c.monthly_fee||'')}"></div>`;
+  html += `<div><label>Retainer Amount</label><input type="text" id="edit_retainerAmount" value="${esc(c.retainer_amount||'')}"></div>`;
+  html += `<div><label>Engagement Date</label><input type="date" id="edit_engagementDate" value="${esc(c.engagement_date||'')}"></div>`;
+
+  // Section: Conflicts & Referral
+  html += `<div class="edit-section-label">Conflicts & Referral</div>`;
+  html += `<div class="full-width"><label>Known Conflicts</label><textarea id="edit_conflicts">${esc(c.conflicts||'')}</textarea></div>`;
+  html += `<div><label>Specialist Involved?</label><select id="edit_specialistInvolved"><option value="No" ${c.specialist_involved!=='Yes'?'selected':''}>No</option><option value="Yes" ${c.specialist_involved==='Yes'?'selected':''}>Yes</option></select></div>`;
+  html += `<div id="editSpecialistName" style="${showSpecialist?'':'display:none'}"><label>Specialist Name</label><input type="text" id="edit_specialistName" value="${esc(c.specialist_name||'')}"></div>`;
+  html += `<div class="full-width" id="editFeeSharingDetails" style="${showSpecialist?'':'display:none'}"><label>Fee-Sharing Arrangement</label><input type="text" id="edit_feeSharingDetails" value="${esc(c.fee_sharing_details||'')}"></div>`;
+
+  // Section: Internal
+  html += `<div class="edit-section-label">Internal Notes</div>`;
+  html += `<div><label>Referral Source</label><input type="text" id="edit_referralSource" value="${esc(c.referral_source||'')}"></div>`;
+  html += `<div><label>Priority</label><select id="edit_priority"><option value="Normal" ${c.priority!=='High'&&c.priority!=='Urgent'?'selected':''}>Normal</option><option value="High" ${c.priority==='High'?'selected':''}>High</option><option value="Urgent" ${c.priority==='Urgent'?'selected':''}>Urgent</option></select></div>`;
+  html += `<div class="full-width"><label>Internal Notes</label><textarea id="edit_internalNotes">${esc(c.internal_notes||'')}</textarea></div>`;
+
+  html += `</div>`; // close edit-form-grid
+
+  // Actions
+  html += `<div class="edit-actions">`;
+  html += `<button class="btn btn-secondary btn-sm" onclick="closeEditClientModal()">Cancel</button>`;
+  html += `<button class="btn btn-sm btn-save-edit" id="editSaveBtn" disabled onclick="saveClientEdits()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save Changes</button>`;
+  html += `</div>`;
+
+  document.getElementById('editClientBody').innerHTML = html;
+
+  // Acknowledgment checkbox enables/disables form
+  document.getElementById('editAckCheckbox').addEventListener('change', function() {
+    const fields = document.getElementById('editFormFields');
+    const btn = document.getElementById('editSaveBtn');
+    if (this.checked) {
+      fields.style.opacity = '1';
+      fields.style.pointerEvents = 'auto';
+      btn.disabled = false;
+    } else {
+      fields.style.opacity = '0.5';
+      fields.style.pointerEvents = 'none';
+      btn.disabled = true;
+    }
+  });
+
+  // Fee type toggle in edit modal
+  document.querySelectorAll('#editFeeToggle input[type="radio"]').forEach(r => {
+    r.addEventListener('change', () => {
+      document.querySelectorAll('#editFeeToggle label').forEach(l => l.classList.remove('active'));
+      r.nextElementSibling.classList.add('active');
+      const v = r.value;
+      document.getElementById('editHourlyRateGroup').style.display = (v==='Hourly'||v==='Hybrid') ? '' : 'none';
+      document.getElementById('editParalegalRateGroup').style.display = (v==='Hourly'||v==='Hybrid') ? '' : 'none';
+      document.getElementById('editFlatFeeGroup').style.display = (v==='Flat Fee'||v==='Hybrid') ? '' : 'none';
+      document.getElementById('editMonthlyFeeGroup').style.display = v==='Subscription' ? '' : 'none';
+    });
+  });
+
+  // Specialist toggle
+  document.getElementById('edit_specialistInvolved').addEventListener('change', function() {
+    const show = this.value === 'Yes';
+    document.getElementById('editSpecialistName').style.display = show ? '' : 'none';
+    document.getElementById('editFeeSharingDetails').style.display = show ? '' : 'none';
+  });
+
+  document.getElementById('editClientModal').classList.add('visible');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeEditClientModal() {
+  document.getElementById('editClientModal').classList.remove('visible');
+  document.body.style.overflow = '';
+  _editClientId = null;
+}
+
+async function saveClientEdits() {
+  if (!_editClientId) return;
+
+  const contactName = document.getElementById('edit_contactName').value.trim();
+  const clientEmail = document.getElementById('edit_clientEmail').value.trim();
+  if (!contactName) { showStatus('Contact name is required.', 'error'); return; }
+  if (!clientEmail) { showStatus('Email is required.', 'error'); return; }
+
+  const btn = document.getElementById('editSaveBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="loading-spinner"></div> Saving...';
+
+  try {
+    const updates = {
+      client_type: document.getElementById('edit_clientType').value,
+      entity_name: document.getElementById('edit_entityName').value,
+      contact_name: contactName,
+      contact_title: document.getElementById('edit_contactTitle').value,
+      client_email: clientEmail,
+      client_phone: document.getElementById('edit_clientPhone').value,
+      client_address: document.getElementById('edit_clientAddress').value,
+      matter_type: document.getElementById('edit_matterType').value,
+      attorney: document.getElementById('edit_attorney').value,
+      assigned_to: document.getElementById('edit_assignTo').value || null,
+      matter_description: document.getElementById('edit_matterDescription').value,
+      adverse_party: document.getElementById('edit_adverseParty').value,
+      fee_type: document.querySelector('input[name="editFeeType"]:checked').value,
+      hourly_rate: document.getElementById('edit_hourlyRate').value,
+      paralegal_rate: document.getElementById('edit_paralegalRate').value,
+      flat_fee_amount: document.getElementById('edit_flatFeeAmount').value,
+      monthly_fee: document.getElementById('edit_monthlyFee').value,
+      retainer_amount: document.getElementById('edit_retainerAmount').value,
+      engagement_date: document.getElementById('edit_engagementDate').value,
+      conflicts: document.getElementById('edit_conflicts').value,
+      specialist_involved: document.getElementById('edit_specialistInvolved').value,
+      specialist_name: document.getElementById('edit_specialistName').value,
+      fee_sharing_details: document.getElementById('edit_feeSharingDetails').value,
+      referral_source: document.getElementById('edit_referralSource').value,
+      priority: document.getElementById('edit_priority').value,
+      internal_notes: document.getElementById('edit_internalNotes').value,
+    };
+
+    const { error } = await db.from('clients').update(updates).eq('id', _editClientId);
+    if (error) throw error;
+
+    closeEditClientModal();
+    renderDashboard();
+    showStatus('Client record updated.', 'success');
+  } catch (e) {
+    showStatus('Error saving: ' + e.message, 'error');
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save Changes';
+  }
+}
+
 function switchTab(t,btn){document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));document.getElementById('tab-'+t).classList.add('active');if(btn)btn.classList.add('active');if(t==='dashboard')renderDashboard();}
 
 async function updateTrackerCount(){const c=await getClients();document.getElementById('trackerCount').textContent=c.length;}
@@ -2019,6 +2258,7 @@ async function renderDashboard() {
           <option value="Executed" ${c.status === 'Executed' ? 'selected' : ''}>Executed</option>
           <option value="Declined" ${c.status === 'Declined' ? 'selected' : ''}>Declined</option>
         </select>
+        <button onclick="editClient('${esc(c.id)}')" title="Edit Matter">\u270E</button>
         <button onclick="viewLetterHistory('${esc(c.id)}')" title="Document History">\ud83d\udcc4</button>
         <button onclick="regenLetter('${esc(c.id)}')" title="Regenerate Letter">\ud83d\udd04</button>
         <button class="del" onclick="deleteClient('${esc(c.id)}')" title="Delete">\u2715</button>
