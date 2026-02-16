@@ -133,13 +133,37 @@ serve(async (req) => {
     if (eventType === 'Completed') {
       const boldsignApiKey = Deno.env.get('BOLDSIGN_API_KEY')
       if (boldsignApiKey) {
-        try {
-          const dlRes = await fetch(
-            `https://api.boldsign.com/v1/document/download?documentId=${encodeURIComponent(documentId)}`,
-            { headers: { 'X-API-KEY': boldsignApiKey } },
-          )
-          if (dlRes.ok) {
+        // Wait briefly for BoldSign to finalize the completed document
+        await new Promise(resolve => setTimeout(resolve, 3000))
+
+        // Retry up to 2 times with increasing delay
+        for (let attempt = 0; attempt < 3; attempt++) {
+          try {
+            if (attempt > 0) {
+              await new Promise(resolve => setTimeout(resolve, attempt * 5000))
+              console.log(`Retry attempt ${attempt} for signed PDF download: documentId=${documentId}`)
+            }
+
+            const dlRes = await fetch(
+              `https://api.boldsign.com/v1/document/download?documentId=${encodeURIComponent(documentId)}`,
+              { headers: { 'X-API-KEY': boldsignApiKey } },
+            )
+
+            if (!dlRes.ok) {
+              const errText = await dlRes.text()
+              console.error(`BoldSign download failed (attempt ${attempt}): status=${dlRes.status}, body=${errText}`)
+              if (attempt === 2) break
+              continue
+            }
+
             const pdfBytes = new Uint8Array(await dlRes.arrayBuffer())
+            if (pdfBytes.length === 0) {
+              console.error(`BoldSign returned empty response (attempt ${attempt})`)
+              if (attempt === 2) break
+              continue
+            }
+
+            console.log(`Downloaded ${pdfBytes.length} bytes from BoldSign for documentId=${documentId}`)
             const storagePath = `${letter.client_id}/${letter.id}_signed.pdf`
             const { error: uploadError } = await supabase.storage
               .from('signed-letters')
@@ -147,19 +171,27 @@ serve(async (req) => {
                 contentType: 'application/pdf',
                 upsert: true,
               })
+
             if (uploadError) {
               console.error('Failed to upload signed PDF:', uploadError.message)
-            } else {
-              // Store the path on the engagement letter record
-              await supabase.from('engagement_letters')
-                .update({ signed_pdf_path: storagePath })
-                .eq('id', letter.id)
+              break
             }
-          } else {
-            console.warn('BoldSign download failed:', dlRes.status, await dlRes.text())
+
+            // Store the path on the engagement letter record
+            const { error: pathError } = await supabase.from('engagement_letters')
+              .update({ signed_pdf_path: storagePath })
+              .eq('id', letter.id)
+
+            if (pathError) {
+              console.error('Failed to update signed_pdf_path:', pathError.message)
+            } else {
+              console.log(`Signed PDF stored at: ${storagePath}`)
+            }
+            break // Success — exit retry loop
+          } catch (e) {
+            console.error(`Signed PDF download/upload failed (attempt ${attempt}):`, e.message)
+            if (attempt === 2) break
           }
-        } catch (e) {
-          console.warn('Signed PDF download/upload failed:', e.message)
         }
       }
     }
