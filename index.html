@@ -95,6 +95,7 @@
   .stat-card{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:20px;text-align:center;}
   .stat-card .stat-num{font-size:36px;font-weight:700;color:var(--sage-dark);line-height:1;}
   .stat-card .stat-label{font-size:12px;color:var(--warm-gray);text-transform:uppercase;letter-spacing:1px;margin-top:6px;font-weight:500;}
+  .stat-card.stat-alert{border-color:#E67E22;background:#FEF5E7;}.stat-card.stat-alert .stat-num{color:#E67E22;}
   .tracker-table-wrap{background:var(--white);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
   .tracker-table{width:100%;border-collapse:collapse;font-size:13px;}
   .tracker-table thead{background:var(--sage-pale);}
@@ -535,7 +536,7 @@
     <div class="letter-modal-header">
       <h2><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Review Engagement Letter</h2>
       <div class="modal-actions">
-        <button class="btn btn-secondary btn-sm" onclick="closeLetterModal()">Cancel</button>
+        <button class="btn btn-secondary btn-sm" onclick="closeLetterModal()" style="font-size:18px;line-height:1;padding:4px 10px;min-width:0;" title="Close">&times;</button>
         <button class="btn btn-slack btn-sm slack-send-btn" id="slackSendBtn" onclick="sendToSlack()" style="display:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 10c-.83 0-1.5-.67-1.5-1.5v-5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5z"/><path d="M20.5 10H19V8.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/><path d="M9.5 14c.83 0 1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5S8 21.33 8 20.5v-5c0-.83.67-1.5 1.5-1.5z"/><path d="M3.5 14H5v1.5c0 .83-.67 1.5-1.5 1.5S2 16.33 2 15.5 2.67 14 3.5 14z"/><path d="M14 14.5c0-.83.67-1.5 1.5-1.5h5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5h-5c-.83 0-1.5-.67-1.5-1.5z"/><path d="M15.5 19H14v1.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5-.67-1.5-1.5-1.5z"/><path d="M10 9.5C10 10.33 9.33 11 8.5 11h-5C2.67 11 2 10.33 2 9.5S2.67 8 3.5 8h5c.83 0 1.5.67 1.5 1.5z"/><path d="M8.5 5H10V3.5C10 2.67 9.33 2 8.5 2S7 2.67 7 3.5 7.67 5 8.5 5z"/></svg> Send to Slack</button>
         <button class="btn btn-send-email btn-sm email-send-btn" id="emailSendBtn" onclick="toggleEmailCompose()" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> Send to Client</button>
         <button class="btn btn-primary btn-sm" onclick="downloadFromReview()" id="modalDownloadBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download .docx</button>
@@ -1713,22 +1714,25 @@ async function renderDashboard() {
       return assignedName && (assignedName === userAttyName || c.user_id !== currentUser.id);
     });
   } else if (_dashFilter === 'review') {
+    // Show only letters assigned to the current user for review
     clients = allClients.filter(c => {
       const ls = letterStatusMap[c.id];
-      return ls && ls.approval_status === 'Pending Review';
+      return ls && ls.approval_status === 'Pending Review' && ls.assigned_reviewer === userAttyName;
     });
   }
 
   const t = allClients.length;
   const p = allClients.filter(c => c.status === 'Prospective').length;
-  const pr = Object.values(letterStatusMap).filter(l => l.approval_status === 'Pending Review').length;
+  const pr = Object.values(letterStatusMap).filter(l => l.approval_status === 'Pending Review' && l.assigned_reviewer === userAttyName).length;
+  const ap = Object.values(letterStatusMap).filter(l => l.approval_status === 'Approved').length;
   const s = allClients.filter(c => c.status === 'Letter Sent').length;
   const e = allClients.filter(c => c.status === 'Executed').length;
 
   document.getElementById('statsRow').innerHTML =
     `<div class="stat-card"><div class="stat-num">${t}</div><div class="stat-label">Total</div></div>` +
     `<div class="stat-card"><div class="stat-num">${p}</div><div class="stat-label">Prospective</div></div>` +
-    `<div class="stat-card"><div class="stat-num">${pr}</div><div class="stat-label">Pending Review</div></div>` +
+    `<div class="stat-card${pr > 0 ? ' stat-alert' : ''}"><div class="stat-num">${pr}</div><div class="stat-label">Needs My Review</div></div>` +
+    `<div class="stat-card"><div class="stat-num">${ap}</div><div class="stat-label">Approved</div></div>` +
     `<div class="stat-card"><div class="stat-num">${s}</div><div class="stat-label">Letter Sent</div></div>` +
     `<div class="stat-card"><div class="stat-num">${e}</div><div class="stat-label">Executed</div></div>`;
 
@@ -1811,7 +1815,7 @@ async function submitForReview() {
   if (submitBtn) submitBtn.disabled = true;
 
   // Save letter first if not saved, or update existing
-  let letterId = _lastSavedLetterId;
+  let letterId = _letterApprovalId || _lastSavedLetterId;
   if (!letterId) {
     letterId = await saveLetterToDb('Pending Review', assignedReviewer);
   } else {
@@ -1827,6 +1831,7 @@ async function submitForReview() {
 
   _letterApprovalStatus = 'Pending Review';
   _letterApprovalId = letterId;
+  _lastSavedLetterId = letterId;
   _letterAssignedReviewer = assignedReviewer;
   updateApprovalBar();
   showStatus(`\u2713 Letter submitted for review by ${assignedReviewer}.`, 'success');
@@ -1854,7 +1859,7 @@ async function submitForReview() {
         ]}
       ];
       await notifySlack({
-        text: `${escSlack(assignedReviewer)}: Letter needs your approval — ${escSlack(meta.name)} - ${escSlack(meta.matter)} (from ${escSlack(sentBy)})`,
+        text: `<!here> ${escSlack(assignedReviewer)}: Letter needs your approval — ${escSlack(meta.name)} - ${escSlack(meta.matter)} (from ${escSlack(sentBy)})`,
         blocks
       });
     } catch (e) { /* Slack notification is best-effort */ }
@@ -2031,9 +2036,12 @@ async function confirmSendBack() {
 
 async function saveDraft() {
   if (!_letterClientId) { showStatus('No client linked.', 'error'); return; }
-  const letterId = await saveLetterToDb('Draft');
+  // Preserve current approval status when saving — don't reset Pending Review or Approved
+  const preserveStatus = _letterApprovalStatus === 'Pending Review' || _letterApprovalStatus === 'Approved';
+  const saveStatus = preserveStatus ? _letterApprovalStatus : 'Draft';
+  const letterId = await saveLetterToDb(saveStatus);
   if (letterId) {
-    _letterApprovalStatus = 'Draft';
+    _letterApprovalStatus = saveStatus;
     _letterApprovalId = letterId;
     updateApprovalBar();
     showStatus('\u2713 Draft saved.', 'success');
@@ -2076,7 +2084,12 @@ function updateApprovalBar(reviewNotes, reviewedBy) {
   } else if (status === 'Pending Review') {
     html += `Status: Pending Review`;
     const reviewer = _letterAssignedReviewer;
-    html += `<small>Sent to ${reviewer ? esc(reviewer) : 'reviewer'} for approval.</small>`;
+    const isReviewer = currentUser && reviewer && (matchUserToAttorney(currentUser.email) === reviewer);
+    if (isReviewer) {
+      html += `<small>This letter is awaiting your approval.</small>`;
+    } else {
+      html += `<small>Sent to ${reviewer ? esc(reviewer) : 'reviewer'} for approval.</small>`;
+    }
   } else if (status === 'Approved') {
     html += `Status: Approved`;
     if (reviewedBy) html += `<small>Approved by ${esc(reviewedBy)}</small>`;
@@ -2582,7 +2595,11 @@ async function openSavedLetter(letterId) {
       reviewedBy: data.reviewed_by || null,
       reviewNotes: data.review_notes || null,
       assignedReviewer: data.assigned_reviewer || null,
+      createdByEmail: data.created_by_email || null,
     };
+
+    // Sync saved-letter ID so subsequent saves update the correct record
+    _lastSavedLetterId = data.id;
 
     showLetterModal(ld.meta, ld.sections, data.client_id, ld.header, versionLabel, approvalData);
   } catch (e) {
