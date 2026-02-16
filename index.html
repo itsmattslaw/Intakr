@@ -1142,15 +1142,15 @@ async function buildDocxBlob() {
       rows: [new TableRow({
         children: [
           new TableCell({
-            width: { size: 25, type: WidthType.PERCENTAGE },
+            width: { size: 15, type: WidthType.PERCENTAGE },
             borders: noBorders,
             verticalAlign: VerticalAlign.CENTER,
             children: [new Paragraph({ alignment: AlignmentType.LEFT, children: [
-              new ImageRun({ data: firmLogo.base64, transformation: { width: 160, height: 160 } })
+              new ImageRun({ data: firmLogo.base64, transformation: { width: 85, height: 85 } })
             ]})]
           }),
           new TableCell({
-            width: { size: 75, type: WidthType.PERCENTAGE },
+            width: { size: 85, type: WidthType.PERCENTAGE },
             borders: noBorders,
             verticalAlign: VerticalAlign.CENTER,
             children: [
