@@ -170,7 +170,7 @@ serve(async (req) => {
       emailPayload.reply_to = [replyTo]
     }
 
-    // Attach DOCX if provided (with sanitized filename)
+    // Attach file if provided (PDF or DOCX, with sanitized filename)
     if (typeof attachmentBase64 === 'string' && attachmentBase64.length > 0 && typeof attachmentFilename === 'string') {
       emailPayload.attachments = [{
         filename: sanitizeFilename(attachmentFilename),
