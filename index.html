@@ -1051,6 +1051,7 @@ async function sendForESignature() {
       clientId: _letterClientId || undefined,
       letterId: letterId || undefined,
       signaturePageNumber: _lastPdfSignaturePageNum || 2,
+      redirectUrl: window.location.origin + window.location.pathname,
     };
 
     const res = await fetch(`${SUPABASE_URL}/functions/v1/send-for-esignature`, {

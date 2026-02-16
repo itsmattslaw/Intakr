@@ -74,7 +74,7 @@ serve(async (req) => {
     const allowedKeys = new Set([
       'pdfBase64', 'fileName', 'signerName', 'signerEmail',
       'title', 'message', 'clientId', 'letterId',
-      'signaturePageNumber',
+      'signaturePageNumber', 'redirectUrl',
     ])
     for (const key of Object.keys(body)) {
       if (!allowedKeys.has(key)) {
@@ -85,7 +85,7 @@ serve(async (req) => {
       }
     }
 
-    const { pdfBase64, fileName, signerName, signerEmail, title, message, clientId, letterId, signaturePageNumber } = body
+    const { pdfBase64, fileName, signerName, signerEmail, title, message, clientId, letterId, signaturePageNumber, redirectUrl } = body
 
     // Validate required fields
     if (!pdfBase64 || !signerName || !signerEmail || !title) {
@@ -163,6 +163,11 @@ serve(async (req) => {
     formData.append('Signers[0][Name]', signerName)
     formData.append('Signers[0][EmailAddress]', signerEmail)
     formData.append('Signers[0][SignerType]', 'Signer')
+
+    // Redirect the signer back to Intakr after signing
+    if (typeof redirectUrl === 'string' && redirectUrl.startsWith('https://')) {
+      formData.append('Signers[0][RedirectUrl]', redirectUrl)
+    }
 
     // Signature field — overlays the "By: _____" line
     formData.append('Signers[0][FormFields][0][Id]', 'clientSignature')
