@@ -1084,6 +1084,7 @@ async function buildDocxBlob() {
   body.push(blank());
   body.push(pp([bold(`Re: ${revRe}`)], {align:AlignmentType.LEFT}));
   body.push(blank());
+  body.push(blank());
   body.push(pp(revGreeting, {align:AlignmentType.LEFT}));
   htmlToParas(editedSections.intro).forEach(p => body.push(p));
 
@@ -1106,7 +1107,10 @@ async function buildDocxBlob() {
 
   htmlToParas(editedSections.closing).forEach(p => body.push(p));
   body.push(blank());
-  body.push(pp('Sincerely,', {align:AlignmentType.LEFT}));
+  body.push(pp([tr('[Signatures on following page]', {italics:true})], {align:AlignmentType.CENTER}));
+
+  // --- Signature page (forced page break) ---
+  body.push(new Paragraph({ pageBreakBefore:true, spacing:sp, alignment:AlignmentType.LEFT, children:[tr('Sincerely,')] }));
   body.push(blank()); body.push(blank()); body.push(blank());
   body.push(pp([bold('MARGOLIS PLLC')], {align:AlignmentType.LEFT}));
   body.push(blank());
@@ -1258,11 +1262,11 @@ async function buildPdfBlob() {
   // Render a single paragraph of formatted text runs with word wrapping
   function renderPara(runs, opts) {
     const fontSize = (opts && opts.size) || 11;
-    const align = (opts && opts.align) || 'left';
+    const align = (opts && opts.align) || 'justify';
     const lh = fontSize * 1.4;
     const afterSpace = (opts && opts.after !== undefined) ? opts.after : 6;
 
-    // Flatten runs into word tokens with formatting
+    // Flatten runs into word tokens with formatting (separate actual words from spaces)
     const words = [];
     for (const run of runs) {
       const parts = run.text.split(/( +)/);
@@ -1281,22 +1285,53 @@ async function buildPdfBlob() {
 
     function flushLine(isLast) {
       if (lineWords.length === 0) return;
+
+      // Separate content words from space tokens
+      const contentWords = lineWords.filter(w => w.text.trim().length > 0);
+      const totalTextWidth = contentWords.reduce((sum, w) => {
+        setF(fontStyle(w), fontSize);
+        return sum + pdf.getTextWidth(w.text);
+      }, 0);
+
       let x = ML;
       if (align === 'center') {
         x = ML + (CW - lineWidth) / 2;
+        for (const w of lineWords) {
+          setF(fontStyle(w), fontSize);
+          pdf.text(w.text, x, y);
+          if (w.underline) { const tw = pdf.getTextWidth(w.text); pdf.setLineWidth(0.5); pdf.line(x, y + 1.5, x + tw, y + 1.5); }
+          x += pdf.getTextWidth(w.text);
+        }
       } else if (align === 'right') {
         x = ML + CW - lineWidth;
-      }
-      for (const w of lineWords) {
-        setF(fontStyle(w), fontSize);
-        pdf.text(w.text, x, y);
-        if (w.underline) {
-          const tw = pdf.getTextWidth(w.text);
-          pdf.setLineWidth(0.5);
-          pdf.line(x, y + 1.5, x + tw, y + 1.5);
+        for (const w of lineWords) {
+          setF(fontStyle(w), fontSize);
+          pdf.text(w.text, x, y);
+          if (w.underline) { const tw = pdf.getTextWidth(w.text); pdf.setLineWidth(0.5); pdf.line(x, y + 1.5, x + tw, y + 1.5); }
+          x += pdf.getTextWidth(w.text);
         }
-        x += pdf.getTextWidth(w.text);
+      } else if (align === 'justify' && !isLast && contentWords.length > 1) {
+        // Distribute extra space evenly between words
+        const gaps = contentWords.length - 1;
+        const extraSpace = (CW - totalTextWidth) / gaps;
+        for (let i = 0; i < contentWords.length; i++) {
+          const w = contentWords[i];
+          setF(fontStyle(w), fontSize);
+          pdf.text(w.text, x, y);
+          if (w.underline) { const tw = pdf.getTextWidth(w.text); pdf.setLineWidth(0.5); pdf.line(x, y + 1.5, x + tw, y + 1.5); }
+          x += pdf.getTextWidth(w.text);
+          if (i < contentWords.length - 1) x += extraSpace;
+        }
+      } else {
+        // Left-align (or last line of justified paragraph)
+        for (const w of lineWords) {
+          setF(fontStyle(w), fontSize);
+          pdf.text(w.text, x, y);
+          if (w.underline) { const tw = pdf.getTextWidth(w.text); pdf.setLineWidth(0.5); pdf.line(x, y + 1.5, x + tw, y + 1.5); }
+          x += pdf.getTextWidth(w.text);
+        }
       }
+
       y += lh;
       checkPage(lh);
       lineWords = [];
@@ -1378,7 +1413,7 @@ async function buildPdfBlob() {
 
   // Re: line
   addLine('Re: ' + revRe, { style: 'bold' });
-  blankLine(4);
+  blankLine(14);
 
   // Greeting
   addLine(revGreeting);
@@ -1418,11 +1453,17 @@ async function buildPdfBlob() {
 
   // Closing
   addHtmlParas(editedSections.closing);
-  blankLine(8);
+  blankLine(14);
+  addLine('[Signatures on following page]', { align: 'center', style: 'italic' });
+
+  // --- Signature page ---
+  pdf.addPage();
+  y = MT;
+
   addLine('Sincerely,', { after: 0 });
   blankLine(40);
   addLine('MARGOLIS PLLC', { style: 'bold', after: 8 });
-  renderPara([{ text: '/s/ ' + meta.sigFull, bold: true, italic: true, underline: false }], { after: 8 });
+  renderPara([{ text: '/s/ ' + meta.sigFull, bold: true, italic: true, underline: false }], { align: 'left', after: 8 });
   addLine('By: ' + meta.sigShort + ', Esq.', { after: 0 });
   addLine('For the Firm');
   blankLine(20);
