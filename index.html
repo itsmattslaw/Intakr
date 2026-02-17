@@ -292,11 +292,39 @@
   .toggle-switch input:checked+.toggle-slider{background:var(--sage);}
   .toggle-switch input:checked+.toggle-slider:before{transform:translateX(20px);}
 
+  /* Audit Log Tab */
+  .audit-log{max-width:1100px;margin:0 auto;padding:40px 24px 80px;}
+  .audit-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:16px;}
+  .audit-header h2{font-size:28px;font-weight:700;letter-spacing:-0.5px;}
+  .audit-filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;}
+  .audit-filters select{padding:8px 14px;border:1px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;background:var(--white);cursor:pointer;}
+  .audit-table-wrap{background:var(--white);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+  .audit-table{width:100%;border-collapse:collapse;font-size:13px;}
+  .audit-table thead{background:var(--sage-pale);}
+  .audit-table th{padding:12px 16px;text-align:left;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:0.8px;color:var(--sage-dark);border-bottom:1px solid var(--border);white-space:nowrap;}
+  .audit-table td{padding:10px 16px;border-bottom:1px solid var(--border);vertical-align:middle;}
+  .audit-table tr:last-child td{border-bottom:none;}
+  .audit-table tr:hover td{background:var(--sage-pale);}
+  .audit-action-badge{display:inline-block;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:600;letter-spacing:0.3px;white-space:nowrap;}
+  .audit-action-badge.action-create{background:#E8F5E9;color:#2E7D32;}
+  .audit-action-badge.action-edit{background:#E3F2FD;color:#1565C0;}
+  .audit-action-badge.action-delete{background:#FBEAEA;color:var(--error);}
+  .audit-action-badge.action-approval{background:var(--amber-pale);color:#9A7B00;}
+  .audit-action-badge.action-send{background:#EDE7F6;color:#5E35B1;}
+  .audit-action-badge.action-auth{background:var(--light-gray);color:var(--warm-gray);}
+  .audit-action-badge.action-setting{background:var(--sage-pale);color:var(--sage-dark);}
+  .audit-details{font-size:12px;color:var(--warm-gray);max-width:300px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .audit-pagination{display:flex;justify-content:center;align-items:center;gap:12px;padding:16px;border-top:1px solid var(--border);background:var(--light-gray);}
+  .audit-pagination button{padding:6px 16px;border:1px solid var(--border);border-radius:6px;background:var(--white);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;transition:all 0.2s;}
+  .audit-pagination button:hover:not(:disabled){background:var(--sage-pale);border-color:var(--sage);}
+  .audit-pagination button:disabled{opacity:0.4;cursor:not-allowed;}
+  .audit-pagination span{font-size:12px;color:var(--warm-gray);}
+
   @media(max-width:640px){
     .form-grid{grid-template-columns:1fr;}.header{padding:16px 20px;flex-direction:column;gap:12px;}
     .tab-bar{padding:0 16px;}.tab-btn{padding:12px 16px;font-size:13px;}
     .actions{flex-direction:column;}.btn{justify-content:center;}
-    .dashboard{padding:24px 16px;}.tracker-table-wrap{overflow-x:auto;}.auth-box{padding:32px 24px;}.settings{padding:24px 16px;}
+    .dashboard{padding:24px 16px;}.tracker-table-wrap{overflow-x:auto;}.auth-box{padding:32px 24px;}.settings{padding:24px 16px;}.audit-log{padding:24px 16px;}
   }
 </style>
 </head>
@@ -373,6 +401,7 @@
 <div class="tab-bar">
   <button class="tab-btn active" onclick="switchTab('intake',this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg> New Intake</button>
   <button class="tab-btn" onclick="switchTab('dashboard',this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg> Client Tracker <span class="count" id="trackerCount">0</span></button>
+  <button class="tab-btn" onclick="switchTab('audit',this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> Audit Log</button>
   <button class="tab-btn" onclick="switchTab('settings',this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Settings</button>
 </div>
 
@@ -467,6 +496,41 @@
   </div>
   <div class="stats-row" id="statsRow"></div>
   <div class="tracker-table-wrap"><div id="trackerTableContainer"></div></div>
+</div>
+</div>
+
+<div class="tab-content" id="tab-audit">
+<div class="audit-log">
+  <div class="audit-header">
+    <h2>Audit Log</h2>
+    <button class="btn btn-secondary btn-sm" onclick="renderAuditLog()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg> Refresh</button>
+  </div>
+  <div class="audit-filters">
+    <select id="auditFilterAction" onchange="_auditPage=0;renderAuditLog()">
+      <option value="">All Actions</option>
+      <option value="sign_in">Sign In</option>
+      <option value="sign_out">Sign Out</option>
+      <option value="client_created">Client Created</option>
+      <option value="client_edited">Client Edited</option>
+      <option value="client_deleted">Client Deleted</option>
+      <option value="client_status_changed">Status Changed</option>
+      <option value="all_data_cleared">Data Cleared</option>
+      <option value="letter_draft_saved">Draft Saved</option>
+      <option value="letter_submitted_for_review">Submitted for Review</option>
+      <option value="letter_approved">Letter Approved</option>
+      <option value="letter_changes_requested">Changes Requested</option>
+      <option value="letter_sent_for_esignature">Sent for E-Signature</option>
+      <option value="letter_emailed_to_client">Emailed to Client</option>
+      <option value="letter_version_deleted">Letter Deleted</option>
+      <option value="setting_changed">Setting Changed</option>
+    </select>
+    <select id="auditFilterUser" onchange="_auditPage=0;renderAuditLog()">
+      <option value="">All Users</option>
+    </select>
+  </div>
+  <div id="auditLogBody">
+    <div class="empty-state"><p>Loading audit log...</p></div>
+  </div>
 </div>
 </div>
 
@@ -663,7 +727,7 @@ db.auth.onAuthStateChange((event,session)=>{
 
 function switchAuthTab(t){document.querySelectorAll('.auth-tab').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.auth-form').forEach(x=>x.classList.remove('active'));if(t==='login'){document.querySelectorAll('.auth-tab')[0].classList.add('active');document.getElementById('loginForm').classList.add('active');}else if(t==='signup'){document.querySelectorAll('.auth-tab')[1].classList.add('active');document.getElementById('signupForm').classList.add('active');}else if(t==='reset'){document.getElementById('resetForm').classList.add('active');}else if(t==='update-password'){document.getElementById('updatePasswordForm').classList.add('active');}}
 
-async function handleLogin(){const e=document.getElementById('loginEmail').value.trim().toLowerCase(),p=document.getElementById('loginPassword').value;if(!e||!p){showStatus('Please enter email and password','error');return;}if(!e.endsWith('@margolispllc.com')){showStatus('Access restricted to @margolispllc.com','error');return;}const b=document.getElementById('loginBtn');b.disabled=true;b.innerHTML='<div class="loading-spinner"></div> Signing In...';try{const{data,error}=await db.auth.signInWithPassword({email:e,password:p});if(error)throw error;currentUser=data.user;if(!currentUser.email.endsWith('@margolispllc.com')){await db.auth.signOut();throw new Error('Access restricted');}showApp();showStatus('\u2713 Welcome back!','success');}catch(x){showStatus('Login failed: '+x.message,'error');b.disabled=false;b.innerHTML='Sign In';}}
+async function handleLogin(){const e=document.getElementById('loginEmail').value.trim().toLowerCase(),p=document.getElementById('loginPassword').value;if(!e||!p){showStatus('Please enter email and password','error');return;}if(!e.endsWith('@margolispllc.com')){showStatus('Access restricted to @margolispllc.com','error');return;}const b=document.getElementById('loginBtn');b.disabled=true;b.innerHTML='<div class="loading-spinner"></div> Signing In...';try{const{data,error}=await db.auth.signInWithPassword({email:e,password:p});if(error)throw error;currentUser=data.user;if(!currentUser.email.endsWith('@margolispllc.com')){await db.auth.signOut();throw new Error('Access restricted');}showApp();logAudit('sign_in');showStatus('\u2713 Welcome back!','success');}catch(x){showStatus('Login failed: '+x.message,'error');b.disabled=false;b.innerHTML='Sign In';}}
 
 async function handleSignup(){const n=document.getElementById('signupName').value.trim(),e=document.getElementById('signupEmail').value.trim().toLowerCase(),p=document.getElementById('signupPassword').value;if(!n||!e||!p){showStatus('Please fill in all fields','error');return;}if(!e.endsWith('@margolispllc.com')){showStatus('Access restricted to @margolispllc.com','error');return;}if(p.length<6){showStatus('Password must be at least 6 characters','error');return;}const b=document.getElementById('signupBtn');b.disabled=true;b.innerHTML='<div class="loading-spinner"></div> Creating...';try{const{data,error}=await db.auth.signUp({email:e,password:p,options:{data:{full_name:n}}});if(error)throw error;if(data.user){if(data.user.identities&&data.user.identities.length===0){showStatus('Email already registered. Try signing in or resetting your password.','error');switchAuthTab('login');}else if(data.session){currentUser=data.user;showApp();showStatus('\u2713 Account created!','success');}else{showStatus('\u2713 Account created! Check your email for a confirmation link, then sign in.','success');switchAuthTab('login');}}}catch(x){showStatus('Signup failed: '+x.message,'error');}finally{b.disabled=false;b.innerHTML='Create Account';}}
 
@@ -671,7 +735,7 @@ async function handlePasswordReset(){const e=document.getElementById('resetEmail
 
 async function handleUpdatePassword(){const n=document.getElementById('newPassword').value,c=document.getElementById('confirmPassword').value;if(!n||!c){showStatus('Fill in both fields','error');return;}if(n.length<6){showStatus('Min 6 characters','error');return;}if(n!==c){showStatus('Passwords do not match','error');return;}const b=document.getElementById('updatePasswordBtn');b.disabled=true;b.innerHTML='<div class="loading-spinner"></div> Updating...';try{const{error}=await db.auth.updateUser({password:n});if(error)throw error;showStatus('\u2713 Password updated!','success');showApp();}catch(x){showStatus('Error: '+x.message,'error');b.disabled=false;b.innerHTML='Update Password';}}
 
-async function handleLogout(){try{await db.auth.signOut();currentUser=null;document.getElementById('authContainer').style.display='flex';document.getElementById('appContainer').classList.remove('visible');showStatus('Signed out','success');}catch(x){showStatus('Error: '+x.message,'error');}}
+async function handleLogout(){try{logAudit('sign_out');await db.auth.signOut();currentUser=null;document.getElementById('authContainer').style.display='flex';document.getElementById('appContainer').classList.remove('visible');showStatus('Signed out','success');}catch(x){showStatus('Error: '+x.message,'error');}}
 
 function showApp(){document.getElementById('authContainer').style.display='none';document.getElementById('appContainer').classList.add('visible');if(!currentUser.email.endsWith('@margolispllc.com')){handleLogout();return;}document.getElementById('userEmail').textContent=currentUser.email;updateTrackerCount();renderDashboard();loadFirmSettings();}
 
@@ -751,6 +815,7 @@ function handleLogoUpload(event) {
     const dataUrl = e.target.result;
     saveFirmSetting('logoDataUrl', dataUrl);
     updateLogoPreview(dataUrl);
+    logAudit('setting_changed', 'firm_settings', null, { setting: 'firmLogo', value: 'uploaded' });
     showStatus('\u2713 Logo saved! It will appear in all future engagement letters.', 'success');
   };
   reader.onerror = function() {
@@ -783,6 +848,7 @@ function removeLogo() {
   deleteFirmSetting('logoDataUrl');
   hideLogoPreview();
   document.getElementById('logoFileInput').value = '';
+  logAudit('setting_changed', 'firm_settings', null, { setting: 'firmLogo', value: 'removed' });
   showStatus('Logo removed.', 'success');
 }
 
@@ -811,12 +877,14 @@ function toggleSlack() {
     localStorage.removeItem('slackWebhookUrl');
     localStorage.removeItem('slackEnabled');
     updateSlackUI();
+    logAudit('setting_changed', 'firm_settings', null, { setting: 'slackEnabled', value: 'true' });
     showStatus('\u2713 Slack notifications enabled! Webhook is configured server-side.', 'success');
   } else {
     deleteFirmSetting('slackEnabled');
     localStorage.removeItem('slackWebhookUrl');
     localStorage.removeItem('slackEnabled');
     updateSlackUI();
+    logAudit('setting_changed', 'firm_settings', null, { setting: 'slackEnabled', value: 'false' });
     showStatus('Slack notifications disabled.', 'success');
   }
 }
@@ -859,10 +927,12 @@ function toggleEmail() {
   if (toggle.checked) {
     saveFirmSetting('emailEnabled', 'true');
     updateEmailUI();
+    logAudit('setting_changed', 'firm_settings', null, { setting: 'emailEnabled', value: 'true' });
     showStatus('\u2713 Client email delivery enabled! Configure the Resend API key in your Supabase Edge Function secrets.', 'success');
   } else {
     deleteFirmSetting('emailEnabled');
     updateEmailUI();
+    logAudit('setting_changed', 'firm_settings', null, { setting: 'emailEnabled', value: 'false' });
     showStatus('Client email delivery disabled.', 'success');
   }
 }
@@ -909,10 +979,12 @@ function toggleBoldsign() {
   if (toggle.checked) {
     saveFirmSetting('boldsignEnabled', 'true');
     updateBoldsignUI();
+    logAudit('setting_changed', 'firm_settings', null, { setting: 'boldsignEnabled', value: 'true' });
     showStatus('\u2713 BoldSign e-signature enabled! Configure BOLDSIGN_API_KEY in your Supabase Edge Function secrets.', 'success');
   } else {
     deleteFirmSetting('boldsignEnabled');
     updateBoldsignUI();
+    logAudit('setting_changed', 'firm_settings', null, { setting: 'boldsignEnabled', value: 'false' });
     showStatus('BoldSign e-signature disabled.', 'success');
   }
 }
@@ -1106,6 +1178,7 @@ async function sendForESignature() {
     const panel = document.getElementById('esignComposePanel');
     if (panel) panel.classList.remove('visible');
 
+    logAudit('letter_sent_for_esignature', 'engagement_letter', letterId, { client: meta.name, signer_email: signerEmail, signer_name: signerName });
     showStatus(`\u2713 Engagement letter sent to ${signerEmail} for electronic signature via BoldSign.`, 'success');
   } catch (err) {
     showStatus('E-signature error: ' + err.message, 'error');
@@ -1277,6 +1350,7 @@ async function sendToClient() {
     const panel = document.getElementById('emailComposePanel');
     if (panel) panel.classList.remove('visible');
 
+    logAudit('letter_emailed_to_client', 'engagement_letter', null, { client: meta.name, to, cc: cc || undefined, subject });
     showStatus(`\u2713 Engagement letter emailed to ${to}. Status updated to "Letter Sent".`, 'success');
   } catch (err) {
     showStatus('Email error: ' + err.message, 'error');
@@ -1848,11 +1922,11 @@ async function getClients(){try{const{data,error}=await db.from('clients').selec
 
 async function addClient(d){try{const{data,error}=await db.from('clients').insert([{user_id:currentUser.id,client_type:d.clientType,entity_name:d.entityName,contact_name:d.contactName,contact_title:d.contactTitle,client_email:d.clientEmail,client_phone:d.clientPhone,client_address:d.clientAddress,matter_type:d.matterType,attorney:d.attorney,assigned_to:d.assignTo||null,matter_description:d.matterDescription,adverse_party:d.adverseParty,fee_type:d.feeType,hourly_rate:d.hourlyRate,paralegal_rate:d.paralegalRate,flat_fee_amount:d.flatFeeAmount,retainer_amount:d.retainerAmount,engagement_date:d.engagementDate,conflicts:d.conflicts,specialist_involved:d.specialistInvolved,specialist_name:d.specialistName,fee_sharing_details:d.feeSharingDetails,referral_source:d.referralSource,priority:d.priority,internal_notes:d.internalNotes,status:'Prospective'}]).select().single();if(error)throw error;updateTrackerCount();return data;}catch(e){showStatus('Error: '+e.message,'error');return null;}}
 
-async function updateClientStatus(id,s){try{const u={status:s};const today=new Date().toISOString().slice(0,10);if(s==='Letter Sent')u.letter_sent=today;if(s==='Executed')u.letter_executed=today;const{error}=await db.from('clients').update(u).eq('id',id);if(error)throw error;renderDashboard();}catch(e){showStatus('Error: '+e.message,'error');}}
+async function updateClientStatus(id,s){try{const u={status:s};const today=new Date().toISOString().slice(0,10);if(s==='Letter Sent')u.letter_sent=today;if(s==='Executed')u.letter_executed=today;const{error}=await db.from('clients').update(u).eq('id',id);if(error)throw error;logAudit('client_status_changed','client',id,{status:s});renderDashboard();}catch(e){showStatus('Error: '+e.message,'error');}}
 
-async function deleteClient(id){if(!confirm('Delete this client?'))return;try{const{error}=await db.from('clients').delete().eq('id',id);if(error)throw error;renderDashboard();showStatus('Removed.','success');}catch(e){showStatus('Error: '+e.message,'error');}}
+async function deleteClient(id){if(!confirm('Delete this client?'))return;try{const{error}=await db.from('clients').delete().eq('id',id);if(error)throw error;logAudit('client_deleted','client',id);renderDashboard();showStatus('Removed.','success');}catch(e){showStatus('Error: '+e.message,'error');}}
 
-async function clearAllData(){if(prompt('This will permanently delete ALL client records. Type DELETE to confirm')!=='DELETE')return;try{const{error}=await db.from('clients').delete().neq('id','00000000-0000-0000-0000-000000000000');if(error)throw error;renderDashboard();showStatus('Cleared.','success');}catch(e){showStatus('Error: '+e.message,'error');}}
+async function clearAllData(){if(prompt('This will permanently delete ALL client records. Type DELETE to confirm')!=='DELETE')return;try{const{error}=await db.from('clients').delete().neq('id','00000000-0000-0000-0000-000000000000');if(error)throw error;logAudit('all_data_cleared');renderDashboard();showStatus('Cleared.','success');}catch(e){showStatus('Error: '+e.message,'error');}}
 
 // =============================================
 // EDIT CLIENT FUNCTIONS
@@ -2041,6 +2115,7 @@ async function saveClientEdits() {
     const { error } = await db.from('clients').update(updates).eq('id', _editClientId);
     if (error) throw error;
 
+    logAudit('client_edited', 'client', _editClientId, { name: contactName });
     closeEditClientModal();
     renderDashboard();
     showStatus('Client record updated.', 'success');
@@ -2051,7 +2126,7 @@ async function saveClientEdits() {
   }
 }
 
-function switchTab(t,btn){document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));document.getElementById('tab-'+t).classList.add('active');if(btn)btn.classList.add('active');if(t==='dashboard')renderDashboard();}
+function switchTab(t,btn){document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));document.getElementById('tab-'+t).classList.add('active');if(btn)btn.classList.add('active');if(t==='dashboard')renderDashboard();if(t==='audit')renderAuditLog();}
 
 async function updateTrackerCount(){const c=await getClients();document.getElementById('trackerCount').textContent=c.length;}
 
@@ -2064,6 +2139,21 @@ document.getElementById('engagementDate').valueAsDate=new Date();
 function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
 // Escape Slack mrkdwn special chars to prevent formatting injection
 function escSlack(s){return String(s||'').replace(/[&<>*_~`|]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','*':'\\*','_':'\\_','~':'\\~','`':'\\`','|':'\\|'})[c]||c);}
+
+// Audit log — fire-and-forget, never blocks the UI
+async function logAudit(action, entityType, entityId, details) {
+  try {
+    if (!currentUser) return;
+    await db.from('audit_log').insert([{
+      user_id: currentUser.id,
+      user_email: currentUser.email,
+      action,
+      entity_type: entityType || null,
+      entity_id: entityId || null,
+      details: details || null,
+    }]);
+  } catch (e) { /* best-effort — never block the user */ }
+}
 
 // Send Slack notification via Supabase Edge Function (webhook URL stays server-side)
 async function notifySlack(payload) {
@@ -2325,6 +2415,7 @@ async function submitForReview() {
   _lastSavedLetterId = letterId;
   _letterAssignedReviewer = assignedReviewer;
   updateApprovalBar();
+  logAudit('letter_submitted_for_review', 'engagement_letter', letterId, { reviewer: assignedReviewer, client: _letterReviewMeta?.name });
   showStatus(`\u2713 Letter submitted for review by ${assignedReviewer}.`, 'success');
 
   // Send Slack notification if configured
@@ -2406,6 +2497,7 @@ async function approveLetter() {
 
     _letterApprovalStatus = 'Approved';
     updateApprovalBar();
+    logAudit('letter_approved', 'engagement_letter', _letterApprovalId, { client: _letterReviewMeta?.name });
     showStatus('Letter approved!', 'success');
 
     // Slack notification
@@ -2500,6 +2592,7 @@ async function confirmSendBack() {
 
     _letterApprovalStatus = 'Changes Requested';
     updateApprovalBar(notes.trim(), currentUser.email);
+    logAudit('letter_changes_requested', 'engagement_letter', _letterApprovalId, { client: _letterReviewMeta?.name, notes: notes.trim() });
     showStatus('Letter sent back with your edits and notes.', 'success');
 
     // Slack notification
@@ -2539,6 +2632,7 @@ async function saveDraft() {
     _letterApprovalStatus = saveStatus;
     _letterApprovalId = letterId;
     updateApprovalBar();
+    logAudit('letter_draft_saved', 'engagement_letter', letterId, { client: _letterReviewMeta?.name });
     showStatus('\u2713 Draft saved.', 'success');
   }
 }
@@ -3219,6 +3313,7 @@ async function deleteLetterVersion(letterId) {
   try {
     const { error } = await db.from('engagement_letters').delete().eq('id', letterId);
     if (error) throw error;
+    logAudit('letter_version_deleted', 'engagement_letter', letterId);
     // Re-render the list: find the card and remove it via data attribute
     const card = document.querySelector(`.doc-version-card[data-letter-id="${CSS.escape(letterId)}"]`);
     if (card) card.remove();
@@ -3262,11 +3357,155 @@ async function downloadFromReview() {
 
 
 
-async function generateAll(){if(!validateForm())return;const d=getFormData();const btn=document.getElementById('generateBtn');btn.disabled=true;btn.innerHTML='<div class="loading-spinner"></div> Generating...';try{const saved=await addClient(d);if(saved){exportSingleClientExcel(saved);openLetterReview(d,saved.id);showStatus(`\u2713 ${clientDisplayName(d)} added \u2013 review your letter.`,'success');resetForm();}}catch(e){showStatus('Error: '+e.message,'error');}finally{btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg> Generate Letter + Add to Tracker';}}
+async function generateAll(){if(!validateForm())return;const d=getFormData();const btn=document.getElementById('generateBtn');btn.disabled=true;btn.innerHTML='<div class="loading-spinner"></div> Generating...';try{const saved=await addClient(d);if(saved){logAudit('client_created','client',saved.id,{name:clientDisplayName(d),matter_type:d.matterType,attorney:d.attorney});exportSingleClientExcel(saved);openLetterReview(d,saved.id);showStatus(`\u2713 ${clientDisplayName(d)} added \u2013 review your letter.`,'success');resetForm();}}catch(e){showStatus('Error: '+e.message,'error');}finally{btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg> Generate Letter + Add to Tracker';}}
 
-async function addToTrackerOnly(){if(!validateForm())return;const d=getFormData();const btn=document.getElementById('trackerBtn');btn.disabled=true;btn.innerHTML='<div class="loading-spinner"></div> Adding...';try{const saved=await addClient(d);if(saved){showStatus(`\u2713 ${clientDisplayName(d)} added.`,'success');resetForm();}}finally{btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg> Add to Tracker Only';}}
+async function addToTrackerOnly(){if(!validateForm())return;const d=getFormData();const btn=document.getElementById('trackerBtn');btn.disabled=true;btn.innerHTML='<div class="loading-spinner"></div> Adding...';try{const saved=await addClient(d);if(saved){logAudit('client_created','client',saved.id,{name:clientDisplayName(d),matter_type:d.matterType,attorney:d.attorney});showStatus(`\u2713 ${clientDisplayName(d)} added.`,'success');resetForm();}}finally{btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg> Add to Tracker Only';}}
 
 async function regenLetter(id){const clients=await getClients();const c=clients.find(x=>x.id===id);if(!c)return;openLetterReview(c,c.id);}
+
+// =============================================
+// AUDIT LOG
+// =============================================
+
+let _auditPage = 0;
+const _auditPageSize = 50;
+
+function getAuditActionLabel(action) {
+  const map = {
+    sign_in: 'Sign In',
+    sign_out: 'Sign Out',
+    client_created: 'Client Created',
+    client_edited: 'Client Edited',
+    client_deleted: 'Client Deleted',
+    client_status_changed: 'Status Changed',
+    all_data_cleared: 'All Data Cleared',
+    letter_draft_saved: 'Draft Saved',
+    letter_submitted_for_review: 'Submitted for Review',
+    letter_approved: 'Letter Approved',
+    letter_changes_requested: 'Changes Requested',
+    letter_sent_for_esignature: 'Sent for E-Signature',
+    letter_emailed_to_client: 'Emailed to Client',
+    letter_version_deleted: 'Letter Deleted',
+    setting_changed: 'Setting Changed',
+  };
+  return map[action] || action;
+}
+
+function getAuditActionClass(action) {
+  if (action.includes('created') || action.includes('draft_saved')) return 'action-create';
+  if (action.includes('edited') || action.includes('status_changed')) return 'action-edit';
+  if (action.includes('deleted') || action.includes('cleared')) return 'action-delete';
+  if (action.includes('approved') || action.includes('review') || action.includes('changes')) return 'action-approval';
+  if (action.includes('sent') || action.includes('emailed') || action.includes('esignature')) return 'action-send';
+  if (action.includes('sign_')) return 'action-auth';
+  if (action.includes('setting')) return 'action-setting';
+  return '';
+}
+
+function formatAuditDetails(details) {
+  if (!details) return '';
+  const parts = [];
+  if (details.name) parts.push(details.name);
+  if (details.client) parts.push(details.client);
+  if (details.matter_type) parts.push(details.matter_type);
+  if (details.attorney) parts.push(details.attorney);
+  if (details.reviewer) parts.push('Reviewer: ' + details.reviewer);
+  if (details.status) parts.push('Status: ' + details.status);
+  if (details.to) parts.push('To: ' + details.to);
+  if (details.signer_email) parts.push('Signer: ' + details.signer_email);
+  if (details.setting) parts.push(details.setting + ' = ' + (details.value || ''));
+  if (details.notes) parts.push('Notes: ' + details.notes);
+  return parts.join(' \u00b7 ');
+}
+
+async function renderAuditLog() {
+  const body = document.getElementById('auditLogBody');
+  body.innerHTML = '<div class="empty-state"><div class="loading-spinner" style="border-color:rgba(0,0,0,0.1);border-top-color:var(--sage);width:24px;height:24px;margin:0 auto 12px;"></div><p>Loading audit log...</p></div>';
+
+  try {
+    const actionFilter = document.getElementById('auditFilterAction').value;
+    const userFilter = document.getElementById('auditFilterUser').value;
+
+    let query = db.from('audit_log')
+      .select('*', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(_auditPage * _auditPageSize, (_auditPage + 1) * _auditPageSize - 1);
+
+    if (actionFilter) query = query.eq('action', actionFilter);
+    if (userFilter) query = query.eq('user_email', userFilter);
+
+    const { data, error, count } = await query;
+    if (error) throw error;
+
+    // Populate user filter dropdown (only on first load or if empty)
+    const userSelect = document.getElementById('auditFilterUser');
+    if (userSelect.options.length <= 1) {
+      try {
+        const { data: users } = await db.from('audit_log')
+          .select('user_email')
+          .order('user_email');
+        if (users) {
+          const unique = [...new Set(users.map(u => u.user_email))];
+          unique.forEach(email => {
+            const opt = document.createElement('option');
+            opt.value = email;
+            opt.textContent = email;
+            userSelect.appendChild(opt);
+          });
+        }
+      } catch (e) { /* best-effort */ }
+    }
+
+    if (!data || data.length === 0) {
+      body.innerHTML = '<div class="empty-state"><p>No audit log entries found.</p><p class="help-text" style="margin-top:8px">Actions will be recorded as users interact with the system.</p></div>';
+      return;
+    }
+
+    const totalPages = Math.ceil((count || data.length) / _auditPageSize);
+
+    let html = '<div class="audit-table-wrap"><table class="audit-table"><thead><tr>';
+    html += '<th>Time</th><th>User</th><th>Action</th><th>Entity</th><th>Details</th>';
+    html += '</tr></thead><tbody>';
+
+    data.forEach(entry => {
+      const time = new Date(entry.created_at).toLocaleString('en-US', {
+        month: 'short', day: 'numeric', year: 'numeric',
+        hour: 'numeric', minute: '2-digit'
+      });
+      const userShort = entry.user_email ? entry.user_email.split('@')[0] : 'system';
+      const actionLabel = getAuditActionLabel(entry.action);
+      const actionClass = getAuditActionClass(entry.action);
+      const entityLabel = entry.entity_type ? entry.entity_type.replace(/_/g, ' ') : '\u2014';
+      const details = formatAuditDetails(entry.details);
+
+      html += `<tr>`;
+      html += `<td style="white-space:nowrap;font-size:12px;color:var(--warm-gray);">${esc(time)}</td>`;
+      html += `<td style="font-weight:500;">${esc(userShort)}</td>`;
+      html += `<td><span class="audit-action-badge ${actionClass}">${esc(actionLabel)}</span></td>`;
+      html += `<td style="font-size:12px;text-transform:capitalize;">${esc(entityLabel)}</td>`;
+      html += `<td class="audit-details" title="${esc(details)}">${esc(details)}</td>`;
+      html += `</tr>`;
+    });
+
+    html += '</tbody></table>';
+
+    // Pagination
+    html += '<div class="audit-pagination">';
+    html += `<button onclick="_auditPage--;renderAuditLog();" ${_auditPage === 0 ? 'disabled' : ''}>&larr; Newer</button>`;
+    html += `<span>Page ${_auditPage + 1} of ${totalPages}</span>`;
+    html += `<button onclick="_auditPage++;renderAuditLog();" ${_auditPage + 1 >= totalPages ? 'disabled' : ''}>Older &rarr;</button>`;
+    html += '</div></div>';
+
+    body.innerHTML = html;
+  } catch (e) {
+    const msg = (e.message || '').toLowerCase();
+    if (msg.includes('relation') || msg.includes('does not exist') || msg.includes('42P01')) {
+      body.innerHTML = '<div class="empty-state"><p>Audit log not set up yet.</p><p class="help-text" style="margin-top:12px">Run the <code style="background:var(--sage-pale);padding:2px 8px;border-radius:4px;">20260217_audit_log.sql</code> migration in Supabase SQL Editor to enable this feature.</p></div>';
+    } else {
+      body.innerHTML = `<div class="empty-state"><p>Error loading audit log.</p><p class="help-text" style="margin-top:8px">${esc(e.message)}</p></div>`;
+    }
+  }
+}
 
 checkAuth();
 </script>
